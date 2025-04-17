@@ -1,0 +1,103 @@
+/* HomePage.css */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8faff;
+  }
+  
+  .home-container {
+    width: 100%;
+  }
+  
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .logo {
+    font-size: 22px;
+    font-weight: bold;
+    color: #0077cc;
+  }
+  
+  .nav-links {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+  }
+  
+  .nav-links a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .auth-buttons button {
+    margin-left: 10px;
+    padding: 8px 16px;
+    border: none;
+    background-color: #0077cc;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .auth-buttons button:hover {
+    background-color: #005fa3;
+  }
+  
+  .hero {
+    padding: 80px 40px;
+    text-align: center;
+    background: linear-gradient(to right, #dfefff, #f4faff);
+  }
+  
+  .hero h1 {
+    font-size: 36px;
+    color: #003f6f;
+    margin-bottom: 20px;
+  }
+  
+  .hero p {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 30px;
+  }
+  
+  .cta-button {
+    padding: 12px 24px;
+    background-color: #0077cc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .cta-button:hover {
+    background-color: #005fa3;
+  }
+  
+  .info-section {
+    padding: 60px 40px;
+    background-color: white;
+    text-align: center;
+  }
+  
+  .info-section:nth-child(even) {
+    background-color: #f0f8ff;
+  }
+  
+  footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #e9f5ff;
+    color: #333;
+  }
+  
