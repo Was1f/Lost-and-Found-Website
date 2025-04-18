@@ -6,7 +6,8 @@ import Navbar from "./components/Navbar";
 import LandingPage from "./pages/LandingPage"; // Importing the Landing Page
 import SignUp from "./pages/SignUp"; // Import SignUpPage
 import Login from "./pages/Login"; // Import LoginPage
-
+import ProfilePage from "./pages/ProfilePage";
+import HistoryPage from "./pages/HistoryPage"; 
 
 function App() {
   return (
@@ -18,6 +19,9 @@ function App() {
         <Route path='/create' element={<CreatePage />} /> {/* Create Page Route */}
         <Route path='/signup' element={<SignUp />} /> {/* Sign Up Page Route */}
         <Route path='/login' element={<Login />} /> {/* Login Page Route */}
+        <Route path="/profile" element={<ProfilePage />} /> {/* Profile Page Route */}
+        <Route path='/history' element={<HistoryPage />} /> 
+        
       </Routes>
     </Box>
   );
