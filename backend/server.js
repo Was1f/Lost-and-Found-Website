@@ -7,6 +7,7 @@ import { connectDB } from "./config/db.js";
 // import productRoutes from "./Routes/product.route.js";
 import authRoutes from "./Routes/auth.route.js";  // Import auth routes
 //import userRoutes from "./Routes/user.route.js";  // Import user routes
+import profileRoutes from "./Routes/profile.route.js"; 
 dotenv.config();
 
 const app = express();  // Initialize app first
@@ -23,8 +24,12 @@ app.use(express.json()); // allows us to accept JSON data in the req.body
 
 // Add the authentication routes
 app.use("/api/auth", authRoutes);  // Add this line for the authentication routes
+app.use("/api/profile", profileRoutes);
 
 // app.use("/api/products", productRoutes);
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
 
 // Serve frontend assets in production
 if (process.env.NODE_ENV === "production") {

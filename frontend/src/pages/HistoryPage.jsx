@@ -12,6 +12,7 @@ import {
     Button,
     HStack,
   } from "@chakra-ui/react";
+  import { useNavigate } from "react-router-dom";
   
   const dummyLostItems = [
     { id: 1, title: "Lost Wallet", date: "2024-04-10", location: "Dhanmondi" },
@@ -25,6 +26,7 @@ import {
   
   const HistoryPage = () => {
     const cardBg = useColorModeValue("white", "gray.700");
+    const navigate = useNavigate();
   
     const handleDelete = (type, id) => {
       console.log(`Deleted ${type} item with ID:`, id);
@@ -117,6 +119,10 @@ import {
             </TabPanel>
           </TabPanels>
         </Tabs>
+  
+        <Button mt={6} variant="ghost" colorScheme="blue" onClick={() => navigate("/profile")}>
+          Back to Profile
+        </Button>
       </Box>
     );
   };
