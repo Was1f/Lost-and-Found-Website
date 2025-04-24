@@ -23,6 +23,12 @@ const LoginPage = () => {
       if (!response.ok) {
         throw new Error(data.message || "Login failed");
       }
+      
+      if (!data.token) {
+        throw new Error("Token not received from server"); // 🛑 prevents storing undefined
+      }
+       // Store the JWT token in localStorage
+      localStorage.setItem("authToken", data.token);
 
       toast({
         title: "Login Successful",
@@ -41,6 +47,7 @@ const LoginPage = () => {
       });
     }
   };
+  
 
   return (
     <Container maxW={"lg"} py={{ base: "12", sm: "24" }} px={{ base: "0", sm: "10" }} centerContent>

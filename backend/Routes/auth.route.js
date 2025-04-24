@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -52,9 +53,15 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
+// ✅ Generate JWT Token
+const token = jwt.sign(
+  { id: user._id },
+  process.env.JWT_SECRET,
+  { expiresIn: '1h' }
+);    
 
     // Send success response if password matches
-    res.status(200).json({ message: 'Login successful' });
+    res.status(200).json({ message: 'Login successful',token});
   } catch (err) {
     console.error('Error logging in:', err);
     res.status(500).json({ message: 'Server error' });
