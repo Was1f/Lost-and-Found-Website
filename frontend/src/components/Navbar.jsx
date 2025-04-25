@@ -36,19 +36,60 @@ const Navbar = () => {
 					bgGradient={"linear(to-r, cyan.400, blue.500)"}
 					bgClip={"text"}
 				>
-					<Link to={"/"}>Product Store 🛒</Link>
+					<Link to={"/"}>Lost & Found</Link>
 				</Text>
+
 				{token && (
 				<HStack spacing={2} alignItems={"center"}>
-				<Button onClick={handleLogout} colorScheme="red">Log Out</Button>
-						<Link to={"/create"}>
+				 
+				 <Button onClick={toggleColorMode}>
+						{colorMode === "light" ? <IoMoon /> : <LuSun size='20' />}
+					</Button>
+
+				 
+				 <Link to={"/create"}>
 						<Button>
 							<PlusSquareIcon fontSize={20} />
 						</Button>
 					</Link>
-					<Button onClick={toggleColorMode}>
-						{colorMode === "light" ? <IoMoon /> : <LuSun size='20' />}
-					</Button>
+
+					<Link to={"/my-posts"}>
+							<Button
+							variant="outline"
+							colorScheme="blue"
+							_hover={{
+								background: "transparent",
+								borderColor: "blue.500",
+							}}
+							>
+							My Posts
+							</Button>
+						</Link>
+
+						<Link to="/recent">
+							<Button
+						variant="outline"  // Transparent with border
+						colorScheme="blue"  // Blue border color
+						_hover={{
+							background: "transparent", // Ensure background is transparent on hover too
+							borderColor: "blue.500",  // Blue border color on hover
+						}}
+						>
+						View Recent Posts
+						</Button>
+                </Link>
+
+					<Button
+					onClick={handleLogout}
+					variant="outline"  // Transparent with border
+					colorScheme="blue"  // Blue border color
+					_hover={{
+					background: "transparent", // Ensure background is transparent on hover too
+					borderColor: "blue.500",  // Blue border color on hover
+					}}
+				>
+					Log Out
+				</Button>
 				</HStack>
 				)}
 			</Flex>

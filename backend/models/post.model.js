@@ -7,7 +7,10 @@ const postSchema = new mongoose.Schema({
   image: { type: String, required: true },  // Image URL or path to the image
   createdAt: { type: Date, default: Date.now },
   status: { type: String, enum: ['lost', 'found'], default: 'lost' },  // 'lost' or 'found'
-});
+  location: { type: String,  required: true, },
+},
+{ timestamps: true }
+);
 
 const Post = mongoose.model('Post', postSchema);
 

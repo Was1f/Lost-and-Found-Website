@@ -11,6 +11,7 @@ const PostForm = () => {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("lost");
   const [image, setImage] = useState(null);
+  const [location, setLocation] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +21,7 @@ const PostForm = () => {
     formData.append("description", description);
     formData.append("status", status);
     formData.append("image", image);
-
+    formData.append("location", location);
     try {
       const token = localStorage.getItem("authToken");
       await axios.post("http://localhost:5000/api/posts/create", formData, {
@@ -39,6 +40,7 @@ const PostForm = () => {
       setTitle("");
       setDescription("");
       setImage(null);
+      setLocation("");
       setStatus("lost");
 
     } catch (error) {
@@ -83,6 +85,16 @@ const PostForm = () => {
               <option value="lost">Lost</option>
               <option value="found">Found</option>
             </Select>
+          </FormControl>
+
+        {/* New location field */}
+          <FormControl isRequired>
+            <FormLabel>Location</FormLabel>
+            <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)} // Update location on input change
+              placeholder="Enter the location of the item"
+            />
           </FormControl>
 
           <FormControl isRequired>

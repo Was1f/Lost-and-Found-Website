@@ -24,9 +24,6 @@ const LoginPage = () => {
         throw new Error(data.message || "Login failed");
       }
       
-      if (!data.token) {
-        throw new Error("Token not received from server"); // 🛑 prevents storing undefined
-      }
        // Store the JWT token in localStorage
       localStorage.setItem("authToken", data.token);
 

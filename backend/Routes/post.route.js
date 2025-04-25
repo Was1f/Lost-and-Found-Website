@@ -18,6 +18,19 @@ const upload = multer({ storage });
 
 const router = express.Router();
 
+// Route to get recent posts (e.g., 5 most recent posts)
+router.get('/recent', async (req, res) => {
+  try {
+    const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'email').exec();
+    console.log(posts);  // Add this log to check the posts
+    res.json(posts); // Send posts to frontend
+
+  } catch (error) {
+    console.error("Error fetching recent posts:", error);
+    res.status(500).json({ message: "Error fetching recent posts" });
+  }
+});
+
 // Create a new post
 router.post('/create', protect, upload.single('image'), async (req, res) => {
   try {
@@ -25,13 +38,14 @@ router.post('/create', protect, upload.single('image'), async (req, res) => {
     console.log("✅ Body received:", req.body);
     console.log("✅ User ID:", req.user?.id);
 
-    const { title, description, image, status } = req.body;
+    const { title, description, image, status, location} = req.body;
 
     const newPost = new Post({
       user: req.user.id,  // User ID will come from the token (JWT)
       title,
       description,
       image: `/uploads/${req.file.filename}`,
+      location,
       status
     });
 

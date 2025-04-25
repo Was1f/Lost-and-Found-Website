@@ -10,6 +10,7 @@ import ProfilePage from "./pages/ProfilePage";
 import HistoryPage from "./pages/HistoryPage"; 
 import PostForm from './pages/PostForm';
 import ProtectedRoute from "./components/ProtectedRoute";
+import RecentPostsPage from "./pages/RecentPostPage";
 
 function App() {
   useEffect(() => {
@@ -37,7 +38,8 @@ function App() {
         <Route path='/login' element={<Login />} /> {/* Login Page Route */}
         <Route path="/profile" element={<ProfilePage />} /> {/* Profile Page Route */}
         <Route path='/history' element={<HistoryPage />} /> 
-        
+        <Route path="/recent" element={<RecentPostsPage />} />
+
       </Routes>
     </Box>
   );
