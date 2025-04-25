@@ -78,9 +78,9 @@ const RecentPostsPage = () => {
                     </Text>
                     
                 {/* Location */}
-                <Text fontSize="sm" color="gray.500" mb={2}>
-                    Location: {post.location}
-                  </Text>
+                <Text fontSize="sm" color="blue.500" fontWeight="medium" mb={2}>
+                  Location: {post.location}
+                </Text>
 
                 {/* Date and Time */}
                 <Text fontSize="sm" color="gray.400" mb={4}>

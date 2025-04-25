@@ -11,6 +11,8 @@ import HistoryPage from "./pages/HistoryPage";
 import PostForm from './pages/PostForm';
 import ProtectedRoute from "./components/ProtectedRoute";
 import RecentPostsPage from "./pages/RecentPostPage";
+import MyPostsPage from "./pages/MyPostsPage";
+import EditPostPage from "./pages/EditPostPage";
 
 function App() {
   useEffect(() => {
@@ -39,6 +41,8 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} /> {/* Profile Page Route */}
         <Route path='/history' element={<HistoryPage />} /> 
         <Route path="/recent" element={<RecentPostsPage />} />
+        <Route path="/my-posts" element={<MyPostsPage />} />
+        <Route path="/edit-post/:id" element={<EditPostPage />} />
 
       </Routes>
     </Box>
