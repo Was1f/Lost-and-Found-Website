@@ -1,6 +1,6 @@
 import { Box, useColorModeValue } from "@chakra-ui/react";
 import { Route, Routes } from "react-router-dom";
-
+import { useEffect } from 'react';
 
 import Navbar from "./components/Navbar";
 import LandingPage from "./pages/LandingPage"; // Importing the Landing Page
@@ -12,6 +12,20 @@ import PostForm from './pages/PostForm';
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
+  useEffect(() => {
+    // Check if token exists and if it's expired
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      // Decode token and check expiration (optional)
+      const decoded = JSON.parse(atob(token.split('.')[1]));
+      const expiry = decoded.exp * 1000;
+
+      if (Date.now() > expiry) {
+        // Token expired, remove it
+        localStorage.removeItem('authToken');
+      }
+    }
+  }, []);
   return (
     <Box minH={"100vh"} bg={useColorModeValue("gray.100", "gray.900")}>
       <Navbar />

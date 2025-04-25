@@ -6,7 +6,7 @@ const postSchema = new mongoose.Schema({
   description: { type: String, required: true },
   image: { type: String, required: true },  // Image URL or path to the image
   createdAt: { type: Date, default: Date.now },
-  status: { type: String, default: 'lost' },  // 'lost' or 'found'
+  status: { type: String, enum: ['lost', 'found'], default: 'lost' },  // 'lost' or 'found'
 });
 
 const Post = mongoose.model('Post', postSchema);

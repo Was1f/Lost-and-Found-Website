@@ -1,13 +1,15 @@
 import { useState } from "react";
 import {
-  Box, Button, FormControl, FormLabel, Input, Textarea, VStack, useToast
+  Box, Select, Button, FormControl, FormLabel, Input, Textarea, VStack, useToast
 } from "@chakra-ui/react";
 import axios from "axios";
+ // Make sure Select is imported
 
 const PostForm = () => {
   const toast = useToast();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("lost");
   const [image, setImage] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -16,6 +18,7 @@ const PostForm = () => {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
+    formData.append("status", status);
     formData.append("image", image);
 
     try {
@@ -36,6 +39,8 @@ const PostForm = () => {
       setTitle("");
       setDescription("");
       setImage(null);
+      setStatus("lost");
+
     } catch (error) {
       toast({
         title: "Failed to create post",
@@ -66,6 +71,18 @@ const PostForm = () => {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the item"
             />
+          </FormControl>
+
+          {/* Dropdown for selecting post status */}
+          <FormControl isRequired>
+            <FormLabel>Status</FormLabel>
+            <Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)} // Update status on selection
+            >
+              <option value="lost">Lost</option>
+              <option value="found">Found</option>
+            </Select>
           </FormControl>
 
           <FormControl isRequired>
