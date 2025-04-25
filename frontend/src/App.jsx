@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RecentPostsPage from "./pages/RecentPostPage";
 import MyPostsPage from "./pages/MyPostsPage";
 import EditPostPage from "./pages/EditPostPage";
+import PostDetailsPage from "./pages/PostDetailsPage";
 
 function App() {
   useEffect(() => {
@@ -34,7 +35,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path='/' element={<LandingPage />} /> {/* Landing Page Route */}
-       
+        <Route path="/post/:id" element={<PostDetailsPage />} />
         <Route path='/create' element={<ProtectedRoute><PostForm /> </ProtectedRoute>} /> {/* Create Page Route */}
         <Route path='/signup' element={<SignUp />} /> {/* Sign Up Page Route */}
         <Route path='/login' element={<Login />} /> {/* Login Page Route */}

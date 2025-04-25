@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 // Schema for Post History (stores previous versions of posts)
 const postHistorySchema = new mongoose.Schema({
+    
   postId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post',
