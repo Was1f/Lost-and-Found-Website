@@ -39,17 +39,23 @@ function App() {
       <Navbar />
 
       <Routes>
-        <Route path='/' element={<LandingPage />} /> {/* Landing Page Route */}
-        <Route path="/post/:id" element={<PostDetailsPage />} />
-        <Route path='/create' element={<ProtectedRoute><PostForm /> </ProtectedRoute>} /> {/* Create Page Route */}
-        <Route path='/signup' element={<SignUp />} /> {/* Sign Up Page Route */}
-        <Route path='/login' element={<Login />} /> {/* Login Page Route */}
-        <Route path="/profile" element={<ProfilePage />} /> {/* Profile Page Route */}
-        <Route path='/history' element={<HistoryPage />} /> 
-        <Route path="/recent" element={<RecentPostsPage />} />
-        <Route path="/my-posts" element={<MyPostsPage />} />
-        <Route path="/edit-post/:id" element={<EditPostPage />} />
+        {/* User Routes */}
+        <Route path='/' element={<LandingPage />} />
+        <Route path='/post/:id' element={<PostDetailsPage />} />
+        <Route path='/create' element={<ProtectedRoute><PostForm /></ProtectedRoute>} />
+        <Route path='/signup' element={<SignUp />} />
+        <Route path='/login' element={<Login />} />
+        <Route path='/profile' element={<ProfilePage />} />
+        <Route path='/history' element={<HistoryPage />} />
+        <Route path='/recent' element={<RecentPostsPage />} />
+        <Route path='/my-posts' element={<MyPostsPage />} />
+        <Route path='/edit-post/:id' element={<EditPostPage />} />
 
+        {/* Admin Routes */}
+        <Route path='/admin/login' element={<AdminLogin />} />
+        <Route path='/dashboard' element={<Dashboard />} />
+        <Route path='/admin/posts' element={<PostManagement />} />
+        <Route path='/admin/users' element={<UserManagement />} />
       </Routes>
     </Box>
   );

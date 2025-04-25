@@ -63,6 +63,10 @@ export const loginController = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
+    // Ban Check: If user is banned, don't allow login
+    if (user.status === 'banned') {
+      return res.status(403).json({ message: 'Your account has been banned. Please contact support.' });
+    }
 
     // Generate JWT token
     const token = jwt.sign(
