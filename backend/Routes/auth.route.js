@@ -20,8 +20,12 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Hash password before saving
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Create a new user
-    const newUser = new User({ email, password });
+    const newUser = new User({ email, password: hashedPassword });
 
     // Save the user to the database
     await newUser.save();
@@ -48,20 +52,26 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Compare the provided password with the saved hashed password
+    // Compare the entered password with the stored hashed password
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
-// ✅ Generate JWT Token
-const token = jwt.sign(
-  { id: user._id },
-  process.env.JWT_SECRET,
-  { expiresIn: '1h' }
-);    
+
+    // **Banned User Check**
+    if (user.status === 'banned') {
+      return res.status(403).json({ message: 'banned' });  // Send 'banned' message
+    }
+
+    // ✅ Generate JWT Token
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || 'secret',  // Secret key for signing JWT
+      { expiresIn: '1h' }  // Token expiry
+    );
 
     // Send success response if password matches
-    res.status(200).json({ message: 'Login successful',token});
+    res.status(200).json({ message: 'Login successful', token, user: { email: user.email } });
   } catch (err) {
     console.error('Error logging in:', err);
     res.status(500).json({ message: 'Server error' });

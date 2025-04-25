@@ -23,8 +23,20 @@ const LoginPage = () => {
       if (!response.ok) {
         throw new Error(data.message || "Login failed");
       }
-      
-       // Store the JWT token in localStorage
+
+      // ✅ If the user is banned, redirect to the banned page
+      if (data.user && data.user.status === 'banned') {
+        toast({
+          title: "Account Banned",
+          description: "You have been banned. Please contact support.",
+          status: "error",
+          isClosable: true,
+        });
+        navigate('/banned'); // Redirect to Banned page
+        return; // Stop further login actions
+      }
+
+      // ✅ Store the JWT token in localStorage
       localStorage.setItem("authToken", data.token);
 
       toast({
@@ -44,7 +56,6 @@ const LoginPage = () => {
       });
     }
   };
-  
 
   return (
     <Container maxW={"lg"} py={{ base: "12", sm: "24" }} px={{ base: "0", sm: "10" }} centerContent>
