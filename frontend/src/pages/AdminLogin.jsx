@@ -36,7 +36,7 @@ const AdminLogin = () => {
       });
 
       // Redirect to the admin dashboard page
-      navigate('/admin/dashboard');
+      navigate('/dashboard');
     } catch (error) {
       toast({
         title: 'Error',
