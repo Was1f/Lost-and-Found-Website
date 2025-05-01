@@ -69,7 +69,9 @@ export const loginController = async (req, res) => {
     }
 
     // Compare the entered password with the stored hashed password
-    const isMatch = await user.matchPassword(password, user.password);
+    const isMatch = await user.matchPassword(password);
+
+    //const isMatch = await user.matchPassword(password, user.password);
     console.log('Password Match:', isMatch);
 
     if (!isMatch) {

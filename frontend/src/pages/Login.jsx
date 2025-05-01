@@ -38,6 +38,7 @@ const LoginPage = () => {
 
       // ✅ Store the JWT token in localStorage
       localStorage.setItem("authToken", data.token);
+      
 
       toast({
         title: "Login Successful",

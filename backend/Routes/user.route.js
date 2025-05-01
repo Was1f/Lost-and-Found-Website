@@ -63,4 +63,23 @@ router.post('/login', async (req, res) => {
   }
 });
 
+//edit user profile route:
+router.put('/:id', async (req, res) => {
+  try {
+    const updates = {
+      username: req.body.username,
+      bio: req.body.bio,
+      profilePicUrl: req.body.profilePicUrl,
+      coverPicUrl: req.body.coverPicUrl,
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;

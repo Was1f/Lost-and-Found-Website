@@ -1,11 +1,17 @@
-import { Box, Button, Container, FormControl, FormLabel, Heading, Input, useToast, VStack } from "@chakra-ui/react";
+import { Box, Button, Container, FormControl, FormLabel, Heading, Input, useToast, VStack,FormErrorMessage,Image,Text,Textarea,Flex,Divider} from "@chakra-ui/react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
+
 
 const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [profilePic, setProfilePic] = useState(null);
+  const [coverPic, setCoverPic] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -19,14 +25,21 @@ const SignUpPage = () => {
       });
       return;
     }
-
-    try {
+   
+    try{
       const response = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ 
+          email,
+          password,
+          username,
+          bio,
+          //profilePic: imgRes.data.profilePic,
+          //coverPic: imgRes.data.coverPic,
+          }),
       });
 
       const data = await response.json();
@@ -70,6 +83,17 @@ const SignUpPage = () => {
         >
           <VStack spacing={4} align="stretch">
             <FormControl>
+              <FormLabel>Username</FormLabel>
+              <input
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />   
+            </FormControl>
+
+            <FormControl>
               <FormLabel>Email</FormLabel>
               <Input
                 type="email"
@@ -101,7 +125,19 @@ const SignUpPage = () => {
                 required
               />
             </FormControl>
+            <FormControl>
+              <FormLabel>Bio</FormLabel>
+              <Input
+                type="text"
+                placeholder="Enter a short bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+              />
+            </FormControl>
 
+              
+      
+           
             <Button
               colorScheme="blue"
               size="lg"

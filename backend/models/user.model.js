@@ -2,6 +2,15 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';  // bcryptjs to hash passwords
 
 const userSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  coverPicUrl: {
+    type: String,
+    default: ""
+  },
   email: {
     type: String,
     required: true,

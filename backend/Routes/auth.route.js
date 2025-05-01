@@ -7,7 +7,7 @@ const router = express.Router();
 
 // Sign-up Route
 router.post('/signup', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password,username,bio,profilePicUrl,coverPicUrl } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Please provide email and password' });
@@ -25,7 +25,15 @@ router.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create a new user
-    const newUser = new User({ email, password: hashedPassword });
+    const newUser = new User({ 
+      email, 
+      //password: hashedPassword,   password is being hashed twice here 
+      password,
+      username,
+      bio,
+      profilePicUrl,
+      coverPicUrl
+    });
 
     // Save the user to the database
     await newUser.save();
