@@ -1,0 +1,27 @@
+{
+  "name": "42-cent-util",
+  "version": "1.0.0",
+  "description": "utility methods used across 42-cent components",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_ENV='test' node ./node_modules/.bin/mocha ./test/ -R spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/continuous-software/42-cent-util.git"
+  },
+  "keywords": [
+    "42-cent",
+    "utility",
+    "json"
+  ],
+  "author": "Laurent Renard",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/continuous-software/42-cent-util/issues"
+  },
+  "homepage": "https://github.com/continuous-software/42-cent-util",
+  "devDependencies": {
+    "mocha": "^2.0.1"
+  }
+}
