@@ -1,0 +1,55 @@
+/* profile.css */
+
+.profile-container {
+    max-width: 800px;
+    margin: 40px auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background-color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .cover-photo {
+    height: 180px;
+    width: 100%;
+    object-fit: cover;
+  }
+  
+  .profile-picture {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 4px solid #ffffff;
+    position: absolute;
+    bottom: -40px;
+    left: 30px;
+  }
+  
+  .info-section {
+    padding: 60px 24px 24px 24px;
+  }
+  
+  .name {
+    font-size: 24px;
+    font-weight: 600;
+  }
+  
+  .role, .location {
+    color: #555;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  
+  .button-group {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  
+  .private-info {
+    font-size: 13px;
+    color: #888;
+    margin-top: 16px;
+  }
+  

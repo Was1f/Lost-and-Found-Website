@@ -7,7 +7,7 @@ import LandingPage from "./pages/LandingPage"; // Importing the Landing Page
 import SignUp from "./pages/SignUp"; // Import SignUpPage
 import Login from "./pages/Login"; // Import LoginPage
 import ProfilePage from "./pages/ProfilePage";
-import HistoryPage from "./pages/HistoryPage"; 
+import UserDashboard from "./pages/UserDashboard"; 
 
 function App() {
   return (
@@ -20,7 +20,7 @@ function App() {
         <Route path='/signup' element={<SignUp />} /> {/* Sign Up Page Route */}
         <Route path='/login' element={<Login />} /> {/* Login Page Route */}
         <Route path="/profile" element={<ProfilePage />} /> {/* Profile Page Route */}
-        <Route path='/history' element={<HistoryPage />} /> 
+        <Route path='/dashboard' element={<UserDashboard />} /> 
         
       </Routes>
     </Box>

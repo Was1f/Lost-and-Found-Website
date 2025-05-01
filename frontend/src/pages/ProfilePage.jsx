@@ -1,82 +1,60 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { Box, Button, Flex, Heading, Image, Stack, Text, Spinner } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import './ProfilePage.css'; // Make sure profile.css is in the same folder
+import { Box, Button, Text } from '@chakra-ui/react';
 
-const ProfilePage = () => {
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Fake logged-in user ID for testing — replace with actual ID from auth later
-  const userId = "661f989c7ae27cb3a44649f1"; 
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/profile/${userId}`);
-        setProfile(res.data);
-      } catch (err) {
-        console.error("Failed to load profile", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  const handleEditProfile = () => {
-    alert("Edit profile clicked!");
+const Profile = () => {
+  // Mocked user data (replace with actual API/user context)
+  const userData = {
+    name: 'Nathaniel Clarke',
+    role: 'Software Engineer at IBM',
+    location: 'San Francisco, California',
+    studentId: 'CSE20201234', // this part will only be visible to the user
+    isCurrentUser: true, // this should be true only for the logged-in user
   };
-
-  const handleViewHistory = () => {
-    navigate("/history");
-  };
-
-  if (loading) return <Spinner size="xl" />;
 
   return (
-    <Flex direction="column" align="center" justify="center" minH="80vh" p={6}>
-      <Box
-        maxW="lg"
-        borderWidth="1px"
-        borderRadius="2xl"
-        overflow="hidden"
-        boxShadow="lg"
-        bg="white"
-        p={6}
-        w="100%"
-      >
-        <Flex justify="center">
-          <Image
-            borderRadius="full"
-            boxSize="120px"
-            src={profile?.profilePicUrl || "https://via.placeholder.com/150"}
-            alt="Profile Picture"
-            mb={4}
-          />
-        </Flex>
-        <Stack spacing={3} textAlign="center">
-          <Heading size="md">{profile?.name || "Unnamed User"}</Heading>
-          <Text color="gray.600">{profile?.email}</Text>
-          <Text mt={2}>
-            {profile?.bio || "👋 Hi! You haven't added a bio yet."}
-          </Text>
-          <Button colorScheme="blue" onClick={handleEditProfile}>
-            Edit Profile
-          </Button>
-          <Button variant="outline" colorScheme="teal" onClick={handleViewHistory}>
-            View History
-          </Button>
-          <Button variant="ghost" onClick={() => navigate("/")}>
-            Back to Home
-          </Button>
-        </Stack>
+    <Box className="profile-container">
+      {/* Cover + Profile Image */}
+      <Box position="relative">
+        <img
+          src="/cover.jpg" // Use a real path or import image
+          alt="Cover"
+          className="cover-photo"
+        />
+        <img
+          src="/profile.jpg" // Use a real path or import image
+          alt="Profile"
+          className="profile-picture"
+        />
       </Box>
-    </Flex>
+
+      {/* User Info */}
+      <Box className="info-section">
+        <Text className="name">{userData.name}</Text>
+        <Text className="role">{userData.role}</Text>
+        <Text className="location">{userData.location}</Text>
+
+        <Box className="button-group">
+          <Button colorScheme="blue">Edit Profile</Button>
+          <Button
+            variant="outline"
+            colorScheme="blue"
+            onClick={() => window.location.href = '/dashboard'}
+          >
+            Dashboard
+          </Button>
+        </Box>
+
+        {userData.isCurrentUser && (
+          <Box className="private-info">
+            Student ID (Private): <strong>{userData.studentId}</strong>
+          </Box>
+        )}
+      </Box>
+    </Box>
   );
 };
 
-export default ProfilePage;
+export default Profile;
+
 

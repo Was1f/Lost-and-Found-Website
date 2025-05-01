@@ -31,7 +31,7 @@ const LoginPage = () => {
         isClosable: true,
       });
 
-      navigate("/home"); // Navigate to homepage or dashboard after successful login
+      navigate("/profile"); // Navigate to homepage or dashboard after successful login
     } catch (error) {
       toast({
         title: "Login Failed",
