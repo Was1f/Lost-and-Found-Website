@@ -7,12 +7,15 @@ const router = express.Router();
 
 // Sign-up Route
 router.post('/signup', async (req, res) => {
-  const { email, password,username,bio,profilePicUrl,coverPicUrl } = req.body;
+  const { email, password,username,bio,profilePicUrl,coverPicUrl,studentId } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Please provide email and password' });
+  if (!email || !password || !studentId) {
+    return res.status(400).json({ message: 'Please provide email, student ID and password' });
   }
-
+  // Validate student ID format (8 digits)
+  if (!/^\d{8}$/.test(studentId)) {
+    return res.status(400).json({ message: 'Student ID must be an 8-digit number' });
+  }
   try {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -20,6 +23,11 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Check if student ID already exists
+    const existingStudentId = await User.findOne({ studentId });
+    if (existingStudentId) {
+      return res.status(400).json({ message: 'User with this Student ID already exists' });
+    }
     // Hash password before saving
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -32,7 +40,9 @@ router.post('/signup', async (req, res) => {
       username,
       bio,
       profilePicUrl,
-      coverPicUrl
+      coverPicUrl,
+      studentId,
+      isVerified: false
     });
 
     // Save the user to the database

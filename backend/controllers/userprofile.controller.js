@@ -14,6 +14,9 @@ export const getUserProfile = async (req, res) => {
       profilePic: user.profilePic,
       coverPic: user.coverPic,
       createdAt: user.createdAt,
+      studentId: user.studentId,
+      isVerified: user.isVerified,
+      createdAt: user.createdAt
     });
   } catch (error) {
     console.error('Error fetching profile:', error);
@@ -52,6 +55,8 @@ export const updateUserProfile = async (req, res) => {
         bio: updatedUser.bio,
         profilePic: updatedUser.profilePic,
         coverPic: updatedUser.coverPic,
+        studentId: updatedUser.studentId,
+        isVerified: updatedUser.isVerified,
       },
     });
   } catch (error) {

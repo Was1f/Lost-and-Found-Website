@@ -12,6 +12,7 @@ const SignUpPage = () => {
   const [bio, setBio] = useState("");
   const [profilePic, setProfilePic] = useState(null);
   const [coverPic, setCoverPic] = useState(null);
+  const [studentId, setStudentId] = useState("");
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -34,9 +35,11 @@ const SignUpPage = () => {
         },
         body: JSON.stringify({ 
           email,
+          studentId,
           password,
           username,
           bio,
+          isVerified: false
           //profilePic: imgRes.data.profilePic,
           //coverPic: imgRes.data.coverPic,
           }),
@@ -103,7 +106,19 @@ const SignUpPage = () => {
                 required
               />
             </FormControl>
-
+            <FormControl>
+              <FormLabel>Student ID</FormLabel>
+              <Input
+                type="text"
+                placeholder="8-digit Student ID number"
+                value={studentId}
+                onChange={(e) => {
+                  // Allow only numbers and limit to 8 digits
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 8);
+                  setStudentId(value);
+                }}
+              />
+            </FormControl>
             <FormControl>
               <FormLabel>Password</FormLabel>
               <Input

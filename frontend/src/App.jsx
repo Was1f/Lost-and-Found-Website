@@ -14,7 +14,7 @@ import RecentPostsPage from "./pages/RecentPostPage";
 import MyPostsPage from "./pages/MyPostsPage";
 import EditPostPage from "./pages/EditPostPage";
 import EditProfile from "./pages/EditProfile";
-import UserDashboard from "./pages/Dashboard";
+import UserDashboard from "./pages/UserDashboard";
 // ✅ Admin Pages
 import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";

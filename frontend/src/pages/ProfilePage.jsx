@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, Button, Text, Spinner, useToast, Flex, Icon, Image,
-  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,Tooltip, Badge 
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { FaMapMarkerAlt, FaCalendarAlt, FaPencilAlt } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCalendarAlt, FaPencilAlt,FaCheckCircle, FaIdCard  } from 'react-icons/fa';
 import { BsGrid3X3 } from 'react-icons/bs';
 import './ProfilePage.css';
 
@@ -15,6 +15,7 @@ const Profile = () => {
   const toast = useToast();
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
+  
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -94,7 +95,7 @@ const Profile = () => {
   const serverUrl = "http://localhost:5000/";
   const profilePicUrl = userData.profilePic ? serverUrl + userData.profilePic : "/avatar-placeholder.png";
   const coverPicUrl = userData.coverPic ? serverUrl + userData.coverPic : "/cover-placeholder.jpg";
-
+  const isVerified = userData.isVerified || false;
   return (
     <Box className="profile-container">
       {/* Cover Image */}
@@ -156,8 +157,15 @@ const Profile = () => {
 
         <Flex align="center" mt={4} justify="center" gap={6} color="gray.600">
           <Flex align="center">
-            <Icon as={FaMapMarkerAlt} mr={2} />
-            <Text>San Francisco, CA</Text>
+            <Icon as={FaIdCard} mr={2} color="blue.500" />
+            <Text fontWeight="medium">{userData.studentId}</Text>
+            {isVerified && (
+              <Tooltip label="Verified Student" placement="top">
+                <span>
+                <Icon as={FaCheckCircle} color="green.500" ml={2} />
+                </span>
+              </Tooltip>
+            )}
           </Flex>
           <Flex align="center">
             <Icon as={FaCalendarAlt} mr={2} />
@@ -168,13 +176,24 @@ const Profile = () => {
         <Box className="profile-grid">
           <Box>
             <Text fontWeight="bold" mb={2}>About</Text>
-            <Text>{userData.bio || "UI/UX Designer & Frontend Developer"}</Text>
+            <Text>{userData.bio || "Hi! I'm using Lost and Found Portal!"}</Text>
           </Box>
           <Box>
             <Text fontWeight="bold" mb={2}>Info</Text>
             <Flex>
               <Text fontWeight="medium" width="150px">Email</Text>
               <Text>{userData.email}</Text>
+            </Flex>
+            <Flex>
+              <Text fontWeight="medium" width="150px">Student ID</Text>
+              <Flex align="center">
+                <Text>{userData.studentId}</Text>
+                {isVerified &&(
+                  <Badge colorScheme="green" ml={2} borderRadius="full" px={2}>
+                    Verified
+                  </Badge>
+                )}
+              </Flex>
             </Flex>
             <Flex>
               <Text fontWeight="medium" width="150px">Member Since</Text>

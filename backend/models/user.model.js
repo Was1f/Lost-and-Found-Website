@@ -25,6 +25,12 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  studentId: {
+    type: String,
+    required: true,
+    unique: true,
+    match: /^\d{8}$/ // Ensure it's an 8-digit number
+  },
   bio: {
      type: String,
      default: "" 

@@ -6,10 +6,14 @@ import User from '../models/user.model.js';
 // Sign-up Controller
 // ========================
 export const signupController = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password,username,bio,studentId,isVerified } = req.body;
 
-  if (!email || !password) {
+  if (!email || !password || !username || !studentId) {
     return res.status(400).json({ message: 'Please provide email and password' });
+  }
+
+  if (!/^\d{8}$/.test(studentId)) {
+    return res.status(400).json({ message: 'Student ID must be an 8-digit number' });
   }
 
   try {
@@ -17,6 +21,17 @@ export const signupController = async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
+    }
+        // Check if student ID already exists
+    existingUser = await User.findOne({ studentId });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this Student ID already exists' });
+    }
+
+    // Check if username already exists
+    existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username is already taken' });
     }
 
     // Hash password
@@ -31,6 +46,10 @@ export const signupController = async (req, res) => {
       email,
       password: hashedPassword,
       status: 'active', // ✅ New users will have active status by default
+      username,
+      bio,
+      studentId,
+      isVerified: false
     });
 
     // Save user to the database
