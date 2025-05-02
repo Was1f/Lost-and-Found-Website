@@ -14,6 +14,7 @@ import RecentPostsPage from "./pages/RecentPostPage";
 import MyPostsPage from "./pages/MyPostsPage";
 import EditPostPage from "./pages/EditPostPage";
 import EditProfile from "./pages/EditProfile";
+import UserDashboard from "./pages/Dashboard";
 // ✅ Admin Pages
 import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
@@ -46,11 +47,7 @@ function App() {
         <Route path='/signup' element={<SignUp />} />
         <Route path='/login' element={<Login />} />
         <Route path='/profile' element={<ProfilePage />} />
-<<<<<<< Updated upstream
-        <Route path='/history' element={<HistoryPage />} />
-=======
-        <Route path='/dashboard' element={<UserDashboard />} /> 
->>>>>>> Stashed changes
+        <Route path='/userdashboard' element={<UserDashboard />} /> 
         <Route path='/recent' element={<RecentPostsPage />} />
         <Route path='/my-posts' element={<MyPostsPage />} />
         <Route path='/edit-post/:id' element={<EditPostPage />} />

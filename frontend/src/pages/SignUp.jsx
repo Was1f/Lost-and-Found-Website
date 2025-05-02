@@ -135,9 +135,7 @@ const SignUpPage = () => {
               />
             </FormControl>
 
-              
-      
-           
+            
             <Button
               colorScheme="blue"
               size="lg"

@@ -1,21 +1,11 @@
-<<<<<<< Updated upstream
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { Box, Button, Flex, Heading, Image, Stack, Text, Spinner } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
-
-const ProfilePage = () => {
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Fake logged-in user ID for testing — replace with actual ID from auth later
-  const userId = "661f989c7ae27cb3a44649f1"; 
-=======
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Text, Spinner, useToast } from '@chakra-ui/react';
+import {
+  Box, Button, Text, Spinner, useToast, Flex, Icon, Image,
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton
+} from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-
+import { FaMapMarkerAlt, FaCalendarAlt, FaPencilAlt } from 'react-icons/fa';
+import { BsGrid3X3 } from 'react-icons/bs';
 import './ProfilePage.css';
 
 const Profile = () => {
@@ -23,17 +13,12 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const toast = useToast();
->>>>>>> Stashed changes
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-<<<<<<< Updated upstream
-        const res = await axios.get(`http://localhost:5000/api/profile/${userId}`);
-        setProfile(res.data);
-      } catch (err) {
-        console.error("Failed to load profile", err);
-=======
         const token = localStorage.getItem("authToken");
 
         if (!token) {
@@ -72,21 +57,18 @@ const Profile = () => {
           duration: 5000,
           isClosable: true,
         });
->>>>>>> Stashed changes
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
-<<<<<<< Updated upstream
-  }, []);
-
-  const handleEditProfile = () => {
-    alert("Edit profile clicked!");
-  };
-=======
   }, [toast, navigate]);
+
+  const openImageModal = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageModalOpen(true);
+  };
 
   if (loading) {
     return (
@@ -107,99 +89,119 @@ const Profile = () => {
       </Box>
     );
   }
->>>>>>> Stashed changes
 
-  const handleViewHistory = () => {
-    navigate("/history");
-  };
-
-  if (loading) return <Spinner size="xl" />;
+  // Get the server URL for images
+  const serverUrl = "http://localhost:5000/";
+  const profilePicUrl = userData.profilePic ? serverUrl + userData.profilePic : "/avatar-placeholder.png";
+  const coverPicUrl = userData.coverPic ? serverUrl + userData.coverPic : "/cover-placeholder.jpg";
 
   return (
-<<<<<<< Updated upstream
-    <Flex direction="column" align="center" justify="center" minH="80vh" p={6}>
-      <Box
-        maxW="lg"
-        borderWidth="1px"
-        borderRadius="2xl"
-        overflow="hidden"
-        boxShadow="lg"
-        bg="white"
-        p={6}
-        w="100%"
-      >
-        <Flex justify="center">
-          <Image
-            borderRadius="full"
-            boxSize="120px"
-            src={profile?.profilePicUrl || "https://via.placeholder.com/150"}
-            alt="Profile Picture"
-            mb={4}
-          />
-        </Flex>
-        <Stack spacing={3} textAlign="center">
-          <Heading size="md">{profile?.name || "Unnamed User"}</Heading>
-          <Text color="gray.600">{profile?.email}</Text>
-          <Text mt={2}>
-            {profile?.bio || "👋 Hi! You haven't added a bio yet."}
-          </Text>
-          <Button colorScheme="blue" onClick={handleEditProfile}>
-            Edit Profile
-          </Button>
-          <Button variant="outline" colorScheme="teal" onClick={handleViewHistory}>
-            View History
-          </Button>
-          <Button variant="ghost" onClick={() => navigate("/")}>
-            Back to Home
-          </Button>
-        </Stack>
-=======
     <Box className="profile-container">
-      <Box position="relative">
-        {/* Using hardcoded placeholder images to test rendering */}
-        <img 
-          src="https://via.placeholder.com/800x180"
+      {/* Cover Image */}
+      <Box position="relative" className="cover-container">
+        <Image 
+          src={coverPicUrl}
           alt="Cover" 
-          className="cover-photo" 
+          className="cover-photo"
+          fallback={
+            <Box className="gradient-cover" />
+          }
         />
+      </Box>
 
-        <img 
-          src="https://via.placeholder.com/80"
+      {/* Avatar */}
+      <Box className="avatar-wrapper">
+        <Image 
+          src={profilePicUrl}
           alt="Profile" 
-          className="profile-picture" 
+          className="profile-avatar"
+          onClick={() => openImageModal(profilePicUrl)}
+          cursor="pointer"
+          onError={(e) => {
+            e.target.src = "/avatar-placeholder.png";
+          }}
         />
       </Box>
 
-      <Box className="info-section">
-        <Text className="name">{userData.username || userData.email}</Text>
-        <Text className="role">
-          {userData.createdAt ? 
-            `User since: ${new Date(userData.createdAt).toLocaleDateString()}` : 
-            "New user"}
-        </Text>
-        <Text className="location">{userData.bio || "No bio yet."}</Text>
+      {/* Action Buttons */}
+      <Flex justify="flex-end" mt={4} px={6}>
+        <Button 
+          leftIcon={<FaPencilAlt />}
+          variant="outline"
+          colorScheme="blue"
+          size="md"
+          onClick={() => navigate('/edit-profile')}
+          mr={2}
+        >
+          Edit Profile
+        </Button>
+        <Button
+          leftIcon={<BsGrid3X3 />}
+          colorScheme="gray"
+          variant="solid"
+          size="md"
+          bg="#1a202c"
+          color="white"
+          _hover={{ bg: "#2d3748" }}
+          onClick={() => navigate('/userdashboard')}
+        >
+          Dashboard
+        </Button>
+      </Flex>
 
-        <Box className="button-group">
-          <Button colorScheme="blue" onClick={() => navigate('/edit-profile')}>
-            Edit Profile
-          </Button>
-          <Button
-            variant="outline"
-            colorScheme="blue"
-            onClick={() => navigate('/dashboard')}
-          >
-            Dashboard
-          </Button>
+      {/* Profile Info */}
+      <Box className="profile-body">
+        <Text className="user-name">{userData.username || "Jane Doe"}</Text>
+        <Text className="user-role">{userData.bio || "UI/UX Designer & Frontend Developer"}</Text>
+
+        <Flex align="center" mt={4} justify="center" gap={6} color="gray.600">
+          <Flex align="center">
+            <Icon as={FaMapMarkerAlt} mr={2} />
+            <Text>San Francisco, CA</Text>
+          </Flex>
+          <Flex align="center">
+            <Icon as={FaCalendarAlt} mr={2} />
+            <Text>Joined {new Date(userData.createdAt).toLocaleDateString()}</Text>
+          </Flex>
+        </Flex>
+
+        <Box className="profile-grid">
+          <Box>
+            <Text fontWeight="bold" mb={2}>About</Text>
+            <Text>{userData.bio || "UI/UX Designer & Frontend Developer"}</Text>
+          </Box>
+          <Box>
+            <Text fontWeight="bold" mb={2}>Info</Text>
+            <Flex>
+              <Text fontWeight="medium" width="150px">Email</Text>
+              <Text>{userData.email}</Text>
+            </Flex>
+            <Flex>
+              <Text fontWeight="medium" width="150px">Member Since</Text>
+              <Text>{new Date(userData.createdAt).toLocaleDateString()}</Text>
+            </Flex>
+          </Box>
         </Box>
->>>>>>> Stashed changes
       </Box>
-    </Flex>
+
+      {/* Image Modal */}
+      <Modal isOpen={imageModalOpen} onClose={() => setImageModalOpen(false)} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Profile Picture</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <Image 
+              src={selectedImage} 
+              alt="Profile" 
+              maxH="70vh" 
+              mx="auto" 
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </Box>
   );
 };
 
-<<<<<<< Updated upstream
-export default ProfilePage;
-
-=======
 export default Profile;
->>>>>>> Stashed changes

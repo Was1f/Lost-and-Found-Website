@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  coverPicUrl: {
+  coverPic: {
     type: String,
     default: ""
   },
@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
      type: String,
      default: "" 
   },
-  profilePicUrl: {
+  profilePic: {
      type: String,
       default: ""
   },

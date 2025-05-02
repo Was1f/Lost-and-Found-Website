@@ -12,7 +12,8 @@ import {
   Image,
   Text,
   Flex,
-  Spinner
+  Spinner,
+  Divider
 } from "@chakra-ui/react";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
@@ -31,7 +32,6 @@ const EditProfile = () => {
 
   // Get auth token
   const token = localStorage.getItem('authToken');
-  const userId = localStorage.getItem('userId');
 
   // Preview URLs for selected images
   const [profilePicPreview, setProfilePicPreview] = useState("");
@@ -56,11 +56,11 @@ const EditProfile = () => {
 
         // Set existing image URLs for preview
         if (response.data.profilePic) {
-          setProfilePicPreview(response.data.profilePic);
+          setProfilePicPreview(`http://localhost:5000/${response.data.profilePic}`);
         }
         
         if (response.data.coverPic) {
-          setCoverPicPreview(response.data.coverPic);
+          setCoverPicPreview(`http://localhost:5000/${response.data.coverPic}`);
         }
       } catch (err) {
         console.error("Failed to fetch user:", err);
@@ -206,6 +206,8 @@ const EditProfile = () => {
               {formData.bio ? `${formData.bio.length}/500` : "0/500"} characters
             </Text>
           </FormControl>
+
+          <Divider my={3} />
 
           <FormControl>
             <FormLabel>Profile Picture</FormLabel>
