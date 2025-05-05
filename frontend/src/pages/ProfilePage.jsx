@@ -158,7 +158,7 @@ const Profile = () => {
         <Flex align="center" mt={4} justify="center" gap={6} color="gray.600">
           <Flex align="center">
             <Icon as={FaIdCard} mr={2} color="blue.500" />
-            <Text fontWeight="medium">{userData.studentId}</Text>
+            <Text fontWeight="medium">{userData.studentId || "not given"}</Text>
             {isVerified && (
               <Tooltip label="Verified Student" placement="top">
                 <span>
