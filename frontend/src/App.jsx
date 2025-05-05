@@ -1,63 +1,27 @@
 import { Box, useColorModeValue } from "@chakra-ui/react";
 import { Route, Routes } from "react-router-dom";
-import { useEffect } from "react";
 
+import CreatePage from "./pages/CreatePage";
 import Navbar from "./components/Navbar";
-import LandingPage from "./pages/LandingPage";
-import SignUp from "./pages/SignUp";
-import Login from "./pages/Login";
+import LandingPage from "./pages/LandingPage"; // Importing the Landing Page
+import SignUp from "./pages/SignUp"; // Import SignUpPage
+import Login from "./pages/Login"; // Import LoginPage
 import ProfilePage from "./pages/ProfilePage";
-//import HistoryPage from "./pages/HistoryPage";
-import UserDashboard from "./pages/UserDashboard";
-import PostForm from "./pages/PostForm";
-import ProtectedRoute from "./components/ProtectedRoute";
-import RecentPostsPage from "./pages/RecentPostPage";
-import MyPostsPage from "./pages/MyPostsPage";
-import EditPostPage from "./pages/EditPostPage";
-
-// ✅ Admin Pages
-import AdminLogin from "./pages/AdminLogin";
-import Dashboard from "./pages/Dashboard";
-import PostManagement from "./pages/PostManagement";
-import UserManagement from "./pages/UserManagement";
-import PostDetailsPage from "./pages/PostDetailsPage";
+import UserDashboard from "./pages/UserDashboard"; 
 
 function App() {
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      const decoded = JSON.parse(atob(token.split('.')[1]));
-      const expiry = decoded.exp * 1000;
-
-      if (Date.now() > expiry) {
-        localStorage.removeItem('authToken');
-      }
-    }
-  }, []);
-
   return (
     <Box minH={"100vh"} bg={useColorModeValue("gray.100", "gray.900")}>
       <Navbar />
-
       <Routes>
-        {/* User Routes */}
-        <Route path='/' element={<LandingPage />} />
-        <Route path='/post/:id' element={<PostDetailsPage />} />
-        <Route path='/create' element={<ProtectedRoute><PostForm /></ProtectedRoute>} />
-        <Route path='/signup' element={<SignUp />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/profile' element={<ProfilePage />} />
+        <Route path='/' element={<LandingPage />} /> {/* Landing Page Route */}
+       
+        <Route path='/create' element={<CreatePage />} /> {/* Create Page Route */}
+        <Route path='/signup' element={<SignUp />} /> {/* Sign Up Page Route */}
+        <Route path='/login' element={<Login />} /> {/* Login Page Route */}
+        <Route path="/profile" element={<ProfilePage />} /> {/* Profile Page Route */}
         <Route path='/dashboard' element={<UserDashboard />} /> 
-        <Route path='/history' element={<HistoryPage />} />
-        <Route path='/recent' element={<RecentPostsPage />} />
-        <Route path='/my-posts' element={<MyPostsPage />} />
-        <Route path='/edit-post/:id' element={<EditPostPage />} />
-
-        {/* Admin Routes */}
-        <Route path='/admin/login' element={<AdminLogin />} />
-        <Route path='/dashboard' element={<Dashboard />} />
-        <Route path='/admin/posts' element={<PostManagement />} />
-        <Route path='/admin/users' element={<UserManagement />} />
+        
       </Routes>
     </Box>
   );

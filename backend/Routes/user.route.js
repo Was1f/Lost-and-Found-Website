@@ -54,7 +54,7 @@ router.post('/login', async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      token: "supersecretkey",  // Send the JWT token
+      token,  // Send the JWT token
       user: { email: user.email },  // Optionally send user details (e.g. email)
     });
   } catch (err) {

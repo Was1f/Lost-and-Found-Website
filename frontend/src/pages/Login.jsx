@@ -24,21 +24,6 @@ const LoginPage = () => {
         throw new Error(data.message || "Login failed");
       }
 
-      // ✅ If the user is banned, redirect to the banned page
-      if (data.user && data.user.status === 'banned') {
-        toast({
-          title: "Account Banned",
-          description: "You have been banned. Please contact support.",
-          status: "error",
-          isClosable: true,
-        });
-        navigate('/banned'); // Redirect to Banned page
-        return; // Stop further login actions
-      }
-
-      // ✅ Store the JWT token in localStorage
-      localStorage.setItem("authToken", data.token);
-
       toast({
         title: "Login Successful",
         description: "You are now logged in.",

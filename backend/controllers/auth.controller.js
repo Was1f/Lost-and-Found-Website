@@ -2,9 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
 
-// ========================
 // Sign-up Controller
-// ========================
 export const signupController = async (req, res) => {
   const { email, password } = req.body;
 
@@ -26,11 +24,9 @@ export const signupController = async (req, res) => {
     console.log('Email:', email);
     console.log('Hashed Password:', hashedPassword);
 
-    // Create new user with status 'active'
     const newUser = new User({
       email,
       password: hashedPassword,
-      status: 'active', // ✅ New users will have active status by default
     });
 
     // Save user to the database
@@ -43,9 +39,7 @@ export const signupController = async (req, res) => {
   }
 };
 
-// ========================
 // Login Controller
-// ========================
 export const loginController = async (req, res) => {
   const { email, password } = req.body;
 
@@ -56,21 +50,15 @@ export const loginController = async (req, res) => {
   try {
     // Find the user by email
     const user = await User.findOne({ email });
-
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     console.log('User:', user);
 
-    // ✅ Ban Check First: before matching password
-    if (!user.status || user.status.toLowerCase() === 'banned') {
-      return res.status(403).json({ message: 'Your account has been banned. Please contact support.' });
-    }
-
     // Compare the entered password with the stored hashed password
     const isMatch = await user.matchPassword(password, user.password);
-    console.log('Password Match:', isMatch);
+    console.log('Password Match:', isMatch); // Debugging password match
 
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -88,7 +76,6 @@ export const loginController = async (req, res) => {
       token,
       user: { email: user.email },
     });
-
   } catch (error) {
     console.error('Error in login:', error);
     res.status(500).json({ message: 'Server error', error });
