@@ -1,8 +1,9 @@
-import { Box, Heading, VStack, Text, Button, Image, Badge, HStack, Flex, Avatar, Link, Container, Divider, keyframes } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { Box, Heading, VStack, Text, Button, Image, Badge, HStack, Flex, Avatar, Link, Container, Divider, keyframes, Input, InputGroup, InputLeftElement } from "@chakra-ui/react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaMapMarkerAlt, FaCalendarAlt, FaUser, FaSearch } from "react-icons/fa";
+import debounce from 'lodash/debounce';
 
 // Define keyframes for animations
 const float = keyframes`
@@ -19,6 +20,8 @@ const pulse = keyframes`
 
 const RecentPostsPage = () => {
   const [posts, setPosts] = useState([]);
+  const [filteredPosts, setFilteredPosts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
 
@@ -29,6 +32,7 @@ const RecentPostsPage = () => {
         const response = await axios.get("http://localhost:5000/api/posts/recent");
         console.log(response.data);
         setPosts(response.data);
+        setFilteredPosts(response.data);
       } catch (error) {
         console.error("Failed to fetch posts", error);
       }
@@ -53,6 +57,34 @@ const RecentPostsPage = () => {
     fetchPosts();
     fetchUserProfile();
   }, []);
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    debounce((query) => {
+      if (!query.trim()) {
+        setFilteredPosts(posts);
+        return;
+      }
+
+      const searchLower = query.toLowerCase();
+      const filtered = posts.filter((post) => {
+        return (
+          post.title.toLowerCase().includes(searchLower) ||
+          post.description.toLowerCase().includes(searchLower) ||
+          post.location.toLowerCase().includes(searchLower)
+        );
+      });
+      setFilteredPosts(filtered);
+    }, 300),
+    [posts]
+  );
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
 
   return (
     <Container maxW="1400px" py={8}>
@@ -195,7 +227,7 @@ const RecentPostsPage = () => {
               background: "linear-gradient(90deg, #3182ce, #805ad5)",
             }}
           >
-            <Flex align="center">
+            <Flex align="center" mb={4}>
               <Box
                 p={2}
                 bg="blue.50"
@@ -205,7 +237,7 @@ const RecentPostsPage = () => {
               >
                 <FaSearch size="20px" color="#3182ce" />
               </Box>
-              <Box>
+              <Box flex="1">
                 <Heading 
                   as="h2" 
                   size="lg" 
@@ -224,11 +256,29 @@ const RecentPostsPage = () => {
                 </Text>
               </Box>
             </Flex>
+
+            {/* Search Input */}
+            <InputGroup size="md" mt={4}>
+              <InputLeftElement pointerEvents="none">
+                <FaSearch color="gray.300" />
+              </InputLeftElement>
+              <Input
+                placeholder="Search by title, description, or location..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                bg="gray.50"
+                border="1px"
+                borderColor="gray.200"
+                _hover={{ borderColor: "gray.300" }}
+                _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #3182ce" }}
+                transition="all 0.2s"
+              />
+            </InputGroup>
           </Box>
 
           <VStack spacing={6} align="stretch">
-            {posts.length > 0 ? (
-              posts.map((post) => (
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map((post) => (
                 <Box 
                   key={post._id} 
                   bg="white" 
@@ -362,7 +412,7 @@ const RecentPostsPage = () => {
                   transition="all 0.3s ease"
                   _hover={{ color: 'gray.700' }}
                 >
-                  No recent posts available
+                  {searchQuery ? "No posts found matching your search" : "No recent posts available"}
                 </Text>
               </Box>
             )}
