@@ -15,6 +15,7 @@ import MyPostsPage from "./pages/MyPostsPage";
 import EditPostPage from "./pages/EditPostPage";
 import EditProfile from "./pages/EditProfile";
 import UserDashboard from "./pages/UserDashboard";
+import FAQPage from "./pages/FAQPage";
 // ✅ Admin Pages
 import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
@@ -52,6 +53,7 @@ function App() {
         <Route path='/my-posts' element={<MyPostsPage />} />
         <Route path='/edit-post/:id' element={<EditPostPage />} />
         <Route path='/edit-profile' element={<EditProfile/>} />
+        <Route path='/faq' element={<FAQPage />} />
 
         {/* Admin Routes */}
         <Route path='/admin/login' element={<AdminLogin />} />
