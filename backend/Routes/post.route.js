@@ -4,6 +4,7 @@ import { protect } from '../middleware/auth.js'; // Protect middleware to ensure
 import multer from 'multer';
 import path from 'path';
 import PostHistory from '../models/PostHistory.js';
+import { updateUserPoints } from '../controllers/leaderboard.controller.js'; // Import the points function
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -69,6 +70,10 @@ router.post('/create', protect, upload.single('image'), async (req, res) => {
     });
 
     await newPost.save();
+    // Add 5 points to user if they posted a found item
+    if (status === 'found') {
+      await updateUserPoints(req.user.id, 5);
+    }  
     res.status(201).json({ message: 'Post created successfully', post: newPost });
   } catch (error) {
     res.status(500).json({ message: 'Error creating post', error: error.message });
