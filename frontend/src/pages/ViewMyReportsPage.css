@@ -1,0 +1,236 @@
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* CSS Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f0f7ff; /* Light blue background */
+  font-family: 'Poppins', sans-serif;
+  color: #2d3748;
+  line-height: 1.6;
+}
+
+/* Container for the page */
+.reports-container {
+  background-color: #ffffff; /* White background */
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
+  margin: 40px auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Page Title */
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: #2d3748;
+  margin-bottom: 30px;
+}
+
+/* Card layout for each report */
+.report-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  border-left: 4px solid #3182ce; /* Blue accent border */
+  position: relative; /* Added for status badge positioning */
+}
+
+/* Hover effect for the report card */
+.report-card:hover {
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
+  transform: translateY(-3px);
+}
+
+/* Report header */
+.report-header {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+/* Title, type, description */
+.report-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2563eb; /* Blue color for title */
+  margin-bottom: 12px;
+  line-height: 1.3;
+  width: 80%; /* Allow space for status badge */
+}
+
+.report-type {
+  font-size: 1rem;
+  color: #4a5568;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+/* Description label styling */
+.description-label {
+  font-weight: 600;
+  color: #2561e4; /* Blue color for emphasis */
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1.05rem;
+  background-color: #fafafa; /* Light blue background */
+  padding: 2px px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.report-description {
+  font-size: 1rem;
+  color: #4a5568;
+  margin-bottom: 20px;
+  line-height: 1.6;
+  max-width: 100%; /* Ensure text wraps within the card */
+  word-wrap: break-word; /* Break long words to prevent overflow */
+  white-space: pre-line; /* Preserve line breaks in the text */
+}
+
+/* Status Badge Colors - Improved styling */
+.report-status {
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 6px 15px;
+  border-radius: 999px; /* Pill shape */
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.report-status:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.report-status.pending {
+  background-color: #ffd700; /* Bright yellow */
+  color: #806000; /* Dark yellow/brown for text */
+  border: 1px solid #e6c200; /* Slightly darker border */
+}
+
+.report-status.resolved {
+  background-color: #48bb78; /* Bright green */
+  color: #ffffff; /* White text */
+  border: 1px solid #38a169; /* Slightly darker border */
+}
+
+/* Admin response */
+.admin-response {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2d3748;
+  margin-top: 15px;
+  font-style: italic;
+  padding: 15px;
+  background-color: #ebf8ff; /* Light blue background */
+  border-left: 4px solid #3182ce; /* Blue accent */
+  border-radius: 4px;
+}
+
+/* View Post button */
+.view-post-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #3182ce; /* Blue color */
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+
+.view-post-btn:hover {
+  background-color: #2b6cb0; /* Darker blue on hover */
+}
+
+/* Notifications */
+.alert {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #e6f7ff; /* Light blue background */
+  color: #2563eb; /* Blue text */
+  border-radius: 8px;
+  border-left: 4px solid #3182ce; /* Blue accent */
+}
+
+.alert .alert-icon {
+  margin-right: 12px;
+}
+
+.reports-list {
+  margin-top: 30px;
+}
+
+/* Add padding between reports */
+.reports-list .report-card {
+  margin-bottom: 20px;
+}
+
+/* Add a background color for alternate rows */
+.reports-list .report-card:nth-child(odd) {
+  background-color: #f8fafc; /* Very light blue/gray background */
+}
+
+/* Type label styling */
+.type-label {
+  font-weight: 700;
+  color: #2563eb;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+/* Responsive Design: */
+@media (max-width: 768px) {
+  .reports-container {
+    padding: 20px;
+    margin: 20px;
+  }
+  
+  .page-title {
+    font-size: 2rem;
+  }
+  
+  .report-card {
+    padding: 15px;
+  }
+  
+  .report-title {
+    width: 100%;
+    margin-bottom: 30px; /* Make room for status badge */
+  }
+  
+  .report-status {
+    top: 55px; /* Position below title on mobile */
+    right: 15px;
+  }
+  
+  .view-post-btn {
+    padding: 10px 15px;
+  }
+}

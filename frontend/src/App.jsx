@@ -53,8 +53,7 @@ function App() {
         <Route path='/my-posts' element={<MyPostsPage />} />
         <Route path='/edit-post/:id' element={<EditPostPage />} />
         <Route path='/edit-profile' element={<EditProfile/>} />
-        <Route path="/post/:id" component={PostDetailsPage} />
-        <Route path="/my-reports" component={ViewMyReportsPage} />
+        <Route path="/my-reports" element={<ViewMyReportsPage/>} />
 
         {/* Admin Routes */}
         <Route path='/admin/login' element={<AdminLogin />} />

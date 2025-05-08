@@ -30,18 +30,19 @@ router.post('/', protect, async (req, res) => {
 });
 
 // GET: Fetch reports for a specific post
-router.get('/:postId', async (req, res) => {
-  try {
-    const reports = await Report.find({ postId: req.params.postId })
-      .populate('userId', 'email')  // Populate user details for who reported
-      .sort({ createdAt: -1 });  // Sort by newest reports first
-
-    res.json(reports);
-  } catch (error) {
-    console.error('Error fetching reports:', error);
-    res.status(500).json({ message: 'Error fetching reports' });
-  }
-});
+router.get('/me', protect, async (req, res) => {
+    try {
+      // Correctly filter by userId, not postId
+      const reports = await Report.find({ userId: req.user._id })  // Ensure it's filtering by userId
+        .populate('postId', 'title')  // Optionally populate the post title
+        .sort({ createdAt: -1 });  // Sort by the most recent reports
+  
+      res.json(reports);  // Return the reports data
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      res.status(500).json({ message: 'Error fetching reports' });
+    }
+  });
 
 // PUT:ADMIN marks the report as resolved and adds a response
 router.put('/:reportId', protect, async (req, res) => {
