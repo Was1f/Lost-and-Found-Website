@@ -44,7 +44,9 @@ const RecentPostsPage = () => {
               {/* Post Details */}
               <Box flex="1">
                 {/* User Info */}
-                <Text fontSize="sm" color="gray.500" mb={2}>User: {post.user.email}</Text>
+                <Text fontSize="sm" color="gray.500" mb={2}>
+                  User: {post.user && post.user.email ? post.user.email : "Anonymous"}
+                </Text>
 
                 {/* Title */}
                 <Heading as="h3" size="md" fontWeight="bold" mb={2}>
