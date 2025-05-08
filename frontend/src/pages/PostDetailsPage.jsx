@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Heading, Text, Image, VStack, Input, Button, Badge } from "@chakra-ui/react";
+import { Box, Heading, Radio, RadioGroup, FormControl, FormLabel, Textarea, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Text, Image, VStack, Input, Button, Badge } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -10,6 +10,9 @@ const PostDetailsPage = () => {
   const [newComment, setNewComment] = useState("");
   const [selectedCommentId, setSelectedCommentId] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const [isReportModalOpen, setReportModalOpen] = useState(false);
+  const [reportType, setReportType] = useState('');
+  const [description, setDescription] = useState('');
   const token = localStorage.getItem("authToken");
 
   // Fetch post details and comments
@@ -93,6 +96,35 @@ const PostDetailsPage = () => {
     }
   };
 
+  const handleReportSubmit = async () => {
+    if (!reportType || !description) {
+      alert("Please provide a report type and description");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/api/reports',  // API endpoint to submit the report
+        {
+          postId: id,  // Pass the post ID
+          reportType,
+          description,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response.data);
+      setReportModalOpen(false);  // Close the modal after submitting
+      alert('Your report has been submitted!');
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      alert('Failed to submit report');
+    }
+  };
+
   if (!post) {
     return <Text>Loading...</Text>;
   }
@@ -134,6 +166,50 @@ const PostDetailsPage = () => {
       <Text fontSize="sm" color="gray.500" mb={6}>
         🕒 Posted On: {new Date(post.createdAt).toLocaleString()}
       </Text>
+
+       {/* Report Post Button */}
+       <Button onClick={() => setReportModalOpen(true)} colorScheme="blue" mb={4}>
+        Report
+      </Button>
+
+      {/*  Report Modal */}
+      {isReportModalOpen && (
+        <Modal isOpen={isReportModalOpen} onClose={() => setReportModalOpen(false)}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Report Post</ModalHeader>
+            <ModalBody>
+              <FormControl isRequired>
+                <FormLabel>Report Type</FormLabel>
+                <RadioGroup onChange={setReportType} value={reportType}>
+                  <Radio value="False Information">False Information</Radio>
+                  <Radio value="Hate Speech">Hate Speech</Radio>
+                  <Radio value="Spam">Spam</Radio>
+                  <Radio value="Irrelevant Content">Irrelevant Content</Radio>
+                  <Radio value="Others">Others</Radio>
+                </RadioGroup>
+              </FormControl>
+
+              {/* Always show the description input */}
+              <FormControl mt={4} isRequired>
+                <FormLabel>Description</FormLabel>
+                <Textarea
+                  placeholder="Please describe the issue"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </FormControl>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button colorScheme="blue" onClick={handleReportSubmit}>
+                Submit Report
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
+
 
       {/* Comments Section */}
       <Box mt={10}>
