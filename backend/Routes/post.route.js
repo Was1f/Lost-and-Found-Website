@@ -139,6 +139,45 @@ router.put('/:id', protect, upload.single('image'), async (req, res) => {
   }
 });
 
+// Add this route to your backend (paste.txt)
+// Place it before the export default router; line
+
+// Route to delete a post
+router.delete('/:id', protect, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    // Check if user owns this post
+    if (post.user.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'Not authorized to delete this post' });
+    }
+    
+    // Save to history before deletion (if you want to keep history)
+    const history = new PostHistory({
+      postId: post._id,
+      title: post.title,
+      description: post.description,
+      status: post.status,
+      location: post.location,
+      image: post.image,
+      updatedBy: req.user._id,
+      changeType: 'delete',
+    });
+    await history.save();
+    
+    // Delete the post
+    await Post.findByIdAndDelete(req.params.id);
+    
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    res.status(500).json({ message: 'Error deleting post' });
+  }
+});
 
 export default router;
 
