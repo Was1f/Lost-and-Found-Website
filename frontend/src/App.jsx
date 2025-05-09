@@ -7,7 +7,6 @@ import LandingPage from "./pages/LandingPage";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import ProfilePage from "./pages/ProfilePage";
-import HistoryPage from "./pages/HistoryPage";
 import PostForm from "./pages/PostForm";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RecentPostsPage from "./pages/RecentPostPage";
@@ -21,7 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import PostManagement from "./pages/PostManagement";
 import UserManagement from "./pages/UserManagement";
 import PostDetailsPage from "./pages/PostDetailsPage";
-
+import PostHistoryPage from "./pages/PostHistoryPage";
 function App() {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -58,6 +57,7 @@ function App() {
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/admin/posts' element={<PostManagement />} />
         <Route path='/admin/users' element={<UserManagement />} />
+        <Route path='/admin/history' element={<PostHistoryPage />} />
       </Routes>
     </Box>
   );

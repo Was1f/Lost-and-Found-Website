@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
 
+
+
 import { connectDB } from "./config/db.js";
 // import productRoutes from "./Routes/product.route.js";
 import authRoutes from "./Routes/auth.route.js";  // Import auth routes
@@ -11,6 +13,7 @@ import postRoutes from './Routes/post.route.js';
 import adminRoutes from "./Routes/admin.route.js"; // 👈 Import Admin Routes
 import commentRoutes from './Routes/comment.route.js';
 import userProfileRoutes from './Routes/userprofile.route.js';
+import postHistoryRoutes from "./Routes/postHistory.route.js";
 dotenv.config();
 
 const app = express(); // Initialize app
@@ -25,12 +28,14 @@ app.use(cors({
 app.use(express.json()); // Parse JSON bodies
 
 // API Routes
+app.use("/api/posthistory", postHistoryRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/admin", adminRoutes); // 👈 Admin routes here
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/comments', commentRoutes);
 app.use('/api/userprofile', userProfileRoutes);
+app.use('/api/posthistory', postRoutes);  // Ensure that this is pointing to the right route
 // Base API Check
 app.get("/", (req, res) => {
   res.send("API is running...");
