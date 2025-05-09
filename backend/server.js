@@ -14,6 +14,7 @@ import userProfileRoutes from './Routes/userprofile.route.js';
 import reportRoutes from './Routes/report.route.js';
 import adminReportRoutes from "./Routes/admin.report.route.js";
 import postHistoryRoutes from "./Routes/postHistory.route.js";
+import adminPostRoutes from "./routes/admin.post.route.js";
 dotenv.config();
 
 const app = express(); // Initialize app
@@ -41,7 +42,7 @@ app.use('/api/posthistory', postHistoryRoutes);
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
-import adminPostRoutes from "./routes/admin.post.route.js";
+
 
 // ... other imports and middleware
 
