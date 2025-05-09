@@ -3,10 +3,12 @@ import {
   Box, Select, Button, FormControl, FormLabel, Input, Textarea, VStack, useToast
 } from "@chakra-ui/react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
  // Make sure Select is imported
 
 const PostForm = () => {
   const toast = useToast();
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("lost");
@@ -42,6 +44,8 @@ const PostForm = () => {
       setImage(null);
       setLocation("");
       setStatus("lost");
+
+      navigate('/recent');
 
     } catch (error) {
       toast({
