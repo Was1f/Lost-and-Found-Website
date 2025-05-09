@@ -279,7 +279,7 @@ const PostDetailsPage = () => {
                     {comment.replies.map((reply) => (
                       <Box key={reply._id} bg="gray.200" p={3} rounded="md" mb={2}>
                         <Text fontWeight="bold" fontSize="sm" mb={1}>
-                          {reply.userId?.email || "Anonymous"}
+                          {reply.userId?.email || "Admin"}
                         </Text>
                         <Text fontSize="sm">{reply.text}</Text>
                         <Text fontSize="xs" color="gray.500" mt={1}>
