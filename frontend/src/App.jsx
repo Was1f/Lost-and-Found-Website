@@ -22,6 +22,7 @@ import PostManagement from "./pages/PostManagement";
 import UserManagement from "./pages/UserManagement";
 import PostDetailsPage from "./pages/PostDetailsPage";
 import Leaderboard from "./pages/leaderboard";
+import VisitUserProfile from "./pages/VisitUserProfile"
 
 function App() {
   useEffect(() => {
@@ -54,7 +55,7 @@ function App() {
         <Route path='/edit-post/:id' element={<EditPostPage />} />
         <Route path='/edit-profile' element={<EditProfile/>} />
         <Route path='/leaderboard' element={<Leaderboard/>} />
-
+        <Route path="/visituserprofile/:userId" element={<VisitUserProfile />} />
 
         {/* Admin Routes */}
         <Route path='/admin/login' element={<AdminLogin />} />

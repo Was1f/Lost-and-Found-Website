@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserProfile, updateUserProfile } from '../controllers/userprofile.controller.js';
+import { getUserProfile, updateUserProfile,getUserById } from '../controllers/userprofile.controller.js';
 import { protect } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
@@ -47,10 +47,14 @@ const upload = multer({
 // GET user profile
 router.get('/me', protect, getUserProfile);
 
+
+
 // UPDATE user profile with profilePic and coverPic
 router.put('/update', protect, upload.fields([
   { name: 'profilePic', maxCount: 1 },
   { name: 'coverPic', maxCount: 1 }
 ]), updateUserProfile);
 
+// Public route - Get any user's profile by ID
+router.get('/:userId', getUserById);
 export default router;

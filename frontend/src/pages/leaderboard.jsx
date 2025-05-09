@@ -17,11 +17,123 @@ import {
   Icon,
   VStack,
   HStack,
-  Divider
+  Divider,
+  Tooltip,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverBody,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverHeader
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { FaAward, FaMedal, FaTrophy, FaCheckCircle, FaIdCard } from 'react-icons/fa';
+import { 
+  FaShieldAlt, FaAward, FaMedal, FaTrophy, FaCheckCircle, FaIdCard, FaInfoCircle, 
+  FaCrown, FaStar, FaHandHoldingHeart, FaHandsHelping, FaThumbsUp, FaGem, FaQuestion
+} from 'react-icons/fa';
 import axios from 'axios';
+
+// Badge system definitions - integrated directly into the component
+const BADGE_TIERS = [
+  { 
+    id: 'helper', 
+    name: 'Helper', 
+    icon: FaHandsHelping, 
+    color: '#48BB78', // green.400
+    threshold: 20, 
+    description: 'Awarded for earning 20+ points by helping return items' 
+  },
+  { 
+    id: 'finder', 
+    name: 'Finder', 
+    icon: FaShieldAlt, 
+    color: '#ED8936', // orange.400
+    threshold: 50, 
+    description: 'Awarded for earning 50+ points as a dedicated helper' 
+  },
+  { 
+    id: 'champion', 
+    name: 'Champion', 
+    icon: FaMedal, 
+    color: '#F6AD55', // orange.300
+    threshold: 100, 
+    description: 'Awarded for earning 100+ points as an outstanding member' 
+  },
+  { 
+    id: 'elite', 
+    name: 'Elite', 
+    icon: FaAward, 
+    color: '#FC8181', // red.300
+    threshold: 150, 
+    description: 'Awarded for earning 150+ points as a premier helper' 
+  },
+  { 
+    id: 'legend', 
+    name: 'Legend', 
+    icon: FaCrown, 
+    color: '#F6E05E', // yellow.300
+    threshold: 250, 
+    description: 'Awarded for earning 250+ points as a legendary contributor' 
+  },
+  { 
+    id: 'ultimate', 
+    name: 'Ultimate', 
+    icon: FaGem, 
+    color: '#B794F4', // purple.300
+    threshold: 500, 
+    description: 'Awarded for earning 500+ points - the highest honor!' 
+  }
+];
+
+// Helper function to get badges earned by a user based on points
+const getUserBadges = (points) => {
+  if (points === undefined || points <= 0) return [];
+  return BADGE_TIERS.filter(badge => points >= badge.threshold);
+};
+
+// Get the highest badge a user has earned
+const getHighestBadge = (points) => {
+  if (points === undefined || points <= 0) return null;
+  const earnedBadges = getUserBadges(points);
+  return earnedBadges.length ? earnedBadges[earnedBadges.length - 1] : null;
+};
+
+// Component for displaying user's badge
+const UserBadgeIcon = ({ user, ...props }) => {
+  const highestBadge = getHighestBadge(user.points);
+  
+  if (!highestBadge) return null;
+
+  
+};
+
+// Component for badge info tooltip
+const BadgeInfo = () => (
+  <Popover placement="bottom">
+    <PopoverTrigger>
+      <Box display="inline-block" cursor="pointer" ml={2}>
+        <Icon as={FaInfoCircle} color="blue.400" />
+      </Box>
+    </PopoverTrigger>
+    <PopoverContent>
+      <PopoverArrow />
+      <PopoverCloseButton />
+      <PopoverHeader fontWeight="bold">Badge Point Thresholds</PopoverHeader>
+      <PopoverBody>
+        <VStack align="start" spacing={2}>
+          {BADGE_TIERS.map(badge => (
+            <HStack key={badge.id} spacing={2}>
+              <Icon as={badge.icon} color={badge.color} />
+              <Text fontWeight="medium">{badge.name}:</Text>
+              <Text>{badge.threshold}+ points</Text>
+            </HStack>
+          ))}
+        </VStack>
+      </PopoverBody>
+    </PopoverContent>
+  </Popover>
+);
 
 const Leaderboard = () => {
   const [users, setUsers] = useState([]);
@@ -63,7 +175,7 @@ const Leaderboard = () => {
   }, [toast]);
 
   const handleUserClick = (userId) => {
-    navigate(`/user-profile/${userId}`);
+    navigate(`/visituserprofile/${userId}`);
   };
 
   // Render medal for top 3 positions
@@ -101,10 +213,14 @@ const Leaderboard = () => {
 
   return (
     <Box maxW="1000px" mx="auto" p={5}>
-      <Heading as="h1" size="xl" textAlign="center" mb={6}>Leaderboard</Heading>
-      <Text textAlign="center" mb={10} color="gray.600">
-        Top contributors who helped return lost items
-      </Text>
+      <Heading as="h1" size="xl" textAlign="center" mb={2}>Leaderboard</Heading>
+      
+      <HStack justify="center" mb={8}>
+        <Text textAlign="center" color="gray.600">
+          Top contributors who helped return lost items
+        </Text>
+        <BadgeInfo />
+      </HStack>
 
       {usersWithPoints.length === 0 ? (
         <Box textAlign="center" p={10} bg="gray.50" borderRadius="md">
@@ -132,7 +248,7 @@ const Leaderboard = () => {
                   spacing={4}
                   align="center"
                   w={{ base: "full", md: `${index === 0 ? "280px" : "250px"}` }}
-                  h={{ base: "auto", md: `${index === 0 ? "350px" : "320px"}` }}
+                  h={{ base: "auto", md: `${index === 0 ? "380px" : "350px"}` }}
                   cursor="pointer"
                   onClick={() => handleUserClick(user._id)}
                   position="relative"
@@ -145,12 +261,16 @@ const Leaderboard = () => {
                     {getMedal(index)}
                   </Box>
                   
-                  <Avatar 
-                    size={index === 0 ? "xl" : "lg"}
-                    src={user.profilePic ? `http://localhost:5000/${user.profilePic}` : null}
-                    name={user.username}
-                    border={`3px solid ${index === 0 ? "gold" : index === 1 ? "silver" : "#CD7F32"}`}
-                  />
+                  <Box position="relative">
+                    <Avatar 
+                      size={index === 0 ? "xl" : "lg"}
+                      src={user.profilePic ? `http://localhost:5000/${user.profilePic}` : null}
+                      name={user.username}
+                      border={`3px solid ${index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "#CD7F32" : ""}`}
+                    />
+                    
+
+                  </Box>
                   
                   <VStack spacing={1}>
                     <Text fontWeight="bold" fontSize={index === 0 ? "xl" : "lg"}>{user.username}</Text>
@@ -174,6 +294,32 @@ const Leaderboard = () => {
                     {user.points} points
                   </Badge>
                   
+                  {/* Display highest badge only if earned */}
+                  {user.points >= 20 && getHighestBadge(user.points) && (
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" mb={1} color="purple.600">
+                        Current Badge:
+                      </Text>
+                      <HStack spacing={1} justify="center">
+                        {(() => {
+                          const badge = getHighestBadge(user.points);
+                          return (
+                            <>
+                              <Icon 
+                                as={badge.icon} 
+                                color={badge.color} 
+                                boxSize={5} 
+                              />
+                              <Text fontWeight="bold" fontSize="sm">
+                                {badge.name}
+                              </Text>
+                            </>
+                          );
+                        })()}
+                      </HStack>
+                    </Box>
+                  )}
+                  
                   <Text fontSize="sm" color="gray.500" noOfLines={2} textAlign="center">
                     {user.bio || "Helping return lost items!"}
                   </Text>
@@ -194,6 +340,7 @@ const Leaderboard = () => {
                     <Th>Rank</Th>
                     <Th>User</Th>
                     <Th>Student ID</Th>
+                    <Th>Badges</Th>
                     <Th isNumeric>Points</Th>
                   </Tr>
                 </Thead>
@@ -216,6 +363,29 @@ const Leaderboard = () => {
                         </Flex>
                       </Td>
                       <Td>{user.studentId || "Not provided"}</Td>
+                      <Td>
+                        {user.points >= 20 && getHighestBadge(user.points) ? (
+                          <HStack spacing={1}>
+                            {(() => {
+                              const badge = getHighestBadge(user.points);
+                              return (
+                                <>
+                                  <Icon 
+                                    as={badge.icon} 
+                                    color={badge.color} 
+                                    boxSize={4} 
+                                  />
+                                  <Text fontSize="sm" color="gray.600">
+                                    {badge.name}
+                                  </Text>
+                                </>
+                              );
+                            })()}
+                          </HStack>
+                        ) : (
+                          <Text fontSize="sm" color="gray.400">None yet</Text>
+                        )}
+                      </Td>
                       <Td isNumeric>
                         <Badge colorScheme="blue">{user.points}</Badge>
                       </Td>
