@@ -24,11 +24,10 @@ import PostDetailsPage from "./pages/PostDetailsPage";
 import AdminReportPage from "./pages/AdminReportPage";
 import AutoMatchingResult from "./pages/AutoMatchingResult";
 import ViewMyReportsPage from './pages/ViewMyReportsPage';
-
-
 import PostHistoryPage from "./pages/PostHistoryPage";
 import Leaderboard from "./pages/leaderboard";
-import VisitUserProfile from "./pages/VisitUserProfile"
+import VisitUserProfile from "./pages/VisitUserProfile";
+
 function App() {
   useEffect(() => {
     const token = localStorage.getItem('authToken');

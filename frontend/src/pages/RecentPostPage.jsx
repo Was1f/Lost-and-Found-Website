@@ -2,7 +2,7 @@ import { Box, Heading, VStack, Text, Button, Image, Badge, HStack, Flex, Avatar,
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
-import { FaMapMarkerAlt, FaCalendarAlt, FaUser, FaSearch } from "react-icons/fa";
+import { FaMapMarkerAlt, FaCalendarAlt, FaUser, FaSearch, FaMedal } from "react-icons/fa";
 import debounce from 'lodash/debounce';
 
 // Define keyframes for animations
@@ -23,9 +23,10 @@ const RecentPostsPage = () => {
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [userProfile, setUserProfile] = useState(null);
+  const [topUsers, setTopUsers] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch recent posts
+  // Fetch recent posts and user profile
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -54,8 +55,18 @@ const RecentPostsPage = () => {
       }
     };
 
+    const fetchTopUsers = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/leaderboard");
+        setTopUsers(response.data.slice(0, 3)); // Get top 3 users
+      } catch (error) {
+        console.error("Failed to fetch top users", error);
+      }
+    };
+
     fetchPosts();
     fetchUserProfile();
+    fetchTopUsers();
   }, []);
 
   // Debounced search function
@@ -94,117 +105,204 @@ const RecentPostsPage = () => {
         {/* Profile Section */}
         {userProfile && (
           <Box w="320px" position="sticky" top="100px">
-            <VStack 
-              spacing={0} 
-              align="center" 
-              bg="white" 
-              boxShadow="lg" 
-              rounded="xl" 
-              overflow="hidden"
-              transition="all 0.3s ease"
-              _hover={{ transform: 'translateY(-5px)', boxShadow: '2xl' }}
-            >
-              {/* Cover Photo */}
-              <Box 
-                w="100%" 
-                h="180px" 
-                position="relative" 
-                mt={2}
+            <VStack spacing={4} align="stretch">
+              {/* Profile Card */}
+              <VStack 
+                spacing={0} 
+                align="center" 
+                bg="white" 
+                boxShadow="lg" 
+                rounded="xl" 
                 overflow="hidden"
+                transition="all 0.3s ease"
+                _hover={{ transform: 'translateY(-5px)', boxShadow: '2xl' }}
               >
-                {userProfile.coverPic ? (
-                  <Image
-                    src={`http://localhost:5000/${userProfile.coverPic}`}
-                    alt="Cover"
-                    w="100%"
-                    h="100%"
-                    objectFit="cover"
-                    transition="all 0.5s ease"
-                    _hover={{ transform: 'scale(1.1)' }}
-                  />
-                ) : (
-                  <Box
-                    w="100%"
-                    h="100%"
-                    bgGradient="linear(to-r, blue.400, purple.500)"
-                    animation={`${pulse} 3s infinite ease-in-out`}
-                  />
-                )}
-              </Box>
-
-              {/* Profile Content */}
-              <VStack spacing={4} align="center" p={6} w="100%" bg="white">
+                {/* Cover Photo */}
                 <Box 
-                  mt="-70px" 
-                  position="relative"
-                  animation={`${float} 3s infinite ease-in-out`}
+                  w="100%" 
+                  h="180px" 
+                  position="relative" 
+                  mt={2}
+                  overflow="hidden"
                 >
-                  {userProfile.profilePic ? (
+                  {userProfile.coverPic ? (
                     <Image
-                      src={`http://localhost:5000/${userProfile.profilePic}`}
-                      alt={userProfile.username}
-                      boxSize="120px"
-                      borderRadius="full"
+                      src={`http://localhost:5000/${userProfile.coverPic}`}
+                      alt="Cover"
+                      w="100%"
+                      h="100%"
                       objectFit="cover"
-                      border="4px solid white"
-                      boxShadow="lg"
-                      transition="all 0.3s ease"
-                      _hover={{ transform: 'scale(1.1)', boxShadow: '2xl' }}
+                      transition="all 0.5s ease"
+                      _hover={{ transform: 'scale(1.1)' }}
                     />
                   ) : (
-                    <Avatar
-                      size="2xl"
-                      name={userProfile.username}
-                      border="4px solid white"
-                      boxShadow="lg"
-                      transition="all 0.3s ease"
-                      _hover={{ transform: 'scale(1.1)', boxShadow: '2xl' }}
+                    <Box
+                      w="100%"
+                      h="100%"
+                      bgGradient="linear(to-r, blue.400, purple.500)"
+                      animation={`${pulse} 3s infinite ease-in-out`}
                     />
                   )}
                 </Box>
-                <Link 
-                  onClick={() => navigate('/profile')}
-                  _hover={{ textDecoration: 'none' }}
-                >
-                  <Heading 
-                    as="h3" 
-                    size="lg" 
-                    textAlign="center" 
-                    cursor="pointer" 
-                    color="gray.700"
-                    transition="all 0.3s ease"
-                    _hover={{ color: 'blue.500', transform: 'scale(1.05)' }}
+
+                {/* Profile Content */}
+                <VStack spacing={4} align="center" p={6} w="100%" bg="white">
+                  <Box 
+                    mt="-70px" 
+                    position="relative"
+                    animation={`${float} 3s infinite ease-in-out`}
                   >
-                    {userProfile.username}
-                  </Heading>
-                </Link>
-                <Text 
-                  fontSize="md" 
-                  color="gray.600" 
-                  textAlign="center" 
-                  px={4}
-                  transition="all 0.3s ease"
-                  _hover={{ color: 'gray.800' }}
-                >
-                  {userProfile.bio || "No bio yet"}
-                </Text>
-                <Divider my={2} />
-                <Button
-                  colorScheme="blue"
-                  variant="solid"
-                  size="md"
-                  width="full"
-                  onClick={() => navigate('/profile')}
-                  _hover={{ 
-                    transform: 'translateY(-2px) scale(1.02)', 
-                    boxShadow: 'lg',
-                    bg: 'blue.600'
-                  }}
-                  transition="all 0.3s ease"
-                >
-                  View Profile
-                </Button>
+                    {userProfile.profilePic ? (
+                      <Image
+                        src={`http://localhost:5000/${userProfile.profilePic}`}
+                        alt={userProfile.username}
+                        boxSize="120px"
+                        borderRadius="full"
+                        objectFit="cover"
+                        border="4px solid white"
+                        boxShadow="lg"
+                        transition="all 0.3s ease"
+                        _hover={{ transform: 'scale(1.1)', boxShadow: '2xl' }}
+                      />
+                    ) : (
+                      <Avatar
+                        size="2xl"
+                        name={userProfile.username}
+                        border="4px solid white"
+                        boxShadow="lg"
+                        transition="all 0.3s ease"
+                        _hover={{ transform: 'scale(1.1)', boxShadow: '2xl' }}
+                      />
+                    )}
+                  </Box>
+                  <Link 
+                    onClick={() => navigate('/profile')}
+                    _hover={{ textDecoration: 'none' }}
+                  >
+                    <Heading 
+                      as="h3" 
+                      size="lg" 
+                      textAlign="center" 
+                      cursor="pointer" 
+                      color="gray.700"
+                      transition="all 0.3s ease"
+                      _hover={{ color: 'blue.500', transform: 'scale(1.05)' }}
+                    >
+                      {userProfile.username}
+                    </Heading>
+                  </Link>
+                  <Text 
+                    fontSize="md" 
+                    color="gray.600" 
+                    textAlign="center" 
+                    px={4}
+                    transition="all 0.3s ease"
+                    _hover={{ color: 'gray.800' }}
+                  >
+                    {userProfile.bio || "No bio yet"}
+                  </Text>
+                  <Divider my={2} />
+                  <Button
+                    colorScheme="blue"
+                    variant="solid"
+                    size="md"
+                    width="full"
+                    onClick={() => navigate('/profile')}
+                    _hover={{ 
+                      transform: 'translateY(-2px) scale(1.02)', 
+                      boxShadow: 'lg',
+                      bg: 'blue.600'
+                    }}
+                    transition="all 0.3s ease"
+                  >
+                    View Profile
+                  </Button>
+                </VStack>
               </VStack>
+
+              {/* Leaderboard Card */}
+              <Box 
+                bg="white" 
+                p={6} 
+                rounded="xl" 
+                boxShadow="lg"
+                borderTop="4px solid"
+                borderColor="yellow.400"
+                transition="all 0.3s ease"
+                _hover={{ 
+                  transform: 'translateY(-5px)', 
+                  boxShadow: '2xl',
+                  bg: 'gray.50'
+                }}
+              >
+                <Heading size="md" mb={4} color="gray.700" display="flex" alignItems="center" gap={2}>
+                  <FaMedal color="#F6E05E" /> Top Contributors
+                </Heading>
+                <VStack spacing={4} align="stretch">
+                  {topUsers.map((user, index) => (
+                    <HStack 
+                      key={user._id} 
+                      p={3} 
+                      bg="gray.50" 
+                      rounded="lg"
+                      transition="all 0.3s ease"
+                      _hover={{ transform: 'translateX(5px)', bg: 'gray.100' }}
+                      cursor="pointer"
+                      onClick={() => {
+                        // If the clicked user is the current user, go to profile page
+                        // Otherwise, go to the user's profile page
+                        if (userProfile && user._id === userProfile._id) {
+                          navigate('/profile');
+                        } else {
+                          navigate(`/visituserprofile/${user._id}`);
+                        }
+                      }}
+                    >
+                      <Box 
+                        w="30px" 
+                        h="30px" 
+                        rounded="full" 
+                        display="flex" 
+                        alignItems="center" 
+                        justifyContent="center"
+                        bg={index === 0 ? "yellow.400" : index === 1 ? "gray.400" : "orange.600"}
+                        color="white"
+                        fontWeight="bold"
+                      >
+                        {index + 1}
+                      </Box>
+                      <Avatar 
+                        size="sm" 
+                        name={user.username}
+                        src={user.profilePic ? `http://localhost:5000/${user.profilePic}` : undefined}
+                      />
+                      <Box flex="1">
+                        <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
+                          {user.username}
+                        </Text>
+                        <Text fontSize="xs" color="gray.500">
+                          {user.points} points
+                        </Text>
+                      </Box>
+                    </HStack>
+                  ))}
+                </VStack>
+                <Button
+                  mt={4}
+                  size="sm"
+                  colorScheme="yellow"
+                  variant="outline"
+                  width="full"
+                  onClick={() => navigate('/leaderboard')}
+                  _hover={{ 
+                    transform: 'translateY(-2px)', 
+                    boxShadow: 'md',
+                    bg: 'yellow.50'
+                  }}
+                >
+                  View Full Leaderboard
+                </Button>
+              </Box>
             </VStack>
           </Box>
         )}
