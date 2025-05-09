@@ -15,10 +15,12 @@ import { DeleteIcon } from '@chakra-ui/icons';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const toast = useToast();
 
   useEffect(() => {
     const fetchUsers = async () => {
+      setLoading(true);
       try {
         const response = await fetch('http://localhost:5000/api/admin/users', {
           headers: {
@@ -38,15 +40,18 @@ const UserManagement = () => {
           isClosable: true,
         });
         setUsers([]);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUsers();
   }, [toast]);
 
-  const handleBanUnbanUser = async (id, isBanned) => {
+  const handleBanUnbanUser = async (id, currentStatus) => {
+    const isBanned = currentStatus === 'banned';
     const confirm = window.confirm(
-      isBanned ? "Unban this user?" : "Ban this user?"
+      isBanned ? "Activate this user?" : "Ban this user?"
     );
     if (!confirm) return;
 
@@ -65,12 +70,13 @@ const UserManagement = () => {
       if (!response.ok) throw new Error(data.message);
 
       toast({
-        title: isBanned ? 'User Unbanned' : 'User Banned',
+        title: isBanned ? 'User Activated' : 'User Banned',
         description: data.message,
         status: 'success',
         isClosable: true,
       });
 
+      // Update the user status in the state
       setUsers(
         users.map((user) =>
           user._id === id
@@ -89,7 +95,7 @@ const UserManagement = () => {
   };
 
   const handleDeleteUser = async (id) => {
-    const confirm = window.confirm("Are you sure you want to delete this user?");
+    const confirm = window.confirm("Are you sure you want to delete this user? This action cannot be undone.");
     if (!confirm) return;
 
     try {
@@ -113,6 +119,7 @@ const UserManagement = () => {
         isClosable: true,
       });
 
+      // Remove deleted user from state
       setUsers(users.filter((user) => user._id !== id));
     } catch (error) {
       toast({
@@ -124,64 +131,86 @@ const UserManagement = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Box p={8} textAlign="center">
+        <Text>Loading users...</Text>
+      </Box>
+    );
+  }
+
   return (
     <Box p={8} bg="gray.50" minH="100vh">
       <Heading as="h2" size="xl" textAlign="center" mb={10}>
         👥 Admin: Manage Users
       </Heading>
 
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-        {users.map((user) => (
-          <Box
-            key={user._id}
-            bg="white"
-            p={6}
-            rounded="lg"
-            boxShadow="md"
-            border="1px solid"
-            borderColor="gray.200"
-            display="flex"
-            flexDirection="column"
-            justifyContent="space-between"
-          >
-            <VStack spacing={3} align="start">
-              <Text fontWeight="bold" fontSize="lg">{user.email}</Text>
+      {users.length === 0 ? (
+        <Box textAlign="center" p={8}>
+          <Text fontSize="lg">No users found</Text>
+        </Box>
+      ) : (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+          {users.map((user) => (
+            <Box
+              key={user._id}
+              bg="white"
+              p={6}
+              rounded="lg"
+              boxShadow="md"
+              border="1px solid"
+              borderColor={user.status === 'banned' ? "red.200" : "gray.200"}
+              display="flex"
+              flexDirection="column"
+              justifyContent="space-between"
+            >
+              <VStack spacing={3} align="start">
+                <Text fontWeight="bold" fontSize="lg">{user.email}</Text>
+                
+                {user.username && (
+                  <Text fontSize="md">Username: {user.username}</Text>
+                )}
+                
+                {user.studentId && (
+                  <Text fontSize="md">Student ID: {user.studentId}</Text>
+                )}
 
-              <Badge
-                colorScheme={user.status === 'banned' ? 'red' : 'green'}
-                fontSize="md"
-              >
-                {user.status === 'banned' ? 'Banned' : 'Active'}
-              </Badge>
+                <Badge
+                  colorScheme={user.status === 'banned' ? 'red' : 'green'}
+                  fontSize="md"
+                >
+                  {user.status === 'banned' ? 'Banned' : 'Active'}
+                </Badge>
 
-              <Text fontSize="sm" color="gray.600">
-                Joined: {new Date(user.createdAt).toLocaleDateString()}
-              </Text>
-            </VStack>
+                <Text fontSize="sm" color="gray.600">
+                  Joined: {new Date(user.createdAt).toLocaleDateString()}
+                </Text>
+              </VStack>
 
-            <Flex mt={4} gap={2}>
-              <Button
-                size="sm"
-                flex="1"
-                colorScheme={user.status === 'banned' ? 'green' : 'red'}
-                onClick={() =>
-                  handleBanUnbanUser(user._id, user.status === 'banned')
-                }
-              >
-                {user.status === 'banned' ? 'Unban' : 'Ban'}
-              </Button>
+              <Flex mt={4} gap={2}>
+                <Button
+                  size="sm"
+                  flex="1"
+                  colorScheme={user.status === 'banned' ? 'green' : 'red'}
+                  onClick={() =>
+                    handleBanUnbanUser(user._id, user.status)
+                  }
+                >
+                  {user.status === 'banned' ? 'Activate' : 'Ban'}
+                </Button>
 
-              <IconButton
-                size="sm"
-                colorScheme="red"
-                icon={<DeleteIcon />}
-                onClick={() => handleDeleteUser(user._id)}
-                aria-label="Delete User"
-              />
-            </Flex>
-          </Box>
-        ))}
-      </SimpleGrid>
+                <IconButton
+                  size="sm"
+                  colorScheme="red"
+                  icon={<DeleteIcon />}
+                  onClick={() => handleDeleteUser(user._id)}
+                  aria-label="Delete User"
+                />
+              </Flex>
+            </Box>
+          ))}
+        </SimpleGrid>
+      )}
     </Box>
   );
 };

@@ -1,16 +1,120 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, Button, Text, Spinner, useToast, Flex, Icon, Image,
-  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,Tooltip, Badge 
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,Tooltip, Badge, Heading, SimpleGrid, HStack, VStack
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { FaMapMarkerAlt, FaCalendarAlt, FaPencilAlt,FaCheckCircle, FaIdCard  } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCalendarAlt, FaPencilAlt,FaCheckCircle, FaIdCard, FaTrophy, FaAward, FaCrown, FaStar, FaHandHoldingHeart,FaHandsHelping, FaMedal, FaThumbsUp, FaGem,FaShieldAlt } from 'react-icons/fa';
 import { BsGrid3X3 } from 'react-icons/bs';
 import './ProfilePage.css';
+
+
+// Badge system definitions - integrated directly into the component
+const BADGE_TIERS = [
+  { 
+    id: 'helper', 
+    name: 'Helper', 
+    icon: FaHandsHelping, 
+    color: '#48BB78', // green.400
+    threshold: 20, 
+    description: 'Awarded for earning 20+ points by helping return items' 
+  },
+  { 
+    id: 'finder', 
+    name: 'Finder', 
+    icon: FaShieldAlt, 
+    color: '#ED8936', // orange.400
+    threshold: 50, 
+    description: 'Awarded for earning 50+ points as a dedicated helper' 
+  },
+  { 
+    id: 'champion', 
+    name: 'Champion', 
+    icon: FaMedal, 
+    color: '#F6AD55', // orange.300
+    threshold: 100, 
+    description: 'Awarded for earning 100+ points as an outstanding member' 
+  },
+  { 
+    id: 'elite', 
+    name: 'Elite', 
+    icon: FaAward, 
+    color: '#FC8181', // red.300
+    threshold: 150, 
+    description: 'Awarded for earning 150+ points as a premier helper' 
+  },
+  { 
+    id: 'legend', 
+    name: 'Legend', 
+    icon: FaCrown, 
+    color: '#F6E05E', // yellow.300
+    threshold: 250, 
+    description: 'Awarded for earning 250+ points as a legendary contributor' 
+  },
+  { 
+    id: 'ultimate', 
+    name: 'Ultimate', 
+    icon: FaGem, 
+    color: '#B794F4', // purple.300
+    threshold: 500, 
+    description: 'Awarded for earning 500+ points - the highest honor!' 
+  }
+];
+
+// Helper function to get badges earned by a user based on points
+const getUserBadges = (points) => {
+  if (!points) return [];
+  return BADGE_TIERS.filter(badge => points >= badge.threshold);
+};
+
+// Get the highest badge a user has earned
+const getHighestBadge = (points) => {
+  if (!points) return null;
+  const earnedBadges = getUserBadges(points);
+  return earnedBadges.length ? earnedBadges[earnedBadges.length - 1] : null;
+};
+
+const BadgeDisplay = ({ badge, size = "md" }) => {
+  const sizeProps = {
+    sm: { iconSize: 4, fontSize: "xs" },
+    md: { iconSize: 5, fontSize: "sm" },
+    lg: { iconSize: 6, fontSize: "md" }
+  };
+
+  return (
+    <Tooltip label={badge.description} placement="top">
+      <VStack
+        bg="white"
+        boxShadow="md"
+        borderRadius="lg"
+        p={2}
+        align="center"
+        justify="center"
+        border={`2px solid ${badge.color}`}
+        minW={size === "sm" ? "70px" : size === "md" ? "90px" : "110px"}
+      >
+        <Icon 
+          as={badge.icon} 
+          color={badge.color} 
+          boxSize={sizeProps[size].iconSize} 
+        />
+        <Text 
+          fontSize={sizeProps[size].fontSize} 
+          fontWeight="bold" 
+          textAlign="center" 
+          noOfLines={1}
+        >
+          {badge.name}
+        </Text>
+      </VStack>
+    </Tooltip>
+  );
+};
 
 const Profile = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+   const [badgesModalOpen, setbadgesModalOpen] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
   const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -70,6 +174,10 @@ const Profile = () => {
     setSelectedImage(imageUrl);
     setImageModalOpen(true);
   };
+  const openBadgesModal = () => {
+    setbadgesModalOpen(true);
+  };
+
 
   if (loading) {
     return (
@@ -96,6 +204,11 @@ const Profile = () => {
   const profilePicUrl = userData.profilePic ? serverUrl + userData.profilePic : "/avatar-placeholder.png";
   const coverPicUrl = userData.coverPic ? serverUrl + userData.coverPic : "/cover-placeholder.jpg";
   const isVerified = userData.isVerified || false;
+    // Get user's points and badges
+  const userPoints = userData.points !== undefined ? userData.points : 0;
+  const earnedBadges = getUserBadges(userPoints);
+  const highestBadge = getHighestBadge(userPoints);
+
   return (
     <Box className="profile-container">
       {/* Cover Image */}
@@ -122,7 +235,26 @@ const Profile = () => {
             e.target.src = "/avatar-placeholder.png";
           }}
         />
+        {/* Display highest badge if earned */}
+        {highestBadge && (
+          <Tooltip label={`${highestBadge.name}: ${highestBadge.description}`}>
+            <Box 
+              position="absolute" 
+              bottom="0" 
+              right="0" 
+              bg="white" 
+              borderRadius="full" 
+              p={1}
+              boxShadow="md"
+              border={`2px solid ${highestBadge.color}`}
+            >
+              <Icon as={highestBadge.icon} boxSize={5} color={highestBadge.color} />
+            </Box>
+          </Tooltip>
+        )}
       </Box>
+
+      
 
       {/* Action Buttons */}
       <Flex justify="flex-end" mt={4} px={6}>
@@ -135,18 +267,6 @@ const Profile = () => {
           mr={2}
         >
           Edit Profile
-        </Button>
-        <Button
-          leftIcon={<BsGrid3X3 />}
-          colorScheme="gray"
-          variant="solid"
-          size="md"
-          bg="#1a202c"
-          color="white"
-          _hover={{ bg: "#2d3748" }}
-          onClick={() => navigate('/userdashboard')}
-        >
-          Dashboard
         </Button>
       </Flex>
 
@@ -171,8 +291,46 @@ const Profile = () => {
             <Icon as={FaCalendarAlt} mr={2} />
             <Text>Joined {new Date(userData.createdAt).toLocaleDateString()}</Text>
           </Flex>
+                    {/* Points Display */}
+          <Flex align="center">
+            <Icon as={FaTrophy} mr={2} color="yellow.500" />
+            <Text fontWeight="bold">{userPoints} points</Text>
+          </Flex>
         </Flex>
 
+        {/* Badges Display (if any earned) */}
+
+        {highestBadge && (
+          <Box mt={6} textAlign="center">
+            <HStack spacing={2} justifyContent="center" mb={2}>
+              <Icon as={FaAward} color="purple.500" />
+              <Text fontWeight="bold" color="purple.500">Current Badge</Text>
+            </HStack>
+            
+            <Flex justify="center" align="center" direction="column">
+              <BadgeDisplay badge={highestBadge} size="md" />
+              
+              <Box mt={3} p={2} bg="gray.50" borderRadius="md" maxW="400px">
+ 
+                {earnedBadges.length > 1 && (
+                  <Button 
+                    size="xs" 
+                    variant="link" 
+                    colorScheme="purple"
+                    onClick={openBadgesModal}
+                    mt={1}
+                  >
+                    View all earned badges
+                  </Button>
+                )}
+              </Box>
+            </Flex>
+          </Box>
+        )}
+
+
+        
+  
         <Box className="profile-grid">
           <Box>
             <Text fontWeight="bold" mb={2}>About</Text>
@@ -199,6 +357,25 @@ const Profile = () => {
               <Text fontWeight="medium" width="150px">Member Since</Text>
               <Text>{new Date(userData.createdAt).toLocaleDateString()}</Text>
             </Flex>
+            <Flex>
+              <Text fontWeight="medium" width="150px">Contribution</Text>
+              <Flex align="center">
+                <Text>{userPoints} points</Text>
+                {highestBadge && (
+                  <Badge 
+                    ml={2} 
+                    borderRadius="full" 
+                    px={2}
+                    colorScheme="purple"
+                    onClick={openBadgesModal}
+                    cursor="pointer"
+                    _hover={{ bg: "purple.100" }}
+                  >
+                    {highestBadge.name}
+                  </Badge>
+                )}
+              </Flex>
+            </Flex>
           </Box>
         </Box>
       </Box>
@@ -219,6 +396,43 @@ const Profile = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
+      {/* Badges Modal */}
+      <Modal isOpen={badgesModalOpen} onClose={() => setbadgesModalOpen(false)} size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader display="flex" alignItems="center">
+            <Icon as={FaAward} mr={2} color="purple.500" />
+            My Badges
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {earnedBadges.length > 0 ? (
+              <>
+                <Text mb={4}>
+                  You've earned {earnedBadges.length} badge{earnedBadges.length !== 1 ? 's' : ''} by helping the community!
+                </Text>
+                
+                <SimpleGrid columns={[1, 2, 3]} spacing={4}>
+                  {earnedBadges.map(badge => (
+                    <BadgeDisplay key={badge.id} badge={badge} size="lg" />
+                  ))}
+                </SimpleGrid>
+                
+                <Box mt={6} p={4} bg="purple.50" borderRadius="md">
+                  <Heading size="sm" mb={2}>Keep helping to earn more badges!</Heading>
+                  <Text fontSize="sm">
+                    Return more lost items to increase your points and earn prestigious badges.
+                  </Text>
+                </Box>
+              </>
+            ) : (
+              <Box textAlign="center" py={4}>
+                <Text>You haven't earned any badges yet. Start helping by finding and returning lost items!</Text>
+              </Box>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>     
     </Box>
   );
 };

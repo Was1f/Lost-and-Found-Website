@@ -1,8 +1,6 @@
-import { Box, Button, Container, FormControl, FormLabel, Heading, Input, useToast, VStack,FormErrorMessage,Image,Text,Textarea,Flex,Divider} from "@chakra-ui/react";
+import { Box, Button, Container, FormControl, FormLabel, Heading, Input, useToast, VStack, Text, Link as ChakraLink, useColorModeValue } from "@chakra-ui/react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from 'axios';
-
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 const SignUpPage = () => {
   const [email, setEmail] = useState("");
@@ -10,11 +8,11 @@ const SignUpPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
-  const [profilePic, setProfilePic] = useState(null);
-  const [coverPic, setCoverPic] = useState(null);
   const [studentId, setStudentId] = useState("");
   const toast = useToast();
   const navigate = useNavigate();
+  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const cardBg = useColorModeValue("white", "gray.800");
 
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
@@ -27,7 +25,7 @@ const SignUpPage = () => {
       return;
     }
    
-    try{
+    try {
       const response = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
         headers: {
@@ -40,9 +38,7 @@ const SignUpPage = () => {
           username,
           bio,
           isVerified: false
-          //profilePic: imgRes.data.profilePic,
-          //coverPic: imgRes.data.coverPic,
-          }),
+        }),
       });
 
       const data = await response.json();
@@ -58,7 +54,7 @@ const SignUpPage = () => {
         isClosable: true,
       });
 
-      navigate("/login"); // Redirect to login after successful signup
+      navigate("/login");
     } catch (error) {
       toast({
         title: "Error",
@@ -70,99 +66,158 @@ const SignUpPage = () => {
   };
 
   return (
-    <Container maxW={"lg"} py={{ base: "12", sm: "24" }} px={{ base: "0", sm: "10" }} centerContent>
-      <VStack spacing={4} w="100%">
-        <Heading as="h1" size="xl" textAlign="center">
-          Sign Up
-        </Heading>
-        <Box
-          w="100%"
-          p={6}
-          bg="white"
-          boxShadow="lg"
-          rounded="md"
-          border="1px solid"
-          borderColor="gray.200"
-        >
-          <VStack spacing={4} align="stretch">
-            <FormControl>
-              <FormLabel>Username</FormLabel>
-              <input
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />   
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Email</FormLabel>
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Student ID</FormLabel>
-              <Input
-                type="text"
-                placeholder="8-digit Student ID number"
-                value={studentId}
-                onChange={(e) => {
-                  // Allow only numbers and limit to 8 digits
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 8);
-                  setStudentId(value);
-                }}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Password</FormLabel>
-              <Input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Confirm Password</FormLabel>
-              <Input
-                type="password"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Bio</FormLabel>
-              <Input
-                type="text"
-                placeholder="Enter a short bio"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-              />
-            </FormControl>
-
-            
-            <Button
-              colorScheme="blue"
-              size="lg"
-              onClick={handleSignUp}
-              width="full"
+    <Box minH="100vh" bg={bgColor} py={20}>
+      <Container maxW="lg">
+        <VStack spacing={8}>
+          <VStack spacing={3} textAlign="center">
+            <Heading
+              as="h1"
+              size="2xl"
+              bgGradient="linear(to-r, blue.400, blue.600)"
+              bgClip="text"
+              fontWeight="bold"
             >
-              Sign Up
-            </Button>
+              Create Account
+            </Heading>
+            <Text fontSize="lg" color="gray.600">
+              Join our community to help others find their lost items
+            </Text>
           </VStack>
-        </Box>
-      </VStack>
-    </Container>
+
+          <Box
+            w="full"
+            p={8}
+            bg={cardBg}
+            rounded="xl"
+            boxShadow="lg"
+            border="1px solid"
+            borderColor="gray.200"
+          >
+            <VStack spacing={6}>
+              <FormControl isRequired>
+                <FormLabel>Username</FormLabel>
+                <Input
+                  type="text"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  size="lg"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                  }}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Email</FormLabel>
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  size="lg"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                  }}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Student ID</FormLabel>
+                <Input
+                  type="text"
+                  placeholder="8-digit Student ID number"
+                  value={studentId}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 8);
+                    setStudentId(value);
+                  }}
+                  size="lg"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                  }}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Password</FormLabel>
+                <Input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  size="lg"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                  }}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Confirm Password</FormLabel>
+                <Input
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  size="lg"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                  }}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Bio</FormLabel>
+                <Input
+                  type="text"
+                  placeholder="Tell us about yourself"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  size="lg"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                  }}
+                />
+              </FormControl>
+
+              <Button
+                colorScheme="blue"
+                size="lg"
+                width="full"
+                onClick={handleSignUp}
+                _hover={{
+                  transform: "translateY(-2px)",
+                  boxShadow: "lg",
+                }}
+                transition="all 0.2s"
+              >
+                Create Account
+              </Button>
+
+              <Text textAlign="center" color="gray.600">
+                Already have an account?{" "}
+                <ChakraLink
+                  as={RouterLink}
+                  to="/login"
+                  color="blue.500"
+                  fontWeight="bold"
+                  _hover={{ textDecoration: "underline" }}
+                >
+                  Sign In
+                </ChakraLink>
+              </Text>
+            </VStack>
+          </Box>
+        </VStack>
+      </Container>
+    </Box>
   );
 };
 

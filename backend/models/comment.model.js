@@ -9,16 +9,33 @@ const commentSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,   // Which user wrote the comment
+    // Not required to allow admin comments
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false,   // Flag to indicate if it's an admin comment
   },
   text: {
     type: String,
     required: true,   // Comment text
     trim: true,
   },
+  parentCommentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',  // Reference to the parent comment (null for main comments)
+    default: null,   // Null for top-level comments, set for replies
+  },
+  isRemoved: {
+    type: Boolean,
+    default: false,  // Flag to indicate if it's been removed by admin
+  },
   createdAt: {
     type: Date,
     default: Date.now,  // When the comment was created
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,  // When the comment was last updated
   },
 });
 

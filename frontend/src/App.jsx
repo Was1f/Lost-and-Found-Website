@@ -14,13 +14,21 @@ import MyPostsPage from "./pages/MyPostsPage";
 import EditPostPage from "./pages/EditPostPage";
 import EditProfile from "./pages/EditProfile";
 import UserDashboard from "./pages/UserDashboard";
+import FAQPage from "./pages/FAQPage";
 // ✅ Admin Pages
 import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
 import PostManagement from "./pages/PostManagement";
 import UserManagement from "./pages/UserManagement";
 import PostDetailsPage from "./pages/PostDetailsPage";
+import AdminReportPage from "./pages/AdminReportPage";
+import AutoMatchingResult from "./pages/AutoMatchingResult";
+import ViewMyReportsPage from './pages/ViewMyReportsPage';
+
+
 import PostHistoryPage from "./pages/PostHistoryPage";
+import Leaderboard from "./pages/leaderboard";
+import VisitUserProfile from "./pages/VisitUserProfile"
 function App() {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -40,6 +48,9 @@ function App() {
 
       <Routes>
         {/* User Routes */}
+        {/* Admin Routes */}
+        
+        <Route path='/admin/reports' element={<AdminReportPage />} />
         <Route path='/' element={<LandingPage />} />
         <Route path='/post/:id' element={<PostDetailsPage />} />
         <Route path='/create' element={<ProtectedRoute><PostForm /></ProtectedRoute>} />
@@ -51,12 +62,17 @@ function App() {
         <Route path='/my-posts' element={<MyPostsPage />} />
         <Route path='/edit-post/:id' element={<EditPostPage />} />
         <Route path='/edit-profile' element={<EditProfile/>} />
+        <Route path='/faq' element={<FAQPage />} />
+        <Route path="/my-reports" element={<ViewMyReportsPage/>} />
+        <Route path='/leaderboard' element={<Leaderboard/>} />
+        <Route path="/visituserprofile/:userId" element={<VisitUserProfile />} />
 
         {/* Admin Routes */}
         <Route path='/admin/login' element={<AdminLogin />} />
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/admin/posts' element={<PostManagement />} />
         <Route path='/admin/users' element={<UserManagement />} />
+        <Route path='/auto-matching-result' element={<AutoMatchingResult />} />
         <Route path='/admin/history' element={<PostHistoryPage />} />
       </Routes>
     </Box>
