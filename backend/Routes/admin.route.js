@@ -15,7 +15,7 @@ router.post('/login', adminLoginController);
 // Fetch all posts (only accessible to admin)
 router.get('/posts', adminAuth, async (req, res) => {
   try {
-    const posts = await Post.find().populate('user', 'email');  // Populate user email
+    const posts = await Post.find().populate('user', 'email').populate('resolvedBy', 'email username');
     res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching posts', error });
@@ -33,6 +33,60 @@ router.delete('/post/:id', adminAuth, async (req, res) => {
     res.status(200).json({ message: 'Post deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting post', error });
+  }
+});
+
+// Update post resolution status
+router.put('/post/resolution/:id', adminAuth, async (req, res) => {
+  const { id } = req.params;
+  const { resolutionStatus, resolvedBy, resolutionNote, resolvedAt, isArchived } = req.body;
+  
+  try {
+    // Get the previous state of the post to check if points need to be awarded
+    const previousPost = await Post.findById(id);
+    if (!previousPost) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    // Update the post with resolution information
+    const updatedPost = await Post.findByIdAndUpdate(
+      id,
+      {
+        resolutionStatus,
+        resolvedBy: resolvedBy || null,
+        resolutionNote: resolutionNote || '',
+        resolvedAt: resolvedAt || (resolutionStatus === 'Resolved' ? new Date() : null),
+        isArchived: isArchived || resolutionStatus === 'Resolved' // Automatically archive if resolved
+      },
+      { new: true }
+    ).populate('user', 'email').populate('resolvedBy', 'email username');
+
+    // Award points to the resolvedBy user if status is Resolved and either:
+    // 1. The status changed from something else to Resolved
+    // 2. The resolvedBy user changed
+    const shouldAwardPoints = 
+      resolutionStatus === 'Resolved' && 
+      resolvedBy && 
+      (previousPost.resolutionStatus !== 'Resolved' || 
+       (!previousPost.resolvedBy || previousPost.resolvedBy.toString() !== resolvedBy));
+    
+    if (shouldAwardPoints) {
+      // Award 10 points to the user who resolved the post
+      await User.findByIdAndUpdate(
+        resolvedBy,
+        { $inc: { points: 10 } }, // Increment points by 10
+        { new: true }
+      );
+    }
+
+    res.status(200).json({ 
+      message: 'Post resolution updated successfully',
+      post: updatedPost,
+      pointsAwarded: shouldAwardPoints ? 10 : 0
+    });
+  } catch (error) {
+    console.error('Error updating post resolution:', error);
+    res.status(500).json({ message: 'Error updating post resolution', error: error.message });
   }
 });
 
@@ -111,13 +165,86 @@ router.delete('/comment/:id', adminAuth, async (req, res) => {
 
 // ------------------- USERS MANAGEMENT -------------------
 
-// Fetch all users
+// Fetch users with filtering, sorting, and pagination
 router.get('/users', adminAuth, async (req, res) => {
   try {
-    const users = await User.find({}, 'email username studentId status createdAt'); // Get necessary fields
-    res.status(200).json(users);
+    const { 
+      status, 
+      search, 
+      sort = 'createdAt', 
+      order = 'desc',
+      page = 1,
+      limit = 100 // Increased limit to get more users for dropdown
+    } = req.query;
+    
+    // Build query
+    const query = {};
+    
+    // Status filter
+    if (status && ['active', 'banned'].includes(status)) {
+      query.status = status;
+    }
+    
+    // Search functionality
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { username: searchRegex },
+        { email: searchRegex },
+        { studentId: searchRegex },
+        { bio: searchRegex }
+      ];
+    }
+    
+    // Count total results for pagination
+    const total = await User.countDocuments(query);
+    
+    // Execute query with sorting and pagination
+    const users = await User.find(query)
+      .select('email username studentId profilePic status createdAt bio points')
+      .sort({ [sort]: order === 'asc' ? 1 : -1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+    
+    res.status(200).json({
+      users,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching users', error });
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
+  }
+});
+
+// Get user activity and detailed profile
+router.get('/users/:id', adminAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Get user's post count
+    const postsCount = await Post.countDocuments({ user: req.params.id });
+    
+    // Get user's comment count
+    const commentsCount = await Comment.countDocuments({ userId: req.params.id });
+    
+    res.status(200).json({
+      user,
+      stats: {
+        postsCount,
+        commentsCount
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user details', error: error.message });
   }
 });
 

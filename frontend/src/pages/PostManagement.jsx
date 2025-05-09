@@ -20,6 +20,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
+  ModalFooter,
   ModalCloseButton,
   useDisclosure,
   FormControl,
@@ -29,12 +30,28 @@ import {
   HStack,
   Divider,
   Badge,
+  Select,
+  Input,
+  Container,
+  Stack,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Tag,
+  Switch,
 } from '@chakra-ui/react';
 import { 
   DeleteIcon, 
   ArrowBackIcon, 
   ChatIcon, 
-  AddIcon 
+  AddIcon,
+  CheckIcon,
+  EditIcon,
+  SettingsIcon,
+  TimeIcon,
+  StarIcon
 } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
 
@@ -45,24 +62,53 @@ const PostManagement = () => {
   const [adminComment, setAdminComment] = useState('');
   const [replyToId, setReplyToId] = useState(null);
   const [replyText, setReplyText] = useState('');
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [users, setUsers] = useState([]);
+  const [resolutionStatus, setResolutionStatus] = useState('Active');
+  const [resolvedBy, setResolvedBy] = useState('');
+  const [resolutionNote, setResolutionNote] = useState('');
+  const [resolvedDate, setResolvedDate] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all', 'active', 'archived'
+  
+  const { 
+    isOpen: isCommentsOpen, 
+    onOpen: onCommentsOpen, 
+    onClose: onCommentsClose 
+  } = useDisclosure();
+  
+  const { 
+    isOpen: isResolutionOpen, 
+    onOpen: onResolutionOpen, 
+    onClose: onResolutionClose 
+  } = useDisclosure();
+  
   const toast = useToast();
   const navigate = useNavigate();
 
-  // Fetch posts on mount
+  // Fetch posts and users on mount
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/admin/posts', {
+        // Fetch posts
+        const postsResponse = await fetch('http://localhost:5000/api/admin/posts', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
           },
         });
 
-        if (!response.ok) throw new Error('Failed to fetch posts');
-
-        const data = await response.json();
-        setPosts(data);
+        if (!postsResponse.ok) throw new Error('Failed to fetch posts');
+        const postsData = await postsResponse.json();
+        setPosts(postsData);
+        
+        // Fetch users for the dropdown
+        const usersResponse = await fetch('http://localhost:5000/api/admin/users', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+          },
+        });
+        
+        if (!usersResponse.ok) throw new Error('Failed to fetch users');
+        const usersData = await usersResponse.json();
+        setUsers(usersData.users || []);
       } catch (error) {
         toast({
           title: 'Error',
@@ -73,8 +119,16 @@ const PostManagement = () => {
       }
     };
 
-    fetchPosts();
+    fetchData();
   }, [toast]);
+
+  // Filter posts based on selected filter
+  const filteredPosts = posts.filter(post => {
+    if (filter === 'all') return true;
+    if (filter === 'active') return !post.isArchived;
+    if (filter === 'archived') return post.isArchived;
+    return true;
+  });
 
   // Handle delete post
   const handleDeletePost = async (id) => {
@@ -110,6 +164,72 @@ const PostManagement = () => {
     }
   };
 
+  // Open resolution modal
+  const openResolutionModal = (post) => {
+    setSelectedPost(post);
+    setResolutionStatus(post.resolutionStatus || 'Active');
+    setResolvedBy(post.resolvedBy || '');
+    setResolutionNote(post.resolutionNote || '');
+    setResolvedDate(post.resolvedAt ? new Date(post.resolvedAt).toISOString().split('T')[0] : '');
+    onResolutionOpen();
+  };
+
+  // Handle update resolution status
+  const handleUpdateResolution = async () => {
+    try {
+      // Automatically set isArchived to true if resolution status is "Resolved"
+      const isArchived = resolutionStatus === 'Resolved';
+      
+      const response = await fetch(`http://localhost:5000/api/admin/post/resolution/${selectedPost._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify({
+          resolutionStatus,
+          resolvedBy,
+          resolutionNote,
+          resolvedAt: resolvedDate || (resolutionStatus === 'Resolved' ? new Date().toISOString() : null),
+          isArchived,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+
+      // Update posts in state
+      setPosts(posts.map(post => 
+        post._id === selectedPost._id 
+          ? { 
+              ...post, 
+              resolutionStatus, 
+              resolvedBy, 
+              resolutionNote, 
+              resolvedAt: resolvedDate || (resolutionStatus === 'Resolved' ? new Date().toISOString() : null),
+              isArchived 
+            } 
+          : post
+      ));
+
+      toast({
+        title: 'Post updated',
+        description: `Post resolution status updated to ${resolutionStatus}`,
+        status: 'success',
+        isClosable: true,
+      });
+      
+      onResolutionClose();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        status: 'error',
+        isClosable: true,
+      });
+    }
+  };
+
   // Fetch comments for a post
   const fetchComments = async (postId) => {
     try {
@@ -128,7 +248,7 @@ const PostManagement = () => {
       const post = posts.find(p => p._id === postId);
       setSelectedPost(post);
       
-      onOpen();
+      onCommentsOpen();
     } catch (error) {
       toast({
         title: 'Error',
@@ -274,242 +394,430 @@ const PostManagement = () => {
     }
   };
 
+  // Get status badge color
+  const getStatusBadgeColor = (status) => {
+    switch (status) {
+      case 'lost': return 'red';
+      case 'found': return 'green';
+      default: return 'gray';
+    }
+  };
+
+  // Get resolution status badge color
+  const getResolutionBadgeColor = (status) => {
+    switch (status) {
+      case 'Active': return 'blue';
+      case 'Resolved': return 'green';
+      case 'Unresolved': return 'orange';
+      default: return 'gray';
+    }
+  };
+
   return (
-    <Box p={8} bg="gray.50" minH="100vh">
-      <Heading as="h2" size="xl" textAlign="center" mb={10}>
-        🗃️ Admin: Manage Lost & Found Posts
-      </Heading>
+    <Container maxW="container.xl" p={0}>
+      <Box p={8} bg="gray.50" minH="100vh" borderRadius="lg">
+        <Heading as="h2" size="xl" textAlign="center" mb={6}>
+          🗃️ Admin: Manage Lost & Found Posts
+        </Heading>
 
-      <Box overflowX="auto" bg="white" p={6} borderRadius="lg" boxShadow="lg">
-        <Table variant="striped" size="md">
-          <Thead bg="gray.100">
-            <Tr>
-              <Th>Image</Th>
-              <Th>Title</Th>
-              <Th>Description</Th>
-              <Th>Status</Th>
-              <Th>User Email</Th>
-              <Th>Posted On</Th>
-              <Th>Action</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {posts.map((post) => (
-              <Tr key={post._id}>
-                <Td>
-                  <Image
-                    src={`http://localhost:5000${post.image}`}
-                    alt="Post"
-                    boxSize="60px"
-                    objectFit="cover"
-                    borderRadius="md"
-                    fallbackSrc="https://via.placeholder.com/60"
-                  />
-                </Td>
-                <Td>
-                  <Text fontWeight="medium">{post.title}</Text>
-                </Td>
-                <Td maxW="300px">
-                  <Tooltip label={post.description} hasArrow>
-                    <Text isTruncated>{post.description}</Text>
-                  </Tooltip>
-                </Td>
-                <Td>
-                  <Text fontWeight="bold" color={post.status === 'found' ? 'green.500' : 'red.500'}>
-                    {post.status === 'found' ? '🟢 Found' : '🔴 Lost'}
-                  </Text>
-                </Td>
-                <Td>
-                  <Tooltip label={post.user?.email}>
-                    <Text isTruncated maxW="150px">
-                      {post.user?.email || 'Unknown'}
+        {/* Filter Tabs */}
+        <Tabs variant="soft-rounded" colorScheme="blue" mb={6}>
+          <TabList>
+            <Tab onClick={() => setFilter('all')}>All Posts</Tab>
+            <Tab onClick={() => setFilter('active')}>Active Posts</Tab>
+            <Tab onClick={() => setFilter('archived')}>Archived Posts</Tab>
+          </TabList>
+        </Tabs>
+
+        <Box overflowX="auto" bg="white" borderRadius="lg" boxShadow="lg" mb={8}>
+          <Box bg="blue.50" py={4} px={6}>
+            <Heading size="md">Posts ({filteredPosts.length})</Heading>
+          </Box>
+          <Box p={0}>
+            <Table variant="striped" size="md">
+              <Thead bg="gray.100">
+                <Tr>
+                  <Th>Image</Th>
+                  <Th>Title</Th>
+                  <Th>Description</Th>
+                  <Th>Status</Th>
+                  <Th>Resolution</Th>
+                  <Th>User Email</Th>
+                  <Th>Posted On</Th>
+                  <Th>Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {filteredPosts.length === 0 ? (
+                  <Tr>
+                    <Td colSpan={8} textAlign="center" py={4}>
+                      No posts found
+                    </Td>
+                  </Tr>
+                ) : (
+                  filteredPosts.map((post) => (
+                    <Tr key={post._id} opacity={post.isArchived ? 0.7 : 1}>
+                      <Td>
+                        <Image
+                          src={`http://localhost:5000${post.image}`}
+                          alt="Post"
+                          boxSize="60px"
+                          objectFit="cover"
+                          borderRadius="md"
+                          fallbackSrc="https://via.placeholder.com/60"
+                        />
+                      </Td>
+                      <Td>
+                        <Text fontWeight="medium">{post.title}</Text>
+                        <Text fontSize="xs" color="gray.500">
+                          {post.location}
+                        </Text>
+                      </Td>
+                      <Td maxW="200px">
+                        <Tooltip label={post.description} hasArrow>
+                          <Text isTruncated>{post.description}</Text>
+                        </Tooltip>
+                      </Td>
+                      <Td>
+                        <Badge 
+                          colorScheme={getStatusBadgeColor(post.status)} 
+                          px={2} 
+                          py={1} 
+                          borderRadius="full"
+                        >
+                          {post.status === 'found' ? '🟢 Found' : '🔴 Lost'}
+                        </Badge>
+                      </Td>
+                      <Td>
+                        <Badge 
+                          colorScheme={getResolutionBadgeColor(post.resolutionStatus)} 
+                          px={2} 
+                          py={1} 
+                          borderRadius="full"
+                        >
+                          {post.resolutionStatus || 'Active'}
+                        </Badge>
+                        {post.isArchived && (
+                          <Badge ml={2} colorScheme="purple">Archived</Badge>
+                        )}
+                      </Td>
+                      <Td>
+                        <Tooltip label={post.user?.email}>
+                          <Text isTruncated maxW="150px">
+                            {post.user?.email || 'Unknown'}
+                          </Text>
+                        </Tooltip>
+                      </Td>
+                      <Td>
+                        {new Date(post.createdAt).toLocaleString('en-GB', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
+                      </Td>
+                      <Td>
+                        <HStack spacing={1}>
+                          <IconButton
+                            colorScheme="teal"
+                            icon={<SettingsIcon />}
+                            size="sm"
+                            onClick={() => openResolutionModal(post)}
+                            aria-label="Manage Resolution"
+                            title="Manage Resolution"
+                          />
+                          <IconButton
+                            colorScheme="blue"
+                            icon={<ChatIcon />}
+                            size="sm"
+                            onClick={() => fetchComments(post._id)}
+                            aria-label="View Comments"
+                            title="View Comments"
+                          />
+                          <IconButton
+                            colorScheme="red"
+                            icon={<DeleteIcon />}
+                            size="sm"
+                            onClick={() => handleDeletePost(post._id)}
+                            aria-label="Delete Post"
+                            title="Delete Post"
+                          />
+                        </HStack>
+                      </Td>
+                    </Tr>
+                  ))
+                )}
+              </Tbody>
+            </Table>
+          </Box>
+        </Box>
+
+        {/* Back to Dashboard Button */}
+        <Flex justify="center" mt={8}>
+          <Button
+            leftIcon={<ArrowBackIcon />}
+            colorScheme="blue"
+            variant="solid"
+            onClick={() => navigate('/dashboard')}
+          >
+            Back to Dashboard
+          </Button>
+        </Flex>
+
+        {/* Resolution Management Modal */}
+        <Modal isOpen={isResolutionOpen} onClose={onResolutionClose} size="lg">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader bg="teal.50" borderTopRadius="md">
+              <HStack>
+                <SettingsIcon color="teal.500" />
+                <Text>Manage Resolution Status</Text>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              {selectedPost && (
+                <VStack spacing={4} align="stretch">
+                  <Box>
+                    <HStack mb={2}>
+                      <Badge colorScheme={getStatusBadgeColor(selectedPost.status)} px={2} py={1}>
+                        {selectedPost.status === 'found' ? 'Found' : 'Lost'}
+                      </Badge>
+                      <Text fontWeight="bold">{selectedPost.title}</Text>
+                    </HStack>
+                    <Text fontSize="sm" color="gray.600">
+                      {selectedPost.description}
                     </Text>
-                  </Tooltip>
-                </Td>
-                <Td>
-                  {new Date(post.createdAt).toLocaleString('en-GB', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  })}
-                </Td>
-                <Td>
-                  <Flex gap={2}>
-                    <IconButton
-                      colorScheme="red"
-                      icon={<DeleteIcon />}
-                      size="sm"
-                      onClick={() => handleDeletePost(post._id)}
-                      aria-label="Delete Post"
+                    <Text fontSize="xs" mt={1} color="gray.500">
+                      Posted by: {selectedPost.user?.email || 'Unknown'} at {selectedPost.location}
+                    </Text>
+                  </Box>
+                  
+                  <Divider />
+                  
+                  <FormControl>
+                    <FormLabel>Resolution Status</FormLabel>
+                    <Select 
+                      value={resolutionStatus} 
+                      onChange={(e) => setResolutionStatus(e.target.value)}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Resolved">Resolved</option>
+                      <option value="Unresolved">Unresolved</option>
+                    </Select>
+                  </FormControl>
+                  
+                  {resolutionStatus === 'Resolved' && (
+                    <>
+                      <FormControl>
+                        <FormLabel>Resolved By User</FormLabel>
+                        <Select 
+                          placeholder="Select user to award points" 
+                          value={resolvedBy} 
+                          onChange={(e) => setResolvedBy(e.target.value)}
+                        >
+                          {users.map(user => (
+                            <option key={user._id} value={user._id}>
+                              {user.email} ({user.username})
+                            </option>
+                          ))}
+                        </Select>
+                        <Text fontSize="xs" color="green.500" mt={1}>
+                          <StarIcon mr={1} boxSize={3} />
+                          Selected user will receive 10 points!
+                        </Text>
+                      </FormControl>
+                      
+                      <FormControl>
+                        <FormLabel>Resolution Date</FormLabel>
+                        <Input 
+                          type="date" 
+                          value={resolvedDate} 
+                          onChange={(e) => setResolvedDate(e.target.value)}
+                          max={new Date().toISOString().split('T')[0]}
+                        />
+                      </FormControl>
+                    </>
+                  )}
+                  
+                  <FormControl>
+                    <FormLabel>Resolution Note</FormLabel>
+                    <Textarea 
+                      value={resolutionNote} 
+                      onChange={(e) => setResolutionNote(e.target.value)}
+                      placeholder="Add optional notes about the resolution..."
                     />
-                    <IconButton
-                      colorScheme="blue"
-                      icon={<ChatIcon />}
-                      size="sm"
-                      onClick={() => fetchComments(post._id)}
-                      aria-label="View Comments"
-                    />
-                  </Flex>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </Box>
-
-      {/* Back to Dashboard Button */}
-      <Flex justify="center" mt={8}>
-        <Button
-          leftIcon={<ArrowBackIcon />}
-          colorScheme="blue"
-          variant="solid"
-          onClick={() => navigate('/dashboard')}
-        >
-          Back to Dashboard
-        </Button>
-      </Flex>
-
-      {/* Comments Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {selectedPost && (
-              <Text>Comments for: {selectedPost.title}</Text>
-            )}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            {/* Add admin comment */}
-            <Box mb={4} p={4} borderWidth="1px" borderRadius="md">
-              <FormControl>
-                <FormLabel>Add Admin Comment</FormLabel>
-                <Textarea 
-                  value={adminComment}
-                  onChange={(e) => setAdminComment(e.target.value)}
-                  placeholder="Enter your comment as an admin..."
-                />
-              </FormControl>
+                  </FormControl>
+                  
+                  <HStack justify="space-between" mt={2}>
+                    <Text fontSize="sm">
+                      <Switch 
+                        isChecked={resolutionStatus === 'Resolved'} 
+                        isReadOnly 
+                        colorScheme="green" 
+                        mr={2} 
+                      />
+                      Archive post automatically when resolved
+                    </Text>
+                  </HStack>
+                </VStack>
+              )}
+            </ModalBody>
+            <ModalFooter bg="gray.50" borderBottomRadius="md">
+              <Button onClick={onResolutionClose} mr={3}>Cancel</Button>
               <Button 
-                mt={3} 
-                colorScheme="blue" 
-                leftIcon={<AddIcon />} 
-                onClick={handleAddAdminComment}
+                colorScheme="teal" 
+                leftIcon={<CheckIcon />}
+                onClick={handleUpdateResolution}
               >
-                Post as Admin
+                Update Resolution
               </Button>
-            </Box>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
-            {/* Reply to comment form (visible only when replying) */}
-            {replyToId && (
+        {/* Comments Modal */}
+        <Modal isOpen={isCommentsOpen} onClose={onCommentsClose} size="xl">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader bg="blue.50" borderTopRadius="md">
+              <HStack>
+                <ChatIcon color="blue.500" />
+                <Text>Comments for: {selectedPost?.title}</Text>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              {/* Add admin comment */}
               <Box mb={4} p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
                 <FormControl>
-                  <FormLabel>Reply as Admin</FormLabel>
+                  <FormLabel>Add Admin Comment</FormLabel>
                   <Textarea 
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    placeholder="Enter your reply..."
+                    value={adminComment}
+                    onChange={(e) => setAdminComment(e.target.value)}
+                    placeholder="Enter your comment as an admin..."
                   />
                 </FormControl>
-                <Flex gap={2} mt={3}>
-                  <Button 
-                    colorScheme="blue" 
-                    leftIcon={<AddIcon />} 
-                    onClick={handleReply}
-                  >
-                    Post Reply
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setReplyToId(null);
-                      setReplyText('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </Flex>
+                <Button 
+                  mt={3} 
+                  colorScheme="blue" 
+                  leftIcon={<AddIcon />} 
+                  onClick={handleAddAdminComment}
+                >
+                  Post as Admin
+                </Button>
               </Box>
-            )}
 
-            <Divider my={4} />
-
-            {/* Comments list */}
-            <VStack spacing={4} align="stretch" mt={4}>
-              {comments.length === 0 ? (
-                <Text>No comments yet</Text>
-              ) : (
-                comments.map((comment) => (
-                  <Box 
-                    key={comment._id} 
-                    p={4} 
-                    borderWidth="1px" 
-                    borderRadius="md"
-                    ml={comment.parentCommentId ? 8 : 0}
-                    bg={comment.isRemoved ? "red.50" : comment.isAdmin ? "blue.50" : "white"} 
-                    borderLeft={comment.isRemoved ? "4px solid red" : "none"}
-                  >
-                    <Flex justify="space-between" mb={2}>
-                      <HStack>
-                        <Text fontWeight="bold">
-                          {comment.isAdmin 
-                            ? 'Admin'
-                            : (comment.userId?.username || comment.userId?.email || 'Unknown User')
-                          }
-                        </Text>
-                        {comment.isAdmin && (
-                          <Badge colorScheme="blue">Admin</Badge>
-                        )}
-                        {comment.isRemoved && (
-                          <Badge colorScheme="red">Removed</Badge>
-                        )}
-                        {comment.parentCommentId && (
-                          <Badge colorScheme="purple">Reply</Badge>
-                        )}
-                      </HStack>
-                      <Text fontSize="sm" color="gray.500">
-                        {new Date(comment.createdAt).toLocaleString()}
-                      </Text>
-                    </Flex>
-                    
-                    <Text 
-                      my={2}
-                      color={comment.isRemoved ? "red.500" : "inherit"}
-                      fontStyle={comment.isRemoved ? "italic" : "normal"}
+              {/* Reply to comment form (visible only when replying) */}
+              {replyToId && (
+                <Box mb={4} p={4} borderWidth="1px" borderRadius="md" bg="blue.50">
+                  <FormControl>
+                    <FormLabel>Reply as Admin</FormLabel>
+                    <Textarea 
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Enter your reply..."
+                    />
+                  </FormControl>
+                  <Flex gap={2} mt={3}>
+                    <Button 
+                      colorScheme="blue" 
+                      leftIcon={<AddIcon />} 
+                      onClick={handleReply}
                     >
-                      {comment.text}
-                    </Text>
-                    
-                    <Flex justify="flex-end" gap={2} mt={2}>
-                      {!comment.parentCommentId && !comment.isRemoved && (
-                        <Button 
-                          size="xs" 
-                          leftIcon={<ChatIcon />} 
-                          onClick={() => {
-                            setReplyToId(comment._id);
-                            setReplyText('');
-                          }}
-                        >
-                          Reply
-                        </Button>
-                      )}
-                      {!comment.isRemoved && (
-                        <IconButton
-                          colorScheme="red"
-                          icon={<DeleteIcon />}
-                          size="xs"
-                          onClick={() => handleDeleteComment(comment._id)}
-                          aria-label="Delete Comment"
-                        />
-                      )}
-                    </Flex>
-                  </Box>
-                ))
+                      Post Reply
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setReplyToId(null);
+                        setReplyText('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </Flex>
+                </Box>
               )}
-            </VStack>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </Box>
+
+              <Divider my={4} />
+
+              {/* Comments list */}
+              <VStack spacing={4} align="stretch" mt={4}>
+                {comments.length === 0 ? (
+                  <Text textAlign="center" py={4} color="gray.500">No comments yet</Text>
+                ) : (
+                  comments.map((comment) => (
+                    <Box 
+                      key={comment._id} 
+                      p={4} 
+                      borderWidth="1px" 
+                      borderRadius="md"
+                      ml={comment.parentCommentId ? 8 : 0}
+                      bg={comment.isRemoved ? "red.50" : comment.isAdmin ? "blue.50" : "white"} 
+                      borderLeft={comment.isRemoved ? "4px solid red" : comment.isAdmin ? "4px solid blue" : "none"}
+                    >
+                      <Flex justify="space-between" mb={2}>
+                        <HStack>
+                          <Text fontWeight="bold">
+                            {comment.isAdmin 
+                              ? 'Admin'
+                              : (comment.userId?.username || comment.userId?.email || 'Unknown User')
+                            }
+                          </Text>
+                          {comment.isAdmin && (
+                            <Badge colorScheme="blue">Admin</Badge>
+                          )}
+                          {comment.isRemoved && (
+                            <Badge colorScheme="red">Removed</Badge>
+                          )}
+                          {comment.parentCommentId && (
+                            <Badge colorScheme="purple">Reply</Badge>
+                          )}
+                        </HStack>
+                        <Text fontSize="sm" color="gray.500">
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </Text>
+                      </Flex>
+                      
+                      <Text 
+                        my={2}
+                        color={comment.isRemoved ? "red.500" : "inherit"}
+                        fontStyle={comment.isRemoved ? "italic" : "normal"}
+                      >
+                        {comment.text}
+                      </Text>
+                      
+                      <Flex justify="flex-end" gap={2} mt={2}>
+                        {!comment.parentCommentId && !comment.isRemoved && (
+                          <Button 
+                            size="xs" 
+                            leftIcon={<ChatIcon />} 
+                            onClick={() => {
+                              setReplyToId(comment._id);
+                              setReplyText('');
+                            }}
+                          >
+                            Reply
+                          </Button>
+                        )}
+                        {!comment.isRemoved && (
+                          <IconButton
+                            colorScheme="red"
+                            icon={<DeleteIcon />}
+                            size="xs"
+                            onClick={() => handleDeleteComment(comment._id)}
+                            aria-label="Remove Comment"
+                          />
+                        )}
+                      </Flex>
+                    </Box>
+                  ))
+                )}
+              </VStack>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      </Box>
+    </Container>
   );
 };
 

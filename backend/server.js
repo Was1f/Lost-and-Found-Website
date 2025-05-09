@@ -17,7 +17,7 @@ import matchRoutes from './Routes/match.route.js';
 // import reportRoutes from './Routes/report.route.js';
 import adminReportRoutes from "./Routes/admin.report.route.js";
 import postHistoryRoutes from "./Routes/postHistory.route.js";
-import adminPostRoutes from "./routes/admin.post.route.js";
+import adminPostRoutes from "./Routes/admin.post.route.js";
 import leaderboardRoutes from './Routes/leaderboard.route.js';
 
 import reportRoutes from './Routes/report.route.js';
