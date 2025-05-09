@@ -1,0 +1,47 @@
+/* Container for the page */
+.reports-container {
+    background-color: #f7fafc;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    max-width: 900px;
+    margin: 40px auto;
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  /* Card layout for each post */
+  .report-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    transition: all 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid #3182ce; /* Blue accent border */
+    position: relative;
+  }
+  
+  /* Status Badge Colors */
+  .report-status-badge {
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 6px 15px;
+    border-radius: 999px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  /* Button Styling for Delete */
+  .popover-body .chakra-button {
+    margin-top: 15px;
+  }
+  
+  

@@ -78,7 +78,19 @@ const Navbar = () => {
 						View Recent Posts
 						</Button>
                 </Link>
-
+				
+				<Link to="/my-reports">
+              <Button
+                variant="outline"
+                colorScheme="blue"
+                _hover={{
+                  background: "transparent",
+                  borderColor: "blue.500",
+                }}
+              >
+                My Reports
+              </Button>
+            </Link>
 					<Button
 					onClick={handleLogout}
 					variant="outline"  // Transparent with border

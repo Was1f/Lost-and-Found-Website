@@ -16,9 +16,18 @@ const commentSchema = new mongoose.Schema({
     required: true,   // Comment text
     trim: true,
   },
+  parentCommentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',  // Reference to the parent comment (null for main comments)
+    default: null,   // Null for top-level comments, set for replies
+  },
   createdAt: {
     type: Date,
     default: Date.now,  // When the comment was created
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,  // When the comment was last updated
   },
 });
 

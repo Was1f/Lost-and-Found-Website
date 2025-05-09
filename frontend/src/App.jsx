@@ -20,7 +20,10 @@ import Dashboard from "./pages/Dashboard";
 import PostManagement from "./pages/PostManagement";
 import UserManagement from "./pages/UserManagement";
 import PostDetailsPage from "./pages/PostDetailsPage";
+
 import PostHistoryPage from "./pages/PostHistoryPage";
+import ViewMyReportsPage from './pages/ViewMyReportsPage';
+
 function App() {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -51,6 +54,7 @@ function App() {
         <Route path='/my-posts' element={<MyPostsPage />} />
         <Route path='/edit-post/:id' element={<EditPostPage />} />
         <Route path='/edit-profile' element={<EditProfile/>} />
+        <Route path="/my-reports" element={<ViewMyReportsPage/>} />
 
         {/* Admin Routes */}
         <Route path='/admin/login' element={<AdminLogin />} />

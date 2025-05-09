@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Heading, Text, Image, VStack, Input, Button, Badge } from "@chakra-ui/react";
+import { Box, Heading, Radio, RadioGroup, FormControl, FormLabel, Textarea, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Text, Image, VStack, Input, Button, Badge } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -8,6 +8,11 @@ const PostDetailsPage = () => {
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [isReportModalOpen, setReportModalOpen] = useState(false);
+  const [reportType, setReportType] = useState('');
+  const [description, setDescription] = useState('');
   const token = localStorage.getItem("authToken");
 
   // Fetch post details and comments
@@ -56,6 +61,70 @@ const PostDetailsPage = () => {
     }
   };
 
+  // Handle posting a reply
+  const handleReplySubmit = async () => {
+    if (!replyText.trim()) return; // Prevent empty replies
+    
+    try {
+      // Make sure the postId is being sent correctly as a valid MongoDB ObjectId
+      const response = await axios.post(
+        `http://localhost:5000/api/comments/comments/reply`, // Fixed route path to match backend
+        { 
+          text: replyText, 
+          parentCommentId: selectedCommentId, 
+          postId: id // This should be a valid MongoDB ObjectId
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        }
+      );
+      
+      console.log("Reply posted successfully:", response.data);
+      
+      setReplyText(""); // Clear input
+      setSelectedCommentId(null); // Close reply input
+
+      // ✅ Refresh comments with replies immediately after posting
+      const updatedComments = await axios.get(`http://localhost:5000/api/comments/${id}`);
+      setComments(updatedComments.data);
+    } catch (error) {
+      console.error("Error posting reply:", error.response?.data || error.message);
+      alert(`Error posting reply: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!reportType || !description) {
+      alert("Please provide a report type and description");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/api/reports',  // API endpoint to submit the report
+        {
+          postId: id,  // Pass the post ID
+          reportType,
+          description,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response.data);
+      setReportModalOpen(false);  // Close the modal after submitting
+      alert('Your report has been submitted!');
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      alert('Failed to submit report');
+    }
+  };
+
   if (!post) {
     return <Text>Loading...</Text>;
   }
@@ -91,12 +160,56 @@ const PostDetailsPage = () => {
       </Text>
 
       <Text fontSize="sm" color="gray.600" mb={2}>
-        📧 Posted By: {post.user.email}
+        📧 Posted By: {post.user?.email || "Unknown"}
       </Text>
 
       <Text fontSize="sm" color="gray.500" mb={6}>
         🕒 Posted On: {new Date(post.createdAt).toLocaleString()}
       </Text>
+
+       {/* Report Post Button */}
+       <Button onClick={() => setReportModalOpen(true)} colorScheme="blue" mb={4}>
+        Report
+      </Button>
+
+      {/*  Report Modal */}
+      {isReportModalOpen && (
+        <Modal isOpen={isReportModalOpen} onClose={() => setReportModalOpen(false)}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Report Post</ModalHeader>
+            <ModalBody>
+              <FormControl isRequired>
+                <FormLabel>Report Type</FormLabel>
+                <RadioGroup onChange={setReportType} value={reportType}>
+                  <Radio value="False Information">False Information</Radio>
+                  <Radio value="Hate Speech">Hate Speech</Radio>
+                  <Radio value="Spam">Spam</Radio>
+                  <Radio value="Irrelevant Content">Irrelevant Content</Radio>
+                  <Radio value="Others">Others</Radio>
+                </RadioGroup>
+              </FormControl>
+
+              {/* Always show the description input */}
+              <FormControl mt={4} isRequired>
+                <FormLabel>Description</FormLabel>
+                <Textarea
+                  placeholder="Please describe the issue"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </FormControl>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button colorScheme="blue" onClick={handleReportSubmit}>
+                Submit Report
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
+
 
       {/* Comments Section */}
       <Box mt={10}>
@@ -135,6 +248,63 @@ const PostDetailsPage = () => {
                 <Text fontSize="xs" color="gray.500" mt={1}>
                   {new Date(comment.createdAt).toLocaleString()}
                 </Text>
+
+                {/* Reply Button */}
+                <Button
+                  colorScheme="blue"
+                  size="sm"
+                  mt={2}
+                  onClick={() => setSelectedCommentId(comment._id)} // Set comment ID to reply to
+                >
+                  Reply
+                </Button>
+
+                {/* Replies Section */}
+                {comment._doc?.replies && comment._doc.replies.length > 0 ? (
+                  <Box mt={3} ml={6}>
+                    {comment._doc.replies.map((reply) => (
+                      <Box key={reply._id} bg="gray.200" p={3} rounded="md" mb={2}>
+                        <Text fontWeight="bold" fontSize="sm" mb={1}>
+                          {reply.userId?.email || "Anonymous"}
+                        </Text>
+                        <Text fontSize="sm">{reply.text}</Text>
+                        <Text fontSize="xs" color="gray.500" mt={1}>
+                          {new Date(reply.createdAt).toLocaleString()}
+                        </Text>
+                      </Box>
+                    ))}
+                  </Box>
+                ) : comment.replies && comment.replies.length > 0 ? (
+                  <Box mt={3} ml={6}>
+                    {comment.replies.map((reply) => (
+                      <Box key={reply._id} bg="gray.200" p={3} rounded="md" mb={2}>
+                        <Text fontWeight="bold" fontSize="sm" mb={1}>
+                          {reply.userId?.email || "Anonymous"}
+                        </Text>
+                        <Text fontSize="sm">{reply.text}</Text>
+                        <Text fontSize="xs" color="gray.500" mt={1}>
+                          {new Date(reply.createdAt).toLocaleString()}
+                        </Text>
+                      </Box>
+                    ))}
+                  </Box>
+                ) : null}
+
+                {/* Reply Input */}
+                {selectedCommentId === comment._id && (
+                  <Box display="flex" mt={3}>
+                    <Input
+                      placeholder="Write a reply..."
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      mr={2}
+                    />
+                    <Button colorScheme="blue" onClick={handleReplySubmit}>
+                      Reply
+                    </Button>
+                  </Box>
+                )}
+
               </Box>
             ))
           ) : (
