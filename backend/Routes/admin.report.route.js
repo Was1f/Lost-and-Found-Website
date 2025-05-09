@@ -1,6 +1,7 @@
 import express from "express";
 import Report from "../models/report.model.js";
 import Post from "../models/post.model.js";
+import { updateUserPoints } from "../controllers/leaderboard.controller.js";
 
 const router = express.Router();
 
@@ -55,6 +56,11 @@ router.put("/:id", async (req, res) => {
       ...(adminResponse && { adminResponse }),
       updatedAt: Date.now()
     });
+
+    // If report is being resolved, add 5 points to the user who reported
+    if (status === "Resolved" && report.userId) {
+      await updateUserPoints(report.userId, 5);
+    }
 
     res.json(updatedReport);
   } catch (error) {

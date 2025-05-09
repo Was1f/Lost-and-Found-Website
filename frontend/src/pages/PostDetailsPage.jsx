@@ -1,7 +1,43 @@
 import { useState, useEffect } from "react";
-import { Box, Heading, Radio, RadioGroup, FormControl, FormLabel, Textarea, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Text, Image, VStack, Input, Button, Badge } from "@chakra-ui/react";
+import { 
+  Box, 
+  Heading, 
+  Radio, 
+  RadioGroup, 
+  FormControl, 
+  FormLabel, 
+  Textarea, 
+  Modal, 
+  ModalOverlay, 
+  ModalContent, 
+  ModalHeader, 
+  ModalBody, 
+  ModalFooter, 
+  useDisclosure, 
+  Text, 
+  Image, 
+  VStack, 
+  Input, 
+  Button, 
+  Badge,
+  Container,
+  Flex,
+  HStack,
+  Icon,
+  Divider,
+  useColorModeValue,
+  Avatar,
+  Tooltip,
+  ScaleFade,
+  Fade,
+  SlideFade
+} from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { FaMapMarkerAlt, FaUser, FaClock, FaFlag, FaComment } from "react-icons/fa";
+import { motion } from "framer-motion";
+
+const MotionBox = motion(Box);
 
 const PostDetailsPage = () => {
   const { id } = useParams(); // Get the post ID from URL
@@ -126,193 +162,351 @@ const PostDetailsPage = () => {
   };
 
   if (!post) {
-    return <Text>Loading...</Text>;
+    return (
+      <Flex justify="center" align="center" minH="60vh">
+        <Text fontSize="xl" color="gray.500">Loading post details...</Text>
+      </Flex>
+    );
   }
 
   return (
-    <Box maxW="4xl" mx="auto" mt={10} p={6} bg="white" boxShadow="md" rounded="md">
-      {/* Post Image */}
-      <Image
-        src={`http://localhost:5000${post.image}`}
-        alt={post.title}
-        width="100%"
-        maxHeight="500px"
-        objectFit="cover"
-        borderRadius="md"
-        mb={6}
-      />
+    <Container maxW="6xl" py={8}>
+      <ScaleFade initialScale={0.9} in={true}>
+        <Box 
+          bg={useColorModeValue("white", "gray.800")}
+          borderRadius="xl"
+          boxShadow="xl"
+          overflow="hidden"
+          mb={8}
+        >
+          {/* Post Image with Hover Effect */}
+          <Box position="relative" overflow="hidden">
+            <Image
+              src={`http://localhost:5000${post.image}`}
+              alt={post.title}
+              width="100%"
+              maxHeight="500px"
+              objectFit="cover"
+              transition="transform 0.3s ease"
+              _hover={{ transform: "scale(1.02)" }}
+            />
+            <Badge
+              position="absolute"
+              top={4}
+              right={4}
+              colorScheme={post.status === "lost" ? "red" : "green"}
+              fontSize="md"
+              px={4}
+              py={2}
+              borderRadius="full"
+              textTransform="uppercase"
+              fontWeight="bold"
+              boxShadow="lg"
+            >
+              {post.status.toUpperCase()}
+            </Badge>
+          </Box>
 
-      {/* Post Info */}
-      <Heading as="h2" size="xl" mb={4}>
-        {post.title}
-      </Heading>
+          {/* Post Content */}
+          <Box p={8}>
+            <SlideFade in={true} offsetY="20px">
+              <Heading 
+                as="h1" 
+                size="2xl" 
+                mb={6}
+                bgGradient="linear(to-r, blue.400, blue.600)"
+                bgClip="text"
+                fontWeight="extrabold"
+                lineHeight="1.2"
+                pb={2}
+              >
+                {post.title}
+              </Heading>
 
-      <Badge colorScheme={post.status === "lost" ? "red" : "green"} fontSize="md" mb={4}>
-        {post.status.toUpperCase()}
-      </Badge>
+              <Text 
+                fontSize="lg" 
+                color={useColorModeValue("gray.700", "gray.300")} 
+                mb={8}
+                lineHeight="1.8"
+              >
+                {post.description}
+              </Text>
 
-      <Text fontSize="md" color="gray.700" mb={4}>
-        {post.description}
-      </Text>
+              <HStack spacing={8} mb={8} wrap="wrap">
+                <Tooltip label="Location">
+                  <HStack 
+                    color="blue.500"
+                    transition="all 0.3s"
+                    _hover={{ transform: "translateX(5px)" }}
+                  >
+                    <Icon as={FaMapMarkerAlt} />
+                    <Text fontWeight="medium">{post.location}</Text>
+                  </HStack>
+                </Tooltip>
 
-      <Text fontSize="sm" color="gray.600" mb={2}>
-        📍 Location: {post.location}
-      </Text>
+                <Tooltip label="Posted By">
+                  <HStack 
+                    color="gray.500"
+                    transition="all 0.3s"
+                    _hover={{ transform: "translateX(5px)" }}
+                  >
+                    <Icon as={FaUser} />
+                    <Text>{post.user?.email || "Anonymous"}</Text>
+                  </HStack>
+                </Tooltip>
 
-      <Text fontSize="sm" color="gray.600" mb={2}>
-        📧 Posted By: {post.user?.email || "Unknown"}
-      </Text>
+                <Tooltip label="Posted On">
+                  <HStack 
+                    color="gray.500"
+                    transition="all 0.3s"
+                    _hover={{ transform: "translateX(5px)" }}
+                  >
+                    <Icon as={FaClock} />
+                    <Text>{new Date(post.createdAt).toLocaleString()}</Text>
+                  </HStack>
+                </Tooltip>
+              </HStack>
 
-      <Text fontSize="sm" color="gray.500" mb={6}>
-        🕒 Posted On: {new Date(post.createdAt).toLocaleString()}
-      </Text>
-
-       {/* Report Post Button */}
-       <Button onClick={() => setReportModalOpen(true)} colorScheme="blue" mb={4}>
-        Report
-      </Button>
-
-      {/*  Report Modal */}
-      {isReportModalOpen && (
-        <Modal isOpen={isReportModalOpen} onClose={() => setReportModalOpen(false)}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Report Post</ModalHeader>
-            <ModalBody>
-              <FormControl isRequired>
-                <FormLabel>Report Type</FormLabel>
-                <RadioGroup onChange={setReportType} value={reportType}>
-                  <Radio value="False Information">False Information</Radio>
-                  <Radio value="Hate Speech">Hate Speech</Radio>
-                  <Radio value="Spam">Spam</Radio>
-                  <Radio value="Irrelevant Content">Irrelevant Content</Radio>
-                  <Radio value="Others">Others</Radio>
-                </RadioGroup>
-              </FormControl>
-
-              {/* Always show the description input */}
-              <FormControl mt={4} isRequired>
-                <FormLabel>Description</FormLabel>
-                <Textarea
-                  placeholder="Please describe the issue"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </FormControl>
-            </ModalBody>
-
-            <ModalFooter>
-              <Button colorScheme="blue" onClick={handleReportSubmit}>
-                Submit Report
+              <Button
+                leftIcon={<FaFlag />}
+                colorScheme="blue"
+                variant="outline"
+                onClick={() => setReportModalOpen(true)}
+                mb={8}
+                _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+                transition="all 0.3s"
+              >
+                Report Post
               </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      )}
-
-
-      {/* Comments Section */}
-      <Box mt={10}>
-        <Heading as="h3" size="lg" mb={4}>
-          Comments
-        </Heading>
-
-        {/* Comment Input */}
-        <Box display="flex" mb={4}>
-          <Input
-            placeholder="Write a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            mr={2}
-          />
-          <Button colorScheme="blue" onClick={handleCommentSubmit}>
-            Comment
-          </Button>
+            </SlideFade>
+          </Box>
         </Box>
 
-        {/* List of Comments */}
-        <VStack align="start" spacing={3}>
-          {comments.length > 0 ? (
-            comments.map((comment) => (
-              <Box
-                key={comment._id}
-                bg="gray.100"
-                p={3}
-                rounded="md"
-                w="100%"
+        {/* Comments Section */}
+        <Fade in={true}>
+          <Box 
+            bg={useColorModeValue("white", "gray.800")}
+            borderRadius="xl"
+            boxShadow="xl"
+            p={8}
+          >
+            <Heading 
+              as="h2" 
+              size="xl" 
+              mb={6}
+              display="flex"
+              alignItems="center"
+              gap={3}
+            >
+              <Icon as={FaComment} color="blue.500" />
+              Comments
+            </Heading>
+
+            {/* Comment Input */}
+            <Box 
+              mb={8}
+              p={4}
+              bg={useColorModeValue("gray.50", "gray.700")}
+              borderRadius="lg"
+            >
+              <Input
+                placeholder="Write a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                mb={4}
+                size="lg"
+                bg={useColorModeValue("white", "gray.600")}
+                _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)" }}
+              />
+              <Button 
+                colorScheme="blue"
+                onClick={handleCommentSubmit}
+                _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+                transition="all 0.3s"
               >
-                <Text fontWeight="bold" fontSize="sm" mb={1}>
-                  {comment.userId?.email || "Anonymous"} {/* populated user email */}
-                </Text>
-                <Text fontSize="sm">{comment.text}</Text>
-                <Text fontSize="xs" color="gray.500" mt={1}>
-                  {new Date(comment.createdAt).toLocaleString()}
-                </Text>
+                Post Comment
+              </Button>
+            </Box>
 
-                {/* Reply Button */}
-                <Button
-                  colorScheme="blue"
-                  size="sm"
-                  mt={2}
-                  onClick={() => setSelectedCommentId(comment._id)} // Set comment ID to reply to
+            {/* Comments List */}
+            <VStack spacing={4} align="stretch">
+              {comments.length > 0 ? (
+                comments.map((comment, index) => (
+                  <MotionBox
+                    key={comment._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <Box
+                      bg={useColorModeValue("gray.50", "gray.700")}
+                      p={4}
+                      borderRadius="lg"
+                      _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+                      transition="all 0.3s"
+                    >
+                      <HStack mb={3}>
+                        <Avatar 
+                          size="md" 
+                          name={comment.userId?.email || "Anonymous"}
+                          src={comment.userId?.profilePic ? `http://localhost:5000${comment.userId.profilePic}` : undefined}
+                        />
+                        <Box>
+                          <Text fontWeight="bold" fontSize="md">
+                            {comment.userId?.email || "Anonymous"}
+                          </Text>
+                          <Text fontSize="sm" color="gray.500">
+                            {new Date(comment.createdAt).toLocaleString()}
+                          </Text>
+                        </Box>
+                      </HStack>
+
+                      <Text fontSize="md" mb={4} lineHeight="1.6">
+                        {comment.text}
+                      </Text>
+
+                      <Button
+                        size="md"
+                        variant="ghost"
+                        colorScheme="blue"
+                        onClick={() => setSelectedCommentId(comment._id)}
+                        _hover={{ transform: "translateX(5px)" }}
+                        transition="all 0.3s"
+                      >
+                        Reply
+                      </Button>
+
+                      {/* Replies Section */}
+                      {comment.replies && comment.replies.length > 0 && (
+                        <Box mt={4} ml={8}>
+                          {comment.replies.map((reply) => (
+                            <Box
+                              key={reply._id}
+                              bg={useColorModeValue("gray.100", "gray.600")}
+                              p={4}
+                              borderRadius="md"
+                              mb={3}
+                            >
+                              <HStack mb={3}>
+                                <Avatar 
+                                  size="sm" 
+                                  name={reply.userId?.email || "Anonymous"}
+                                  src={reply.userId?.profilePic ? `http://localhost:5000${reply.userId.profilePic}` : undefined}
+                                />
+                                <Box>
+                                  <Text fontWeight="bold" fontSize="sm">
+                                    {reply.userId?.email || "Anonymous"}
+                                  </Text>
+                                  <Text fontSize="xs" color="gray.500">
+                                    {new Date(reply.createdAt).toLocaleString()}
+                                  </Text>
+                                </Box>
+                              </HStack>
+                              <Text fontSize="sm" lineHeight="1.6">{reply.text}</Text>
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+
+                      {/* Reply Input */}
+                      {selectedCommentId === comment._id && (
+                        <Box mt={4} ml={8}>
+                          <Input
+                            placeholder="Write a reply..."
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            mb={3}
+                            size="md"
+                            fontSize="sm"
+                          />
+                          <Button
+                            size="md"
+                            colorScheme="blue"
+                            onClick={handleReplySubmit}
+                            _hover={{ transform: "translateY(-2px)" }}
+                            transition="all 0.3s"
+                          >
+                            Post Reply
+                          </Button>
+                        </Box>
+                      )}
+                    </Box>
+                  </MotionBox>
+                ))
+              ) : (
+                <Text 
+                  textAlign="center" 
+                  color="gray.500"
+                  py={8}
                 >
-                  Reply
-                </Button>
+                  No comments yet. Be the first to comment!
+                </Text>
+              )}
+            </VStack>
+          </Box>
+        </Fade>
+      </ScaleFade>
 
-                {/* Replies Section */}
-                {comment._doc?.replies && comment._doc.replies.length > 0 ? (
-                  <Box mt={3} ml={6}>
-                    {comment._doc.replies.map((reply) => (
-                      <Box key={reply._id} bg="gray.200" p={3} rounded="md" mb={2}>
-                        <Text fontWeight="bold" fontSize="sm" mb={1}>
-                          {reply.userId?.email || "Anonymous"}
-                        </Text>
-                        <Text fontSize="sm">{reply.text}</Text>
-                        <Text fontSize="xs" color="gray.500" mt={1}>
-                          {new Date(reply.createdAt).toLocaleString()}
-                        </Text>
-                      </Box>
-                    ))}
-                  </Box>
-                ) : comment.replies && comment.replies.length > 0 ? (
-                  <Box mt={3} ml={6}>
-                    {comment.replies.map((reply) => (
-                      <Box key={reply._id} bg="gray.200" p={3} rounded="md" mb={2}>
-                        <Text fontWeight="bold" fontSize="sm" mb={1}>
-                          {reply.userId?.email || "Admin"}
-                        </Text>
-                        <Text fontSize="sm">{reply.text}</Text>
-                        <Text fontSize="xs" color="gray.500" mt={1}>
-                          {new Date(reply.createdAt).toLocaleString()}
-                        </Text>
-                      </Box>
-                    ))}
-                  </Box>
-                ) : null}
+      {/* Report Modal */}
+      <Modal 
+        isOpen={isReportModalOpen} 
+        onClose={() => setReportModalOpen(false)}
+        size="xl"
+        isCentered
+      >
+        <ModalOverlay backdropFilter="blur(10px)" />
+        <ModalContent maxW="800px" mx={4}>
+          <ModalHeader fontSize="2xl" pb={4}>Report Post</ModalHeader>
+          <ModalBody pb={6}>
+            <FormControl isRequired mb={6}>
+              <FormLabel fontSize="lg" mb={3}>Report Type</FormLabel>
+              <RadioGroup onChange={setReportType} value={reportType}>
+                <VStack align="start" spacing={4}>
+                  <Radio value="False Information" size="lg">False Information</Radio>
+                  <Radio value="Hate Speech" size="lg">Hate Speech</Radio>
+                  <Radio value="Spam" size="lg">Spam</Radio>
+                  <Radio value="Irrelevant Content" size="lg">Irrelevant Content</Radio>
+                  <Radio value="Others" size="lg">Others</Radio>
+                </VStack>
+              </RadioGroup>
+            </FormControl>
 
-                {/* Reply Input */}
-                {selectedCommentId === comment._id && (
-                  <Box display="flex" mt={3}>
-                    <Input
-                      placeholder="Write a reply..."
-                      value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      mr={2}
-                    />
-                    <Button colorScheme="blue" onClick={handleReplySubmit}>
-                      Reply
-                    </Button>
-                  </Box>
-                )}
+            <FormControl isRequired>
+              <FormLabel fontSize="lg" mb={3}>Description</FormLabel>
+              <Textarea
+                placeholder="Please describe the issue in detail..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)" }}
+                size="lg"
+                minH="200px"
+                fontSize="md"
+              />
+            </FormControl>
+          </ModalBody>
 
-              </Box>
-            ))
-          ) : (
-            <Text>No comments yet. Be the first!</Text>
-          )}
-        </VStack>
-      </Box>
-    </Box>
+          <ModalFooter pt={4} pb={6}>
+            <Button 
+              variant="ghost" 
+              mr={4} 
+              onClick={() => setReportModalOpen(false)}
+              size="lg"
+            >
+              Cancel
+            </Button>
+            <Button 
+              colorScheme="blue" 
+              onClick={handleReportSubmit}
+              _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+              transition="all 0.3s"
+              size="lg"
+            >
+              Submit Report
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </Container>
   );
 };
 

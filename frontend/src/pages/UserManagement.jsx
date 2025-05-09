@@ -139,14 +139,14 @@ const UserManagement = () => {
         }
       );
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to fetch users');
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch users');
+      }
 
       const data = await response.json();
-      setUsers(data.users);
-      setPagination(data.pagination);
+      setUsers(data.users || []);
+      setPagination(data.pagination || { total: 0, pages: 1 });
     } catch (error) {
       toast({
         title: 'Error',
@@ -154,6 +154,8 @@ const UserManagement = () => {
         status: 'error',
         isClosable: true,
       });
+      setUsers([]);
+      setPagination({ total: 0, pages: 1 });
     } finally {
       setLoading(false);
     }
@@ -515,7 +517,7 @@ const UserManagement = () => {
             <Flex justify="space-between" align="center">
               <Box>
                 <Text color="gray.500" fontSize="sm">Active Users</Text>
-                <Heading size="lg">{users.filter(u => u.status === 'active').length}</Heading>
+                <Heading size="lg">{users?.filter(u => u.status === 'active')?.length || 0}</Heading>
               </Box>
               <Box
                 p={2}
@@ -539,7 +541,7 @@ const UserManagement = () => {
             <Flex justify="space-between" align="center">
               <Box>
                 <Text color="gray.500" fontSize="sm">Banned Users</Text>
-                <Heading size="lg">{users.filter(u => u.status === 'banned').length}</Heading>
+                <Heading size="lg">{users?.filter(u => u.status === 'banned')?.length || 0}</Heading>
               </Box>
               <Box
                 p={2}

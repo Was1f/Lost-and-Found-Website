@@ -69,7 +69,9 @@ const MyPostsPage = () => {
   const [stats, setStats] = useState({
     total: 0,
     lost: 0,
-    found: 0
+    found: 0,
+    resolved: 0,
+    unresolved: 0
   });
   const token = localStorage.getItem("authToken");
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -95,7 +97,9 @@ const MyPostsPage = () => {
         const stats = {
           total: sortedPosts.length,
           lost: sortedPosts.filter(post => post.status === 'lost').length,
-          found: sortedPosts.filter(post => post.status === 'found').length
+          found: sortedPosts.filter(post => post.status === 'found').length,
+          resolved: sortedPosts.filter(post => post.isResolved).length,
+          unresolved: sortedPosts.filter(post => !post.isResolved).length
         };
         setStats(stats);
         
@@ -339,6 +343,20 @@ const MyPostsPage = () => {
                       <FaRegSmile color="#38a169" /> Items you've found
                     </StatHelpText>
                   </Stat>
+                  <Stat>
+                    <StatLabel color="gray.600">Resolved Posts</StatLabel>
+                    <StatNumber color="purple.500">{stats.resolved}</StatNumber>
+                    <StatHelpText>
+                      <FaRegSmile color="#805ad5" /> Successfully resolved
+                    </StatHelpText>
+                  </Stat>
+                  <Stat>
+                    <StatLabel color="gray.600">Unresolved Posts</StatLabel>
+                    <StatNumber color="orange.500">{stats.unresolved}</StatNumber>
+                    <StatHelpText>
+                      <FaRegClock color="#dd6b20" /> Still pending
+                    </StatHelpText>
+                  </Stat>
                 </SimpleGrid>
               </Box>
             </VStack>
@@ -393,6 +411,8 @@ const MyPostsPage = () => {
                 <Tab>All Posts</Tab>
                 <Tab>Lost Items</Tab>
                 <Tab>Found Items</Tab>
+                <Tab>Resolved</Tab>
+                <Tab>Unresolved</Tab>
               </TabList>
 
               <TabPanels>
@@ -721,6 +741,240 @@ const MyPostsPage = () => {
                             >
                               Found
                             </Badge>
+
+                            <Text fontSize="sm" color="blue.500" fontWeight="medium" mb={2}>
+                              Location: {post.location}
+                            </Text>
+
+                            <Text
+                              mb={4}
+                              style={{
+                                display: "-webkit-box",
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                WebkitLineClamp: "2",
+                              }}
+                            >
+                              {post.description}
+                            </Text>
+
+                            <HStack spacing={4}>
+                              <Button
+                                colorScheme="blue"
+                                onClick={() => navigate(`/post/${post._id}`)}
+                                _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
+                              >
+                                View Details
+                              </Button>
+
+                              <Button
+                                colorScheme="teal"
+                                onClick={() => navigate(`/edit-post/${post._id}`)}
+                                _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
+                              >
+                                Edit
+                              </Button>
+                            </HStack>
+                          </Box>
+                        </HStack>
+                      </Box>
+                    ))}
+                  </VStack>
+                </TabPanel>
+
+                <TabPanel px={0}>
+                  <VStack spacing={4} align="stretch">
+                    {posts.filter(post => post.isResolved).map((post) => (
+                      <Box 
+                        key={post._id} 
+                        borderWidth={1} 
+                        borderRadius="md" 
+                        p={4} 
+                        mb={4}
+                        transition="all 0.3s ease"
+                        _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+                        borderLeft="4px solid"
+                        borderColor={post.status === "lost" ? "red.500" : "green.500"}
+                      >
+                        <HStack spacing={6} align="start">
+                          <Image
+                            src={`http://localhost:5000${post.image}`}
+                            alt={post.title}
+                            boxSize="250px"
+                            objectFit="cover"
+                            borderRadius="md"
+                            transition="all 0.3s ease"
+                            _hover={{ transform: 'scale(1.05)' }}
+                          />
+
+                          <Box flex="1">
+                            <HStack justify="space-between" align="center">
+                              <Text fontSize="sm" color="gray.500" mb={2}>
+                                Posted on: {new Date(post.createdAt).toLocaleString()}
+                              </Text>
+
+                              <Menu>
+                                <MenuButton 
+                                  as={IconButton} 
+                                  icon={<HamburgerIcon />} 
+                                  variant="ghost" 
+                                  aria-label="Options" 
+                                  size="sm"
+                                />
+                                <MenuList>
+                                  <MenuItem 
+                                    icon={<DeleteIcon color="red.500" />}
+                                    onClick={() => openDeleteDialog(post)}
+                                  >
+                                    Delete
+                                  </MenuItem>
+                                </MenuList>
+                              </Menu>
+                            </HStack>
+
+                            <Heading as="h3" size="md" fontWeight="bold" mb={2}>
+                              {post.title}
+                            </Heading>
+
+                            <HStack spacing={2} mb={4}>
+                              <Badge
+                                colorScheme={post.status === "lost" ? "red" : "green"}
+                                fontSize="md"
+                                p={2}
+                                borderRadius="full"
+                                textTransform="uppercase"
+                                fontWeight="bold"
+                              >
+                                {post.status.toUpperCase()}
+                              </Badge>
+                              <Badge
+                                colorScheme="purple"
+                                fontSize="md"
+                                p={2}
+                                borderRadius="full"
+                                textTransform="uppercase"
+                                fontWeight="bold"
+                              >
+                                RESOLVED
+                              </Badge>
+                            </HStack>
+
+                            <Text fontSize="sm" color="blue.500" fontWeight="medium" mb={2}>
+                              Location: {post.location}
+                            </Text>
+
+                            <Text
+                              mb={4}
+                              style={{
+                                display: "-webkit-box",
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                WebkitLineClamp: "2",
+                              }}
+                            >
+                              {post.description}
+                            </Text>
+
+                            <HStack spacing={4}>
+                              <Button
+                                colorScheme="blue"
+                                onClick={() => navigate(`/post/${post._id}`)}
+                                _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
+                              >
+                                View Details
+                              </Button>
+
+                              <Button
+                                colorScheme="teal"
+                                onClick={() => navigate(`/edit-post/${post._id}`)}
+                                _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
+                              >
+                                Edit
+                              </Button>
+                            </HStack>
+                          </Box>
+                        </HStack>
+                      </Box>
+                    ))}
+                  </VStack>
+                </TabPanel>
+
+                <TabPanel px={0}>
+                  <VStack spacing={4} align="stretch">
+                    {posts.filter(post => !post.isResolved).map((post) => (
+                      <Box 
+                        key={post._id} 
+                        borderWidth={1} 
+                        borderRadius="md" 
+                        p={4} 
+                        mb={4}
+                        transition="all 0.3s ease"
+                        _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+                        borderLeft="4px solid"
+                        borderColor={post.status === "lost" ? "red.500" : "green.500"}
+                      >
+                        <HStack spacing={6} align="start">
+                          <Image
+                            src={`http://localhost:5000${post.image}`}
+                            alt={post.title}
+                            boxSize="250px"
+                            objectFit="cover"
+                            borderRadius="md"
+                            transition="all 0.3s ease"
+                            _hover={{ transform: 'scale(1.05)' }}
+                          />
+
+                          <Box flex="1">
+                            <HStack justify="space-between" align="center">
+                              <Text fontSize="sm" color="gray.500" mb={2}>
+                                Posted on: {new Date(post.createdAt).toLocaleString()}
+                              </Text>
+
+                              <Menu>
+                                <MenuButton 
+                                  as={IconButton} 
+                                  icon={<HamburgerIcon />} 
+                                  variant="ghost" 
+                                  aria-label="Options" 
+                                  size="sm"
+                                />
+                                <MenuList>
+                                  <MenuItem 
+                                    icon={<DeleteIcon color="red.500" />}
+                                    onClick={() => openDeleteDialog(post)}
+                                  >
+                                    Delete
+                                  </MenuItem>
+                                </MenuList>
+                              </Menu>
+                            </HStack>
+
+                            <Heading as="h3" size="md" fontWeight="bold" mb={2}>
+                              {post.title}
+                            </Heading>
+
+                            <HStack spacing={2} mb={4}>
+                              <Badge
+                                colorScheme={post.status === "lost" ? "red" : "green"}
+                                fontSize="md"
+                                p={2}
+                                borderRadius="full"
+                                textTransform="uppercase"
+                                fontWeight="bold"
+                              >
+                                {post.status.toUpperCase()}
+                              </Badge>
+                              <Badge
+                                colorScheme="orange"
+                                fontSize="md"
+                                p={2}
+                                borderRadius="full"
+                                textTransform="uppercase"
+                                fontWeight="bold"
+                              >
+                                UNRESOLVED
+                              </Badge>
+                            </HStack>
 
                             <Text fontSize="sm" color="blue.500" fontWeight="medium" mb={2}>
                               Location: {post.location}

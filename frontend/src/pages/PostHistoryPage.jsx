@@ -1,6 +1,29 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+// Add these keyframe animations at the top of the component
+const fadeIn = {
+  '@keyframes fadeIn': {
+    '0%': { opacity: 0, transform: 'translateY(10px)' },
+    '100%': { opacity: 1, transform: 'translateY(0)' }
+  }
+};
+
+const pulse = {
+  '@keyframes pulse': {
+    '0%': { transform: 'scale(1)' },
+    '50%': { transform: 'scale(1.02)' },
+    '100%': { transform: 'scale(1)' }
+  }
+};
+
+const slideIn = {
+  '@keyframes slideIn': {
+    '0%': { transform: 'translateX(-20px)', opacity: 0 },
+    '100%': { transform: 'translateX(0)', opacity: 1 }
+  }
+};
+
 const PostHistoryPage = () => {
   const [postHistory, setPostHistory] = useState([]);
   const [filteredHistory, setFilteredHistory] = useState([]);
@@ -10,10 +33,23 @@ const PostHistoryPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [filterType, setFilterType] = useState("all"); // "all", "update", "delete"
 
+  // Get admin token from localStorage
+  const getAdminToken = () => {
+    return localStorage.getItem('adminToken');
+  };
+
+  // Configure axios with admin token
+  const api = axios.create({
+    baseURL: 'http://localhost:5000/api',
+    headers: {
+      'Authorization': `Bearer ${getAdminToken()}`
+    }
+  });
+
   useEffect(() => {
     // Fetch post history from the backend
     setIsLoading(true);
-    axios.get("http://localhost:5000/api/posthistory/all")
+    api.get("/posthistory/all")
       .then(response => {
         setPostHistory(response.data);
         setFilteredHistory(response.data);
@@ -65,8 +101,7 @@ const PostHistoryPage = () => {
       return;
     }
 
-    // Call the backend to delete selected posts
-    axios.delete("http://localhost:5000/api/posthistory/delete", { data: { postIds: selectedPosts } })
+    api.delete("/posthistory/delete", { data: { postIds: selectedPosts } })
       .then(response => {
         // Remove deleted posts from the UI
         setPostHistory(postHistory.filter(post => !selectedPosts.includes(post._id)));
@@ -102,153 +137,137 @@ const PostHistoryPage = () => {
 
   return (
     <div style={{ 
-      padding: "30px", 
-      maxWidth: "1000px", 
+      padding: "40px", 
+      maxWidth: "1200px", 
       margin: "0 auto",
-      fontFamily: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      color: "#333",
-      backgroundColor: "#f9f9f9",
-      borderRadius: "10px",
-      boxShadow: "0 0 20px rgba(0,0,0,0.05)"
+      fontFamily: "'Inter', 'Segoe UI', Roboto, sans-serif",
+      color: "#2D3748",
+      backgroundColor: "#F7FAFC",
+      minHeight: "100vh",
+      animation: 'fadeIn 0.5s ease-out'
     }}>
       <h2 style={{ 
         textAlign: "center", 
-        marginBottom: "25px", 
-        color: "#1a3e72",
-        fontSize: "32px",
-        fontWeight: "600",
-        letterSpacing: "0.5px"
+        marginBottom: "35px", 
+        color: "#1A365D",
+        fontSize: "36px",
+        fontWeight: "700",
+        letterSpacing: "-0.5px",
+        animation: 'slideIn 0.6s ease-out'
       }}>Post History</h2>
 
       {/* Search and Filter Section */}
       <div style={{ 
         display: "flex", 
         flexWrap: "wrap", 
-        gap: "10px", 
+        gap: "15px", 
         alignItems: "center", 
-        marginBottom: "25px",
+        marginBottom: "30px",
         backgroundColor: "white",
-        padding: "20px",
-        borderRadius: "8px",
-        boxShadow: "0 2px 5px rgba(0,0,0,0.05)"
+        padding: "25px",
+        borderRadius: "12px",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
+        animation: 'fadeIn 0.7s ease-out',
+        transition: 'all 0.3s ease'
       }}>
-        <input 
-          type="text" 
-          placeholder="Search Post History" 
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            filterHistory(e.target.value, filterType);
-          }}
-          style={{
-            flex: "1",
-            minWidth: "200px",
-            padding: "12px 15px",
-            borderRadius: "5px",
-            border: "1px solid #ddd",
-            boxSizing: "border-box",
-            fontSize: "16px",
-            transition: "border 0.3s ease",
-            outline: "none"
-          }}
-        />
-        <button 
-          onClick={handleSearch}
-          style={{
-            padding: "12px 20px",
-            backgroundColor: "#4285F4",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontWeight: "500",
-            fontSize: "16px",
-            transition: "background 0.3s ease",
-            boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-          }}
-        >
-          Search
-        </button>
+        <div style={{ 
+          flex: "1",
+          minWidth: "300px",
+          position: "relative"
+        }}>
+          <input 
+            type="text" 
+            placeholder="Search Post History" 
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              filterHistory(e.target.value, filterType);
+            }}
+            style={{
+              width: "100%",
+              padding: "14px 20px",
+              borderRadius: "8px",
+              border: "1px solid #E2E8F0",
+              boxSizing: "border-box",
+              fontSize: "16px",
+              transition: "all 0.2s ease",
+              outline: "none",
+              backgroundColor: "#F8FAFC"
+            }}
+          />
+        </div>
 
         {/* Filter Buttons */}
         <div style={{ 
           display: "flex", 
-          gap: "10px", 
-          marginLeft: "auto"
+          gap: "12px", 
+          flexWrap: "wrap"
         }}>
-          <button 
-            onClick={() => handleFilterChange("all")}
-            style={{
-              padding: "8px 15px",
-              backgroundColor: filterType === "all" ? "#1a3e72" : "#e0e0e0",
-              color: filterType === "all" ? "white" : "#333",
-              border: "none",
-              borderRadius: "20px",
-              cursor: "pointer",
-              fontWeight: "500",
-              fontSize: "14px"
-            }}
-          >
-            All
-          </button>
-          <button 
-            onClick={() => handleFilterChange("update")}
-            style={{
-              padding: "8px 15px",
-              backgroundColor: filterType === "update" ? "#4CAF50" : "#e0e0e0",
-              color: filterType === "update" ? "white" : "#333",
-              border: "none",
-              borderRadius: "20px",
-              cursor: "pointer",
-              fontWeight: "500",
-              fontSize: "14px"
-            }}
-          >
-            Updates
-          </button>
-          <button 
-            onClick={() => handleFilterChange("delete")}
-            style={{
-              padding: "8px 15px",
-              backgroundColor: filterType === "delete" ? "#F44336" : "#e0e0e0",
-              color: filterType === "delete" ? "white" : "#333",
-              border: "none",
-              borderRadius: "20px",
-              cursor: "pointer",
-              fontWeight: "500",
-              fontSize: "14px"
-            }}
-          >
-            Deletions
-          </button>
+          {['all', 'update', 'delete'].map((type, index) => (
+            <button 
+              key={type}
+              onClick={() => handleFilterChange(type)}
+              style={{
+                padding: "12px 24px",
+                backgroundColor: filterType === type ? 
+                  (type === 'all' ? "#2B6CB0" : 
+                   type === 'update' ? "#38A169" : "#E53E3E") : 
+                  "#EDF2F7",
+                color: filterType === type ? "white" : "#4A5568",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "15px",
+                transition: "all 0.3s ease",
+                boxShadow: filterType === type ? 
+                  `0 2px 4px rgba(${type === 'all' ? '43, 108, 176' : 
+                                   type === 'update' ? '56, 161, 105' : 
+                                   '229, 62, 62'}, 0.2)` : "none",
+                transform: filterType === type ? "scale(1.05)" : "scale(1)",
+                animation: `slideIn 0.${5 + index}s ease-out`
+              }}
+            >
+              {type === 'all' ? 'All Posts' : type === 'update' ? 'Updates' : 'Deletions'}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Delete Button */}
       {selectedPosts.length > 0 && (
         <div style={{ 
-          marginBottom: "20px", 
-          textAlign: "right",
+          marginBottom: "25px", 
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center"
+          alignItems: "center",
+          backgroundColor: "white",
+          padding: "15px 25px",
+          borderRadius: "12px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)"
         }}>
-          <span style={{ color: "#666", fontWeight: "500" }}>
+          <span style={{ 
+            color: "#4A5568", 
+            fontWeight: "600",
+            fontSize: "16px"
+          }}>
             {selectedPosts.length} post{selectedPosts.length > 1 ? 's' : ''} selected
           </span>
           <button
             style={{
-              padding: "10px 20px",
-              backgroundColor: "#F44336",
+              padding: "12px 24px",
+              backgroundColor: "#E53E3E",
               color: "white",
               border: "none",
-              borderRadius: "5px",
+              borderRadius: "8px",
               cursor: "pointer",
-              fontWeight: "500",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+              fontWeight: "600",
+              fontSize: "15px",
+              boxShadow: "0 2px 4px rgba(229, 62, 62, 0.2)",
               display: "flex",
               alignItems: "center",
-              gap: "8px"
+              gap: "10px",
+              transition: "all 0.2s ease"
             }}
             onClick={handleDeletePosts}
           >
@@ -262,38 +281,49 @@ const PostHistoryPage = () => {
       {isLoading ? (
         <div style={{ 
           textAlign: "center", 
-          padding: "40px", 
-          color: "#666",
-          fontSize: "18px" 
+          padding: "60px", 
+          color: "#4A5568",
+          fontSize: "18px",
+          backgroundColor: "white",
+          borderRadius: "12px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
+          animation: 'fadeIn 0.5s ease-out'
         }}>
           Loading post history...
         </div>
       ) : filteredHistory.length === 0 ? (
         <div style={{ 
           textAlign: "center", 
-          padding: "40px", 
-          color: "#666",
+          padding: "60px", 
+          color: "#4A5568",
           fontSize: "18px",
           backgroundColor: "white",
-          borderRadius: "8px",
-          boxShadow: "0 2px 5px rgba(0,0,0,0.05)"
+          borderRadius: "12px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
+          animation: 'fadeIn 0.5s ease-out'
         }}>
           No posts found matching your criteria
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-          {filteredHistory.map(post => (
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {filteredHistory.map((post, index) => (
             <div 
               key={post._id} 
               style={{
-                border: "1px solid #e0e0e0", 
-                padding: "20px", 
-                borderRadius: "10px", 
-                backgroundColor: selectedPosts.includes(post._id) ? "#f0f7ff" : "white",
+                border: "1px solid #E2E8F0", 
+                padding: "25px", 
+                borderRadius: "12px", 
+                backgroundColor: selectedPosts.includes(post._id) ? "#EBF8FF" : "white",
                 cursor: "pointer",
                 position: "relative",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.05)",
-                transition: "all 0.2s ease"
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
+                transition: "all 0.3s ease",
+                animation: `fadeIn 0.${5 + index * 0.1}s ease-out`,
+                transform: selectedPosts.includes(post._id) ? "scale(1.02)" : "scale(1)",
+                '&:hover': {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 6px 12px rgba(0, 0, 0, 0.1)"
+                }
               }}
               onClick={() => handleSelectPost(post._id)}
             >
@@ -302,57 +332,69 @@ const PostHistoryPage = () => {
                 display: "flex", 
                 justifyContent: "space-between", 
                 alignItems: "flex-start",
-                marginBottom: "15px"
+                marginBottom: "20px",
+                paddingRight: "180px"
               }}>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, maxWidth: "calc(100% - 220px)" }}>
                   <h3 style={{ 
-                    color: "#1a3e72", 
-                    margin: "0 0 10px 0",
-                    fontSize: "20px",
-                    fontWeight: "600"
+                    color: "#2D3748", 
+                    margin: "0 0 12px 0",
+                    fontSize: "22px",
+                    fontWeight: "700",
+                    letterSpacing: "-0.5px",
+                    wordBreak: "break-word"
                   }}>
                     {post.title}
                   </h3>
                   <p style={{ 
-                    margin: "0 0 10px 0",
-                    color: "#555",
-                    fontSize: "15px",
-                    lineHeight: "1.5"
+                    margin: "0 0 12px 0",
+                    color: "#4A5568",
+                    fontSize: "16px",
+                    lineHeight: "1.6",
+                    wordBreak: "break-word"
                   }}>
                     {post.description}
                   </p>
                 </div>
                 
                 <div style={{ 
-                  marginLeft: "20px", 
+                  marginLeft: "25px", 
                   display: "flex", 
                   flexDirection: "column", 
                   alignItems: "flex-end",
-                  gap: "10px"
+                  gap: "12px",
+                  minWidth: "140px",
+                  marginRight: "20px"
                 }}>
-                  {/* Status Badge */}
                   <span style={{ 
-                    padding: "5px 12px",
-                    backgroundColor: post.status === "Resolved" ? "#DCEDC8" : "#FFF9C4",
-                    color: post.status === "Resolved" ? "#33691E" : "#F57F17",
-                    borderRadius: "20px",
+                    padding: "8px 16px",
+                    backgroundColor: post.status === "found" ? "#C6F6D5" : "#FEFCBF",
+                    color: post.status === "found" ? "#2F855A" : "#975A16",
+                    borderRadius: "8px",
                     fontSize: "14px",
-                    fontWeight: "600"
+                    fontWeight: "600",
+                    whiteSpace: "nowrap",
+                    display: "inline-block",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                    transition: "all 0.3s ease",
+                    animation: `pulse 2s infinite`
                   }}>
-                    {post.status}
+                    {post.status === "found" ? "Found" : "Lost"}
                   </span>
                   
-                  {/* Change Type Badge */}
                   <span style={{ 
-                    padding: "5px 12px",
-                    backgroundColor: post.changeType === "update" ? "#E8F5E9" : "#FFEBEE",
-                    color: post.changeType === "update" ? "#2E7D32" : "#C62828",
-                    borderRadius: "20px",
+                    padding: "8px 16px",
+                    backgroundColor: post.changeType === "update" ? "#C6F6D5" : "#FED7D7",
+                    color: post.changeType === "update" ? "#2F855A" : "#C53030",
+                    borderRadius: "8px",
                     fontSize: "14px",
                     fontWeight: "600",
                     display: "flex",
                     alignItems: "center",
-                    gap: "5px"
+                    gap: "8px",
+                    whiteSpace: "nowrap",
+                    justifyContent: "flex-end",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)"
                   }}>
                     {post.changeType === "update" ? "✏️ Update" : "❌ Deletion"}
                   </span>
@@ -362,8 +404,8 @@ const PostHistoryPage = () => {
               {/* Divider */}
               <div style={{ 
                 height: "1px", 
-                backgroundColor: "#e0e0e0", 
-                margin: "15px 0" 
+                backgroundColor: "#E2E8F0", 
+                margin: "20px 0" 
               }}></div>
 
               {/* Details Section */}
@@ -371,58 +413,59 @@ const PostHistoryPage = () => {
                 display: "flex", 
                 justifyContent: "space-between",
                 flexWrap: "wrap",
-                gap: "15px"
+                gap: "20px"
               }}>
                 {/* Left Column */}
-                <div style={{ flex: "1", minWidth: "250px" }}>
+                <div style={{ flex: "1", minWidth: "300px" }}>
                   <p style={{ 
-                    margin: "0 0 10px 0",
-                    color: "#666",
-                    fontSize: "14px"
+                    margin: "0 0 12px 0",
+                    color: "#4A5568",
+                    fontSize: "15px"
                   }}>
                     <strong style={{ 
-                      color: "#1a3e72", 
+                      color: "#2D3748", 
                       fontWeight: "600" 
                     }}>Location:</strong> {post.location}
                   </p>
                   
                   {/* Updated By - Highlighted */}
                   <div style={{ 
-                    backgroundColor: "#f5f5f5", 
-                    padding: "10px 15px", 
+                    backgroundColor: "#F7FAFC", 
+                    padding: "15px", 
                     borderRadius: "8px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "10px",
-                    marginBottom: "10px"
+                    gap: "12px",
+                    marginBottom: "12px",
+                    border: "1px solid #E2E8F0"
                   }}>
                     <div style={{ 
-                      width: "30px", 
-                      height: "30px", 
+                      width: "40px", 
+                      height: "40px", 
                       borderRadius: "50%", 
-                      backgroundColor: "#1a3e72",
+                      backgroundColor: "#2B6CB0",
                       color: "white",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontWeight: "bold",
-                      fontSize: "16px"
+                      fontSize: "18px"
                     }}>
                       {post.updatedBy?.username ? post.updatedBy.username.charAt(0).toUpperCase() : "?"}
                     </div>
                     <div>
                       <p style={{ 
                         margin: "0",
-                        fontSize: "15px",
+                        fontSize: "16px",
                         fontWeight: "600",
-                        color: "#333"
+                        color: "#2D3748"
                       }}>
                         {post.updatedBy?.username || "Unknown"}
                       </p>
                       <p style={{ 
-                        margin: "0",
-                        fontSize: "12px",
-                        color: "#666"
+                        margin: "4px 0 0 0",
+                        fontSize: "14px",
+                        color: "#718096"
                       }}>
                         Changed By User
                       </p>
@@ -431,43 +474,56 @@ const PostHistoryPage = () => {
                 </div>
                 
                 {/* Right Column */}
-                <div style={{ flex: "1", minWidth: "250px" }}>
+                <div style={{ flex: "1", minWidth: "300px" }}>
                   <p style={{ 
-                    margin: "0 0 5px 0",
-                    color: "#666",
-                    fontSize: "14px"
+                    margin: "0 0 8px 0",
+                    color: "#4A5568",
+                    fontSize: "15px"
                   }}>
                     <strong style={{ 
-                      color: "#1a3e72", 
+                      color: "#2D3748", 
                       fontWeight: "600" 
                     }}>Change Date:</strong> {formatDate(post.changeDate)}
                   </p>
                   
                   {/* Post ID for reference */}
                   <p style={{ 
-                    margin: "5px 0 0 0",
-                    color: "#999",
-                    fontSize: "12px"
+                    margin: "8px 0 0 0",
+                    color: "#A0AEC0",
+                    fontSize: "13px"
                   }}>
                     Post ID: {post._id}
                   </p>
                 </div>
               </div>
 
-              {/* Checkbox for marking as checked */}
+              {/* Checkbox with animation */}
               <div style={{ 
                 position: "absolute", 
-                top: "20px", 
-                right: "20px", 
+                top: "25px", 
+                right: "25px", 
                 display: "flex",
                 alignItems: "center",
-                gap: "8px"
+                gap: "10px",
+                backgroundColor: "white",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                zIndex: 1,
+                border: "1px solid #E2E8F0",
+                transition: "all 0.3s ease",
+                '&:hover': {
+                  transform: "scale(1.05)",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)"
+                }
               }}>
                 <label style={{ 
                   display: "flex", 
                   alignItems: "center",
                   cursor: "pointer",
-                  userSelect: "none"
+                  userSelect: "none",
+                  whiteSpace: "nowrap",
+                  margin: 0
                 }}>
                   <input 
                     type="checkbox" 
@@ -477,41 +533,47 @@ const PostHistoryPage = () => {
                     style={{ 
                       width: "18px", 
                       height: "18px", 
-                      cursor: "pointer" 
+                      cursor: "pointer",
+                      marginRight: "10px"
                     }}
                   />
                   <span style={{ 
-                    marginLeft: "5px", 
                     fontSize: "14px", 
-                    color: "#666" 
+                    color: "#4A5568",
+                    lineHeight: 1,
+                    fontWeight: "500"
                   }}>
                     Mark as checked
                   </span>
                 </label>
               </div>
 
-              {/* Delete Icon (displayed only if selected) */}
+              {/* Delete Icon with animation */}
               {selectedPosts.includes(post._id) && (
                 <div style={{ 
                   position: "absolute", 
-                  bottom: "20px", 
-                  right: "20px", 
-                  color: "#F44336", 
-                  backgroundColor: "rgba(244, 67, 54, 0.1)",
-                  borderRadius: "20px",
-                  padding: "5px 12px",
+                  bottom: "25px", 
+                  right: "25px", 
+                  color: "#E53E3E", 
+                  backgroundColor: "rgba(229, 62, 62, 0.1)",
+                  borderRadius: "8px",
+                  padding: "8px 16px",
                   fontSize: "14px",
                   fontWeight: "500",
                   display: "flex",
                   alignItems: "center",
-                  gap: "5px"
+                  gap: "8px",
+                  border: "1px solid rgba(229, 62, 62, 0.2)",
+                  animation: "fadeIn 0.3s ease-out",
+                  transition: "all 0.3s ease"
                 }}>
                   <span>Selected for deletion</span>
                   <span 
                     style={{ 
                       marginLeft: "5px",
-                      fontSize: "20px", 
-                      cursor: "pointer" 
+                      fontSize: "18px", 
+                      cursor: "pointer",
+                      color: "#C53030"
                     }}
                     onClick={(e) => { 
                       e.stopPropagation();
@@ -526,6 +588,25 @@ const PostHistoryPage = () => {
           ))}
         </div>
       )}
+
+      {/* Add style tag for keyframes */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+          }
+          @keyframes slideIn {
+            0% { transform: translateX(-20px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+          }
+        `}
+      </style>
     </div>
   );
 };

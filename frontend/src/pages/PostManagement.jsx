@@ -84,20 +84,37 @@ const PostManagement = () => {
   const toast = useToast();
   const navigate = useNavigate();
 
+  // Fetch posts function
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/admin/posts', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch posts');
+      }
+
+      const data = await response.json();
+      setPosts(data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        status: 'error',
+        isClosable: true,
+      });
+    }
+  };
+
   // Fetch posts and users on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch posts
-        const postsResponse = await fetch('http://localhost:5000/api/admin/posts', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
-          },
-        });
-
-        if (!postsResponse.ok) throw new Error('Failed to fetch posts');
-        const postsData = await postsResponse.json();
-        setPosts(postsData);
+        await fetchPosts();
         
         // Fetch users for the dropdown
         const usersResponse = await fetch('http://localhost:5000/api/admin/users', {
@@ -178,56 +195,49 @@ const PostManagement = () => {
   };
 
   // Handle update resolution status
-  const handleUpdateResolution = async () => {
+  const handleUpdateResolution = async (postId, resolutionStatus, resolutionNote) => {
     try {
-      // Automatically set isArchived to true if resolution status is "Resolved"
-      const isArchived = resolutionStatus === 'Resolved';
-      
-      const response = await fetch(`http://localhost:5000/api/admin/post/resolution/${selectedPost._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
-        },
-        body: JSON.stringify({
-          resolutionStatus,
-          resolvedBy,
-          resolutionNote,
-          resolvedAt: resolvedDate || (resolutionStatus === 'Resolved' ? new Date().toISOString() : null),
-          isArchived,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/admin/posts/${postId}/resolution`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          },
+          body: JSON.stringify({
+            resolutionStatus,
+            resolutionNote,
+            resolvedBy: resolutionStatus === 'Resolved' ? resolvedBy : null,
+            resolvedAt: resolutionStatus === 'Resolved' ? (resolvedDate || new Date().toISOString()) : null,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update resolution status");
+      }
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-
-      // Update posts in state
-      setPosts(posts.map(post => 
-        post._id === selectedPost._id 
-          ? { 
-              ...post, 
-              resolutionStatus, 
-              resolvedBy, 
-              resolutionNote, 
-              resolvedAt: resolvedDate || (resolutionStatus === 'Resolved' ? new Date().toISOString() : null),
-              isArchived 
-            } 
-          : post
-      ));
-
       toast({
-        title: 'Post updated',
-        description: `Post resolution status updated to ${resolutionStatus}`,
-        status: 'success',
+        title: "Success",
+        description: data.message,
+        status: "success",
+        duration: 3000,
         isClosable: true,
       });
-      
+
+      // Refresh the posts list
+      fetchPosts();
       onResolutionClose();
     } catch (error) {
+      console.error("Error updating resolution:", error);
       toast({
-        title: 'Error',
-        description: error.message,
-        status: 'error',
+        title: "Error",
+        description: error.message || "Failed to update resolution status",
+        status: "error",
+        duration: 3000,
         isClosable: true,
       });
     }
@@ -681,7 +691,7 @@ const PostManagement = () => {
               <Button 
                 colorScheme="teal" 
                 leftIcon={<CheckIcon />}
-                onClick={handleUpdateResolution}
+                onClick={() => handleUpdateResolution(selectedPost._id, resolutionStatus, resolutionNote)}
               >
                 Update Resolution
               </Button>
