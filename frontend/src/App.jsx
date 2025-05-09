@@ -20,7 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import PostManagement from "./pages/PostManagement";
 import UserManagement from "./pages/UserManagement";
 import PostDetailsPage from "./pages/PostDetailsPage";
-
+import AdminReportPage from "./pages/AdminReportPage";
 import PostHistoryPage from "./pages/PostHistoryPage";
 import ViewMyReportsPage from './pages/ViewMyReportsPage';
 
@@ -43,6 +43,9 @@ function App() {
 
       <Routes>
         {/* User Routes */}
+        {/* Admin Routes */}
+        
+        <Route path='/admin/reports' element={<AdminReportPage />} />
         <Route path='/' element={<LandingPage />} />
         <Route path='/post/:id' element={<PostDetailsPage />} />
         <Route path='/create' element={<ProtectedRoute><PostForm /></ProtectedRoute>} />
