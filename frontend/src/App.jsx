@@ -22,7 +22,6 @@ import PostManagement from "./pages/PostManagement";
 import UserManagement from "./pages/UserManagement";
 import PostDetailsPage from "./pages/PostDetailsPage";
 import AdminReportPage from "./pages/AdminReportPage";
-import PostHistoryPage from "./pages/PostHistoryPage";
 import AutoMatchingResult from "./pages/AutoMatchingResult";
 import ViewMyReportsPage from './pages/ViewMyReportsPage';
 

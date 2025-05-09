@@ -14,10 +14,10 @@ import commentRoutes from './Routes/comment.route.js';
 import userProfileRoutes from './Routes/userprofile.route.js';
 import matchRoutes from './Routes/match.route.js';
 
-import reportRoutes from './Routes/report.route.js';
+// import reportRoutes from './Routes/report.route.js';
 import adminReportRoutes from "./Routes/admin.report.route.js";
 import postHistoryRoutes from "./Routes/postHistory.route.js";
-
+import adminPostRoutes from "./routes/admin.post.route.js";
 import leaderboardRoutes from './Routes/leaderboard.route.js';
 
 import reportRoutes from './Routes/report.route.js';
@@ -45,8 +45,9 @@ app.use('/api/userprofile', userProfileRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/posthistory', postHistoryRoutes);
+app.use("/api/admin/posts", adminPostRoutes);
 
-app.use('/api/posthistory', postRoutes);  // Ensure that this is pointing to the right route
+// app.use('/api/posthistory', postRoutes);  // Ensure that this is pointing to the right route
 
 app.use('/api/leaderboard', leaderboardRoutes)
 
