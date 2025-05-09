@@ -7,6 +7,7 @@ import PostHistory from '../models/PostHistory.js';
 import { updateUserPoints } from '../controllers/leaderboard.controller.js'; // Import the points function
 import Match from '../models/match.model.js';
 import stringSimilarity from 'string-similarity';
+import User from '../models/user.model.js';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -77,25 +78,12 @@ async function checkAndArchiveOldPosts() {
 // Route to get recent posts (e.g., 5 most recent posts)
 router.get('/recent', async (req, res) => {
   try {
-    console.log('Fetching recent posts...');
-    
-    // FIXED: Run automatic archive check BEFORE getting recent posts
-    // This ensures any posts that should be archived are archived before we query
-    const archivedCount = await checkAndArchiveOldPosts();
-    if (archivedCount > 0) {
-      console.log(`Automatically archived ${archivedCount} old posts`);
-    }
-    
-    // Get only non-archived posts
-    const posts = await Post.find({ 
-      isArchived: false 
-    })
-    .sort({ createdAt: -1 })
-    .populate('user', 'email')
-    .exec();
-    
-    console.log(`Returning ${posts.length} non-archived posts`);
-    res.json(posts); // Send posts to frontend
+    console.log("Fetching recent posts...");
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .populate('user', 'username email')
+      .exec();
+    res.json(posts);
   } catch (error) {
     console.error("Error fetching recent posts:", error);
     res.status(500).json({ message: "Error fetching recent posts" });
@@ -193,11 +181,9 @@ router.put('/:id/resolution', protect, async (req, res) => {
 // Route to fetch posts made by the logged-in user
 router.get('/user', protect, async (req, res) => {
   try {
-    // FIXED: Also run the archive check before showing user posts
-    // This ensures all posts that should be archived are archived
     await checkAndArchiveOldPosts();
     
-    const userPosts = await Post.find({ user: req.user._id })  // Use the user ID from the token
+    const userPosts = await Post.find({ user: req.user._id })
       .populate('user', 'email')
       .exec();
 
@@ -205,13 +191,12 @@ router.get('/user', protect, async (req, res) => {
       return res.status(404).json({ message: 'No posts found for this user' });
     }
 
-    res.json(userPosts); // Send user's posts to frontend
+    res.json(userPosts);
   } catch (error) {
     console.error("Error fetching user posts:", error);
     res.status(500).json({ message: "Error fetching user posts" });
   }
 });
-
 
 // Create a new post
 router.post('/create', protect, upload.single('image'), async (req, res) => {
@@ -220,10 +205,11 @@ router.post('/create', protect, upload.single('image'), async (req, res) => {
     console.log("✅ Body received:", req.body);
     console.log("✅ User ID:", req.user?.id);
 
-    const { title, description, status, location} = req.body;
+    const { title, description, status, location } = req.body;
 
-    const newPost = new Post({
-      user: req.user.id,  // User ID will come from the token (JWT)
+    // Create post using the model directly
+    const newPost = await Post.create({
+      user: req.user.id,
       title,
       description,
       image: `/uploads/${req.file.filename}`,
@@ -233,43 +219,46 @@ router.post('/create', protect, upload.single('image'), async (req, res) => {
       isArchived: false
     });
 
-    await newPost.save();
-
     // --- Auto-matching logic ---
     let matches = [];
     if (newPost.status === 'lost' || newPost.status === 'found') {
-      // Find posts of the opposite type
       const otherType = newPost.status === 'lost' ? 'found' : 'lost';
       const otherPosts = await Post.find({ status: otherType });
+      
       for (const other of otherPosts) {
-        // Combine title, description, location for both
         const textA = `${newPost.title} ${newPost.description} ${newPost.location}`;
         const textB = `${other.title} ${other.description} ${other.location}`;
         const similarity = stringSimilarity.compareTwoStrings(textA, textB);
+        
         if (similarity >= 0.3) {
-          // Check if match already exists
           const exists = newPost.status === 'lost'
             ? await Match.findOne({ lostPost: newPost._id, foundPost: other._id })
             : await Match.findOne({ lostPost: other._id, foundPost: newPost._id });
+            
           if (!exists) {
-            const match = newPost.status === 'lost'
-              ? new Match({ lostPost: newPost._id, foundPost: other._id, similarity })
-              : new Match({ lostPost: other._id, foundPost: newPost._id, similarity });
-            await match.save();
+            const match = await Match.create({
+              lostPost: newPost.status === 'lost' ? newPost._id : other._id,
+              foundPost: newPost.status === 'found' ? newPost._id : other._id,
+              similarity
+            });
             matches.push(match);
           }
         }
       }
     }
-    // --- End auto-matching logic ---
 
-    res.status(201).json({ message: 'Post created successfully', post: newPost, matches });
     // Add 5 points to user if they posted a found item
     if (status === 'found') {
-      await updateUserPoints(req.user.id, 5);
-    }  
-    res.status(201).json({ message: 'Post created successfully', post: newPost });
+      await User.updatePoints(req.user.id, 5);
+    }
+
+    res.status(201).json({ 
+      message: 'Post created successfully', 
+      post: newPost,
+      matches 
+    });
   } catch (error) {
+    console.error("Error creating post:", error);
     res.status(500).json({ message: 'Error creating post', error: error.message });
   }
 });
@@ -277,19 +266,18 @@ router.post('/create', protect, upload.single('image'), async (req, res) => {
 // Route to get a post by its ID
 router.get('/:id', protect, async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);  // Fetch post by ID
+    const post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ message: 'Post not found' });  // If post not found, return 404
+      return res.status(404).json({ message: 'Post not found' });
     }
 
-    res.json(post);  // Return the post data
+    res.json(post);
   } catch (error) {
     console.error('Error fetching post:', error);
-    res.status(500).json({ message: 'Error fetching post' });  // Handle errors
+    res.status(500).json({ message: 'Error fetching post' });
   }
 });
-
 
 // Route to update a post
 router.put('/:id', protect, upload.single('image'), async (req, res) => {
@@ -306,7 +294,7 @@ router.put('/:id', protect, upload.single('image'), async (req, res) => {
     }
 
     // Save current version to PostHistory
-    const history = new PostHistory({
+    const history = await PostHistory.create({
       postId: post._id,
       title: post.title,
       description: post.description,
@@ -316,41 +304,31 @@ router.put('/:id', protect, upload.single('image'), async (req, res) => {
       updatedBy: req.user._id,
       changeType: 'update',
     });
-    await history.save();
 
-        // Check if status is changing and handle points adjustment
+    // Check if status is changing and handle points adjustment
     if (status && post.status !== status) {
-      // If changing from lost to found - add 5 points
       if (post.status === 'lost' && status === 'found') {
-        await updateUserPoints(req.user._id, 5);
-        console.log(`✅ Added 5 points to user ${req.user._id} for changing post from lost to found`);
-      }
-      // If changing from found to lost - deduct 5 points
-      else if (post.status === 'found' && status === 'lost') {
-        await updateUserPoints(req.user._id, -5);
-        console.log(`✅ Deducted 5 points from user ${req.user._id} for changing post from found to lost`);
+        await User.updatePoints(req.user._id, 5);
+      } else if (post.status === 'found' && status === 'lost') {
+        await User.updatePoints(req.user._id, -5);
       }
     }
-    // ✅ Update actual post fields
-   // Safely update only if fields are present
-    if (title) post.title = title;
-    if (description) post.description = description;
-    if (status) post.status = status;
-    if (location) post.location = location;
-    
-    if (req.file) {
-      post.image = `/uploads/${req.file.filename}`;  // if new image is uploaded
-    }
 
-    await post.save(); // ✅ Save updated post
+    // Update post fields
+    const updatedPost = await Post.updateById(req.params.id, {
+      ...(title && { title }),
+      ...(description && { description }),
+      ...(status && { status }),
+      ...(location && { location }),
+      ...(req.file && { image: `/uploads/${req.file.filename}` })
+    });
 
-    res.json({ message: 'Post updated successfully', post });
+    res.json({ message: 'Post updated successfully', post: updatedPost });
   } catch (error) {
     console.error('Error updating post:', error);
     res.status(500).json({ message: 'Error updating post' });
   }
 });
-
 
 // Route to delete a post
 router.delete('/:id', protect, async (req, res) => {
@@ -361,13 +339,12 @@ router.delete('/:id', protect, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    // Check if user owns this post
     if (post.user.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: 'Not authorized to delete this post' });
     }
     
-    // Save to history before deletion (if you want to keep history)
-    const history = new PostHistory({
+    // Save to history before deletion
+    await PostHistory.create({
       postId: post._id,
       title: post.title,
       description: post.description,
@@ -377,10 +354,9 @@ router.delete('/:id', protect, async (req, res) => {
       updatedBy: req.user._id,
       changeType: 'delete',
     });
-    await history.save();
     
     // Delete the post
-    await Post.findByIdAndDelete(req.params.id);
+    await Post.deleteById(req.params.id);
     
     res.json({ message: 'Post deleted successfully' });
   } catch (error) {

@@ -83,6 +83,39 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// Route to get history for a specific post
+router.get('/post/:postId', async (req, res) => {
+  try {
+    const histories = await PostHistory.find({ postId: req.params.postId })
+      .populate({
+        path: 'updatedBy',
+        select: 'username profilePic email',
+        model: User
+      })
+      .sort({ changeDate: -1 })
+      .lean()
+      .exec();
+
+    const processedHistories = histories.map(history => {
+      if (history.updatedBy && !history.updatedBy.username) {
+        return {
+          ...history,
+          updatedBy: {
+            ...history.updatedBy,
+            username: "Unknown User"
+          }
+        };
+      }
+      return history;
+    });
+
+    res.json(processedHistories);
+  } catch (err) {
+    console.error("Error fetching post history:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Route to delete selected post histories
 router.delete('/delete', async (req, res) => {
   const { postIds } = req.body;  // Array of post IDs to delete

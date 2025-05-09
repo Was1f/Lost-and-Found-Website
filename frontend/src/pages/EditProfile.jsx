@@ -131,7 +131,7 @@ const EditProfile = () => {
 
       // Send update request
       const response = await axios.put(
-        `http://localhost:5000/api/userprofile/update`, 
+        `http://localhost:5000/api/userprofile/me`, 
         formDataToSend, 
         {
           headers: {

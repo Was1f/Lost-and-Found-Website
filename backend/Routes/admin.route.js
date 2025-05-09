@@ -3,7 +3,7 @@ import { adminLoginController } from '../controllers/admin.controller.js';
 import { adminAuth } from '../middleware/adminAuthmiddleware.js';
 import User from '../models/user.model.js';
 import Post from '../models/post.model.js';
-import Comment from '../models/comment.model.js'; 
+import Comment from '../models/comment.model.js';
 
 const router = express.Router();
 
@@ -15,97 +15,71 @@ router.post('/login', adminLoginController);
 // Fetch all posts (only accessible to admin)
 router.get('/posts', adminAuth, async (req, res) => {
   try {
-    const posts = await Post.find().populate('user', 'email');  // Populate user email
+    const posts = await Post.getModel()
+      .find()
+      .populate('user', 'email')
+      .sort({ createdAt: -1 })
+      .exec();
     res.status(200).json(posts);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching posts', error });
+    console.error('Error fetching posts:', error);
+    res.status(500).json({ message: 'Error fetching posts', error: error.message });
   }
 });
 
-// Delete a post
-router.delete('/post/:id', adminAuth, async (req, res) => {
-  const { id } = req.params;
+// Delete a post (admin only)
+router.delete('/posts/:id', adminAuth, async (req, res) => {
   try {
-    const deletedPost = await Post.findByIdAndDelete(id);
-    if (!deletedPost) {
+    const post = await Post.getModel()
+      .findById(req.params.id)
+      .exec();
+      
+    if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    res.status(200).json({ message: 'Post deleted successfully' });
+
+    await Post.deleteById(req.params.id);
+    res.json({ message: 'Post deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting post', error });
+    console.error('Error deleting post:', error);
+    res.status(500).json({ message: 'Error deleting post', error: error.message });
   }
 });
 
 // ------------------- COMMENTS MANAGEMENT -------------------
 
-// Get all comments for a post
-router.get('/comments/:postId', adminAuth, async (req, res) => {
+// Fetch all comments (admin only)
+router.get('/comments', adminAuth, async (req, res) => {
   try {
-    const { postId } = req.params;
-    const comments = await Comment.find({ postId })
-      .populate('userId', 'username email')
-      .sort({ createdAt: -1 });
+    const comments = await Comment.getModel()
+      .find()
+      .populate('userId', 'email')
+      .populate('postId', 'title')
+      .sort({ createdAt: -1 })
+      .exec();
     res.status(200).json(comments);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching comments', error });
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Error fetching comments', error: error.message });
   }
 });
 
-// Add a comment as admin
-router.post('/comment', adminAuth, async (req, res) => {
+// Delete a comment (admin only)
+router.delete('/comments/:id', adminAuth, async (req, res) => {
   try {
-    const { postId, text, parentCommentId } = req.body;
-    
-    // Create an admin comment
-    const newComment = new Comment({
-      postId,
-      isAdmin: true, // Mark as admin comment
-      text,
-      parentCommentId: parentCommentId || null,
-    });
-    
-    await newComment.save();
-    res.status(201).json(newComment);
-  } catch (error) {
-    console.error('Admin comment error:', error);
-    res.status(500).json({ message: 'Error adding comment', error: error.message });
-  }
-});
-
-// Delete/Remove a comment (marks as removed)
-router.delete('/comment/:id', adminAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Instead of deleting, mark as removed
-    const updatedComment = await Comment.findByIdAndUpdate(
-      id, 
-      { 
-        isRemoved: true,
-        text: "This comment has been removed by admin for violating community guidelines."
-      },
-      { new: true }
-    );
-    
-    if (!updatedComment) {
+    const comment = await Comment.getModel()
+      .findById(req.params.id)
+      .exec();
+      
+    if (!comment) {
       return res.status(404).json({ message: 'Comment not found' });
     }
-    
-    // For any replies, also mark them as removed
-    await Comment.updateMany(
-      { parentCommentId: id },
-      { 
-        isRemoved: true,
-        text: "This comment has been removed by admin for violating community guidelines."
-      }
-    );
-    
-    res.status(200).json({ 
-      message: 'Comment and its replies have been removed', 
-      comment: updatedComment 
-    });
+
+    await Comment.deleteById(req.params.id);
+    res.json({ message: 'Comment deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error removing comment', error: error.message });
+    console.error('Error deleting comment:', error);
+    res.status(500).json({ message: 'Error deleting comment', error: error.message });
   }
 });
 
@@ -114,51 +88,54 @@ router.delete('/comment/:id', adminAuth, async (req, res) => {
 // Fetch all users
 router.get('/users', adminAuth, async (req, res) => {
   try {
-    const users = await User.find({}, 'email username studentId status createdAt'); // Get necessary fields
+    const users = await User.getModel()
+      .find()
+      .select('email username studentId status createdAt')
+      .sort({ createdAt: -1 })
+      .exec();
     res.status(200).json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching users', error });
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
   }
 });
 
-// Delete a user
-router.delete('/user/:id', adminAuth, async (req, res) => {
-  const { id } = req.params;
+// Update user status
+router.put('/users/:id/status', adminAuth, async (req, res) => {
   try {
-    await User.findByIdAndDelete(id);
-    res.status(200).json({ message: 'User deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting user', error });
-  }
-});
-
-// Ban a user
-router.put('/user/ban/:id', adminAuth, async (req, res) => {
-  const { id } = req.params;
-  try {
-    // Find the user first to check current status
-    const user = await User.findById(id);
+    const { status } = req.body;
+    const user = await User.getModel()
+      .findById(req.params.id)
+      .exec();
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // Toggle the status between 'active' and 'banned'
-    const newStatus = user.status === 'banned' ? 'active' : 'banned';
-    
-    // Update the user status
-    const updatedUser = await User.findByIdAndUpdate(
-      id, 
-      { status: newStatus },
-      { new: true }
-    );
-    
-    res.status(200).json({ 
-      message: newStatus === 'banned' ? 'User banned successfully' : 'User activated successfully',
-      user: updatedUser
-    });
+
+    const updatedUser = await User.updateById(req.params.id, { status });
+    res.json({ message: 'User status updated successfully', user: updatedUser });
   } catch (error) {
+    console.error('Error updating user status:', error);
     res.status(500).json({ message: 'Error updating user status', error: error.message });
+  }
+});
+
+// Delete a user
+router.delete('/users/:id', adminAuth, async (req, res) => {
+  try {
+    const user = await User.getModel()
+      .findById(req.params.id)
+      .exec();
+      
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await User.deleteById(req.params.id);
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Error deleting user', error: error.message });
   }
 });
 

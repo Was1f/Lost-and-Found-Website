@@ -82,16 +82,19 @@ const PostManagement = () => {
     if (!confirm) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/post/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/posts/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete post');
+      }
 
+      const data = await response.json();
       toast({
         title: 'Post deleted',
         description: data.message,
@@ -113,13 +116,16 @@ const PostManagement = () => {
   // Fetch comments for a post
   const fetchComments = async (postId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/comments/${postId}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/comments?postId=${postId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch comments');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch comments');
+      }
 
       const data = await response.json();
       setComments(data);
@@ -144,7 +150,7 @@ const PostManagement = () => {
     if (!adminComment.trim()) return;
     
     try {
-      const response = await fetch('http://localhost:5000/api/admin/comment', {
+      const response = await fetch('http://localhost:5000/api/admin/comments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +162,10 @@ const PostManagement = () => {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to add comment');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add comment');
+      }
 
       const newComment = await response.json();
       
@@ -185,7 +194,7 @@ const PostManagement = () => {
     if (!replyText.trim() || !replyToId) return;
     
     try {
-      const response = await fetch('http://localhost:5000/api/admin/comment', {
+      const response = await fetch('http://localhost:5000/api/admin/comments/reply', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -198,7 +207,10 @@ const PostManagement = () => {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to add reply');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add reply');
+      }
 
       const newReply = await response.json();
       
@@ -223,20 +235,23 @@ const PostManagement = () => {
     }
   };
 
-  // Handle delete comment (now marks as removed)
+  // Handle delete comment
   const handleDeleteComment = async (id) => {
     const confirm = window.confirm('Are you sure you want to remove this comment?');
     if (!confirm) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/comment/${id}`, {
-        method: 'DELETE',  // Still using DELETE method but it updates instead of deleting
+      const response = await fetch(`http://localhost:5000/api/admin/comments/${id}`, {
+        method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
 
-      if (!response.ok) throw new Error('Failed to remove comment');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to remove comment');
+      }
       
       const data = await response.json();
       
