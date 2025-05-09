@@ -20,6 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import PostManagement from "./pages/PostManagement";
 import UserManagement from "./pages/UserManagement";
 import PostDetailsPage from "./pages/PostDetailsPage";
+import ViewMyReportsPage from './pages/ViewMyReportsPage';
 
 
 import PostHistoryPage from "./pages/PostHistoryPage";
@@ -55,6 +56,7 @@ function App() {
         <Route path='/my-posts' element={<MyPostsPage />} />
         <Route path='/edit-post/:id' element={<EditPostPage />} />
         <Route path='/edit-profile' element={<EditProfile/>} />
+        <Route path="/my-reports" element={<ViewMyReportsPage/>} />
         <Route path='/leaderboard' element={<Leaderboard/>} />
         <Route path="/visituserprofile/:userId" element={<VisitUserProfile />} />
 
