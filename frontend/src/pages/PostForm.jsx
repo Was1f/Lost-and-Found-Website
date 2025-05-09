@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box, Select, Button, FormControl, FormLabel, Input, Textarea, VStack, useToast
 } from "@chakra-ui/react";
@@ -15,9 +15,19 @@ const PostForm = () => {
   const [image, setImage] = useState(null);
   const [location, setLocation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMounted, setIsMounted] = useState(true);
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isMounted) return;
+    
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -44,27 +54,34 @@ const PostForm = () => {
         position: "top"
       });
 
-      setTitle("");
-      setDescription("");
-      setImage(null);
-      setLocation("");
-      setStatus("lost");
-
-      navigate('/recent');
+      if (isMounted) {
+        setTitle("");
+        setDescription("");
+        setImage(null);
+        setLocation("");
+        setStatus("lost");
+        navigate('/recent');
+      }
 
     } catch (error) {
-      toast({
-        title: "Failed to create post",
-        description: error.message,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top"
-      });
+      if (isMounted) {
+        toast({
+          title: "Failed to create post",
+          description: error.message,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "top"
+        });
+      }
     } finally {
-      setIsSubmitting(false);
+      if (isMounted) {
+        setIsSubmitting(false);
+      }
     }
   };
+
+  if (!isMounted) return null;
 
   return (
     <div className="post-form-container">

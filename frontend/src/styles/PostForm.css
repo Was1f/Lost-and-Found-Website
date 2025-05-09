@@ -4,13 +4,11 @@
   width: 90%;
   margin: 3rem auto;
   padding: 2.5rem;
-  background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+  background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
-  resize: both;
+  z-index: 1;
 }
 
 .post-form-container::before {
@@ -21,8 +19,7 @@
   right: 0;
   height: 4px;
   background: linear-gradient(90deg, #4299E1, #667EEA);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  opacity: 1;
 }
 
 .post-form-container:hover::before {
@@ -81,10 +78,8 @@
   border: 2px solid #E2E8F0;
   border-radius: 12px;
   font-size: 1.1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background-color: #ffffff;
   color: #2D3748;
-  resize: both;
   min-height: 50px;
   max-height: 300px;
 }
@@ -93,13 +88,11 @@
   border-color: #4299E1;
   box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.15);
   outline: none;
-  transform: translateY(-1px);
 }
 
 .form-textarea {
   min-height: 150px;
   max-height: 500px;
-  resize: both;
   line-height: 1.6;
   width: 100%;
   min-width: 200px;
@@ -136,11 +129,9 @@
 
 .file-input-container {
   position: relative;
-  overflow: hidden;
   display: inline-block;
   width: 100%;
   min-width: 200px;
-  resize: both;
 }
 
 .file-input-label {
@@ -151,18 +142,15 @@
   border-radius: 12px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 1.1rem;
   color: #4A5568;
   font-weight: 500;
   min-height: 50px;
-  resize: both;
 }
 
 .file-input-label:hover {
   background: #EDF2F7;
   border-color: #4299E1;
-  transform: translateY(-1px);
 }
 
 .file-input {
@@ -178,142 +166,39 @@
 .submit-button {
   width: 100%;
   padding: 1.2rem;
-  background: linear-gradient(135deg, #4299E1, #667EEA);
+  background: #4299E1;
   color: white;
   border: none;
   border-radius: 12px;
   font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  position: relative;
-  overflow: hidden;
-}
-
-.submit-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-  transition: 0.5s;
-}
-
-.submit-button:hover::before {
-  left: 100%;
 }
 
 .submit-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(66, 153, 225, 0.3);
+  background: #3182CE;
 }
 
 .submit-button:active {
-  transform: translateY(0);
+  background: #2B6CB0;
 }
 
 .submit-button:disabled {
   background: #CBD5E0;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Enhanced animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.form-group {
-  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
-}
-
-.form-title {
-  animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.form-group:nth-child(1) { animation-delay: 0.1s; }
-.form-group:nth-child(2) { animation-delay: 0.2s; }
-.form-group:nth-child(3) { animation-delay: 0.3s; }
-.form-group:nth-child(4) { animation-delay: 0.4s; }
-.form-group:nth-child(5) { animation-delay: 0.5s; }
-.form-group:nth-child(6) { animation-delay: 0.6s; }
-
-/* Ensure dropdowns are above other elements */
-.form-select {
-  z-index: 2;
-}
-
-/* Add focus ring for better accessibility */
-.form-input:focus-visible,
-.form-select:focus-visible,
-.file-input-label:focus-visible {
-  outline: 2px solid #4299E1;
-  outline-offset: 2px;
-}
-
-/* Add placeholder styling */
-.form-input::placeholder,
-.form-textarea::placeholder {
-  color: #A0AEC0;
-  opacity: 0.8;
-}
-
-/* Add hover effect for inputs */
-.form-input:hover,
-.form-select:hover {
-  border-color: #CBD5E0;
-}
-
-/* Add transition for all interactive elements */
-.form-input,
-.form-select,
-.file-input-label,
-.submit-button {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Status Selector Styling */
 .status-selector {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1rem;
-  width: 100%;
-  min-width: 200px;
-  flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
 .status-option {
   flex: 1;
-  min-width: 120px;
   position: relative;
 }
 
@@ -325,35 +210,28 @@
 }
 
 .status-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   padding: 1rem;
   background: #F7FAFC;
   border: 2px solid #E2E8F0;
   border-radius: 12px;
+  text-align: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 600;
+  font-size: 1.1rem;
   color: #4A5568;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-size: 1rem;
-  min-height: 50px;
-  word-wrap: break-word;
+  font-weight: 500;
 }
 
 .status-label:hover {
   background: #EDF2F7;
   border-color: #4299E1;
-  transform: translateY(-1px);
 }
 
 .status-option input[type="radio"]:checked + .status-label {
-  background: #4299E1;
+  background: #EBF8FF;
   border-color: #4299E1;
-  color: white;
-  box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);
+  color: #2B6CB0;
+  font-weight: 600;
 }
 
 .status-option input[type="radio"]:focus + .status-label {
@@ -374,33 +252,31 @@
   .post-form-container {
     width: 95%;
     padding: 1.5rem;
+    margin: 2rem auto;
   }
-
+  
   .form-group {
-    min-width: 200px;
+    margin-bottom: 1.5rem;
   }
-
+  
   .status-selector {
     flex-direction: column;
-  }
-
-  .status-option {
-    width: 100%;
   }
 }
 
 @media screen and (max-width: 480px) {
   .post-form-container {
     width: 100%;
-    margin: 1rem auto;
     padding: 1rem;
+    margin: 1rem auto;
+    border-radius: 8px;
   }
-
+  
   .form-input,
   .form-textarea,
-  .form-select,
-  .file-input-container {
-    min-width: 150px;
+  .file-input-label {
+    font-size: 1rem;
+    padding: 0.8rem;
   }
 }
 
