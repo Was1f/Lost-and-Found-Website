@@ -44,13 +44,9 @@ router.get('/me', protect, async (req, res) => {
     }
   });
 
-// PUT:ADMIN marks the report as resolved and adds a response
+// PUT:ADMIN marks the report as resolved and adds a response (optional)
 router.put('/:reportId', protect, async (req, res) => {
-  const { adminResponse } = req.body;
-
-  if (!adminResponse) {
-    return res.status(400).json({ message: 'Admin response is required' });
-  }
+  const { adminResponse, status } = req.body;
 
   try {
     const report = await Report.findById(req.params.reportId);
@@ -58,16 +54,22 @@ router.put('/:reportId', protect, async (req, res) => {
       return res.status(404).json({ message: 'Report not found' });
     }
 
-    report.status = 'Resolved';
-    report.adminResponse = adminResponse;
+    // Set status to "Resolved" by default or use the provided status
+    report.status = status || 'Resolved';
+    
+    // Only set adminResponse if it's provided
+    if (adminResponse) {
+      report.adminResponse = adminResponse;
+    }
+    
     report.updatedAt = Date.now();
 
     await report.save();
 
-    res.json({ message: 'Report resolved successfully', report });
+    res.json({ message: 'Report updated successfully', report });
   } catch (error) {
-    console.error('Error resolving report:', error);
-    res.status(500).json({ message: 'Error resolving report' });
+    console.error('Error updating report:', error);
+    res.status(500).json({ message: 'Error updating report' });
   }
 });
 

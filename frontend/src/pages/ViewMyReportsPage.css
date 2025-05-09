@@ -1,5 +1,6 @@
 /* Google Fonts Import */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
 /* CSS Reset */
 *, *::before, *::after {
@@ -49,6 +50,12 @@ body {
   position: relative; /* Added for status badge positioning */
 }
 
+/* Special styling for cards with deleted posts */
+.report-card.deleted-post {
+  border-left: 4px solid #e53e3e; /* Red accent border for deleted posts */
+  background-color: #fff5f5; /* Very light red background */
+}
+
 /* Hover effect for the report card */
 .report-card:hover {
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
@@ -71,6 +78,39 @@ body {
   margin-bottom: 12px;
   line-height: 1.3;
   width: 80%; /* Allow space for status badge */
+}
+
+/* Deleted post indicator styling */
+.deleted-post-indicator {
+  color: #e53e3e; /* Red color */
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1rem; /* Reduced font size */
+  display: inline-flex;
+  align-items: center;
+  background-color: #fff0f0; /* Very light red background */
+  padding: 4px 8px; /* Reduced padding */
+  border-radius: 4px; /* Smaller border radius */
+  border: 1px dashed #e53e3e;
+  box-shadow: 0 1px 3px rgba(229, 62, 62, 0.15);
+  animation: pulse 2s infinite;
+}
+
+.deleted-post-indicator i {
+  margin-right: 6px;
+  font-size: 0.9rem; /* Smaller icon */
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(229, 62, 62, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
+  }
 }
 
 .report-type {
@@ -169,18 +209,70 @@ body {
   background-color: #2b6cb0; /* Darker blue on hover */
 }
 
+/* Deleted post button */
+.deleted-post-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #e2e8f0; /* Gray color */
+  color: #718096;
+  border: none;
+  border-radius: 8px;
+  cursor: not-allowed;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.deleted-post-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.05) 10px,
+    rgba(0, 0, 0, 0.05) 20px
+  );
+}
+
 /* Notifications */
 .alert {
-  margin-bottom: 30px;
-  padding: 20px;
+  margin-bottom: 20px;
+  padding: 10px 15px;
   background-color: #e6f7ff; /* Light blue background */
   color: #2563eb; /* Blue text */
   border-radius: 8px;
   border-left: 4px solid #3182ce; /* Blue accent */
+  display: flex;
+  align-items: center;
 }
 
 .alert .alert-icon {
-  margin-right: 12px;
+  margin-right: 10px;
+}
+
+.alert-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alert button {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  margin-left: 8px;
+  min-width: auto;
+  height: auto;
 }
 
 .reports-list {
@@ -230,7 +322,7 @@ body {
     right: 15px;
   }
   
-  .view-post-btn {
+  .view-post-btn, .deleted-post-btn {
     padding: 10px 15px;
   }
 }
