@@ -139,7 +139,10 @@ const UserManagement = () => {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to fetch users');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to fetch users');
+        }
 
       const data = await response.json();
       setUsers(data.users);
@@ -201,18 +204,25 @@ const UserManagement = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/admin/user/ban/${id}`,
+        `http://localhost:5000/api/admin/users/${id}/status`,
         {
           method: 'PUT',
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
           },
+          body: JSON.stringify({
+            status: isBanned ? 'active' : 'banned'
+          })
         }
       );
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update user status');
+      }
 
+      const data = await response.json();
       toast({
         title: isBanned ? 'User Activated' : 'User Banned',
         description: data.message,
@@ -256,7 +266,7 @@ const UserManagement = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/admin/user/${id}`,
+        `http://localhost:5000/api/admin/users/${id}`,
         {
           method: 'DELETE',
           headers: {
@@ -265,9 +275,12 @@ const UserManagement = () => {
         }
       );
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete user');
+      }
 
+      const data = await response.json();
       toast({
         title: 'User Deleted',
         description: data.message,

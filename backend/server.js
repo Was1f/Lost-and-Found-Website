@@ -57,10 +57,6 @@ app.get("/", (req, res) => {
 });
 
 
-// ... other imports and middleware
-
-// Register the admin post routes
-app.use("/api/admin/posts", adminPostRoutes);
 
 // Add this to your main server file (e.g., server.js or app.js)
 

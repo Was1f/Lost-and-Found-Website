@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';  // bcryptjs to hash passwords
+import BaseModel from './base.model.js';
 
 const adminSchema = new mongoose.Schema({
   email: {
@@ -45,5 +46,18 @@ adminSchema.methods.matchPassword = async function(password) {
 };
 
 // Create the model for admins
-const Admin = mongoose.model('Admin', adminSchema, 'admins'); // "admins" collection
-export default Admin;
+const AdminModel = mongoose.model('Admin', adminSchema, 'admins'); // "admins" collection
+
+// Create Admin class that extends BaseModel
+class Admin extends BaseModel {
+  constructor() {
+    super(AdminModel);
+  }
+
+  // Add any admin-specific methods here
+  async findByEmail(email) {
+    return await this.findOne({ email: email.toLowerCase() });
+  }
+}
+
+export default new Admin();

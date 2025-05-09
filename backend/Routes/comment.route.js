@@ -19,13 +19,11 @@ router.post('/:postId', protect, async (req, res) => {
       return res.status(400).json({ message: 'Invalid postId format' });
     }
 
-    const comment = new Comment({
+    const comment = await Comment.create({
       postId: req.params.postId,
       userId: req.user._id,
       text,
     });
-
-    await comment.save();
 
     res.status(201).json({ message: 'Comment added successfully', comment });
   } catch (error) {
@@ -34,8 +32,7 @@ router.post('/:postId', protect, async (req, res) => {
   }
 });
 
-// Make sure this route is mounted BEFORE the /:postId route to prevent conflicts
-// POST a reply to a comment - Fixed route with better path distinction
+// POST a reply to a comment
 router.post('/comments/reply', protect, async (req, res) => {
   const { text, parentCommentId, postId } = req.body;
   
@@ -67,14 +64,12 @@ router.post('/comments/reply', protect, async (req, res) => {
     console.log("Parent comment found:", parentComment);
     
     // Create the reply (which will reference the parent comment)
-    const reply = new Comment({
-      postId: postId, // Use the postId from request body
+    const reply = await Comment.create({
+      postId: postId,
       userId: req.user._id,
       text,
-      parentCommentId, // Link the reply to the parent comment
+      parentCommentId,
     });
-
-    await reply.save();
 
     res.status(201).json({ message: 'Reply added successfully', reply });
   } catch (error) {
@@ -113,7 +108,29 @@ router.get('/:postId', async (req, res) => {
     res.json(comments); // Return comments and their replies
   } catch (error) {
     console.error('Error fetching comments:', error);
-    res.status(500).json({ message: 'Server error fetching comments', error: error.message });
+    res.status(500).json({ message: 'Error fetching comments', error: error.message });
+  }
+});
+
+// DELETE a comment
+router.delete('/:commentId', protect, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.commentId);
+    
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    if (comment.userId.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'Not authorized to delete this comment' });
+    }
+
+    await Comment.deleteById(req.params.commentId);
+    
+    res.json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    res.status(500).json({ message: 'Error deleting comment' });
   }
 });
 

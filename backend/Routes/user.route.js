@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';  // Use JWT for creating a token
-import User from '../models/user.model.js'; // Import User model
+import jwt from 'jsonwebtoken';
+import User from '../models/user.model.js';
 
 const router = express.Router();
 
@@ -17,13 +17,12 @@ router.post('/signup', async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create and save new user
-    const newUser = new User({
+    // Create new user using the wrapper
+    const newUser = await User.create({
       email,
       password: hashedPassword,
     });
 
-    await newUser.save();
     res.status(201).json({ success: true, message: 'User registered successfully' });
   } catch (err) {
     console.error(err);
@@ -36,26 +35,35 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Find the user by email
+    // Find user by email
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ success: false, message: 'Invalid credentials' });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
 
-    // Compare the password with the hashed one
+    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ success: false, message: 'Invalid credentials' });
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
 
-    // Create and send a JWT token
+    // Create JWT token
     const token = jwt.sign(
-      { userId: user._id },  // Payload: user ID
-      process.env.JWT_SECRET,  // Secret key from .env
-      { expiresIn: '1h' }  // Token expiration time (1 hour)
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
     );
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: 'Login successful',
-      token: "supersecretkey",  // Send the JWT token
-      user: { email: user.email },  // Optionally send user details (e.g. email)
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        studentId: user.studentId,
+        status: user.status
+      }
     });
   } catch (err) {
     console.error(err);
@@ -63,22 +71,37 @@ router.post('/login', async (req, res) => {
   }
 });
 
-//edit user profile route:
-router.put('/:id', async (req, res) => {
+// Get user profile
+router.get('/profile', async (req, res) => {
   try {
-    const updates = {
-      username: req.body.username,
-      bio: req.body.bio,
-      profilePicUrl: req.body.profilePicUrl,
-      coverPicUrl: req.body.coverPicUrl,
-    };
-
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
-    if (!updatedUser) return res.status(404).json({ message: "User not found" });
-
-    res.status(200).json(updatedUser);
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// Update user profile
+router.put('/profile', async (req, res) => {
+  const { username, studentId } = req.body;
+
+  try {
+    const updatedUser = await User.updateById(req.user._id, {
+      ...(username && { username }),
+      ...(studentId && { studentId })
+    });
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 
@@ -114,6 +137,5 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: 'Error fetching user', error: error.message });
   }
 });
-
 
 export default router;

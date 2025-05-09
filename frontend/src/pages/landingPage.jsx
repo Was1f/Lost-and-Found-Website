@@ -1,5 +1,5 @@
 // HomePage.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './LandingPage.css';
 import {
   Box,
@@ -19,7 +19,7 @@ import {
   Badge,
   keyframes,
 } from "@chakra-ui/react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { FaSearch, FaMapMarkerAlt, FaBell, FaShieldAlt } from "react-icons/fa";
 import { motion } from "framer-motion";
 
@@ -79,6 +79,21 @@ const MotionBox = motion(Box);
 const LandingPage = () => {
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const handleGetStarted = () => {
+    if (isLoggedIn) {
+      navigate('/recent');
+    } else {
+      navigate('/signup');
+    }
+  };
 
   return (
     <Box>
@@ -113,8 +128,7 @@ const LandingPage = () => {
               </Text>
               <HStack spacing={4}>
                 <Button
-                  as={RouterLink}
-                  to="/signup"
+                  onClick={handleGetStarted}
                   size="lg"
                   colorScheme="whiteAlpha"
                   _hover={{ bg: "whiteAlpha.300" }}
