@@ -43,6 +43,11 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  status: {
+    type: String,
+    enum: ['active', 'banned'],
+    default: 'active'  // Default to active when user signs up
+  }
 });
 
 // Hash the password before saving to DB

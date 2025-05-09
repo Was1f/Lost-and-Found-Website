@@ -6,50 +6,38 @@ import User from '../models/user.model.js';
 // Sign-up Controller
 // ========================
 export const signupController = async (req, res) => {
-  const { email, password,username,bio,studentId,isVerified } = req.body;
+  const { username, email, password, studentId } = req.body;
 
   if (!email || !password || !username || !studentId) {
-    return res.status(400).json({ message: 'Please provide email and password' });
-  }
-
-  if (!/^\d{8}$/.test(studentId)) {
-    return res.status(400).json({ message: 'Student ID must be an 8-digit number' });
+    return res.status(400).json({ message: 'Please provide all required fields' });
   }
 
   try {
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { username }, { studentId }]
+    });
+    
     if (existingUser) {
+      if (existingUser.email === email) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+      if (existingUser.username === username) {
+        return res.status(400).json({ message: 'Username already in use' });
+      }
+      if (existingUser.studentId === studentId) {
+        return res.status(400).json({ message: 'Student ID already registered' });
+      }
       return res.status(400).json({ message: 'User already exists' });
     }
-        // Check if student ID already exists
-    existingUser = await User.findOne({ studentId });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User with this Student ID already exists' });
-    }
-
-    // Check if username already exists
-    existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Username is already taken' });
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    console.log('Email:', email);
-    console.log('Hashed Password:', hashedPassword);
 
     // Create new user with status 'active'
     const newUser = new User({
-      email,
-      password: hashedPassword,
-      status: 'active', // ✅ New users will have active status by default
       username,
-      bio,
+      email,
+      password, // Password will be hashed by pre-save hook
       studentId,
-      isVerified: false
+      status: 'active', // Default status is active
     });
 
     // Save user to the database
@@ -58,7 +46,7 @@ export const signupController = async (req, res) => {
     res.status(201).json({ message: 'User registered successfully', success: true });
   } catch (error) {
     console.error('Error in signup:', error);
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -80,18 +68,16 @@ export const loginController = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    console.log('User:', user);
-
-    // ✅ Ban Check First: before matching password
-    if (!user.status || user.status.toLowerCase() === 'banned') {
-      return res.status(403).json({ message: 'Your account has been banned. Please contact support.' });
+    // Check if user is banned
+    if (user.status === 'banned') {
+      return res.status(403).json({ 
+        message: 'Your account has been banned. Please contact support.',
+        banned: true 
+      });
     }
 
     // Compare the entered password with the stored hashed password
     const isMatch = await user.matchPassword(password);
-
-    //const isMatch = await user.matchPassword(password, user.password);
-    console.log('Password Match:', isMatch);
 
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -100,18 +86,23 @@ export const loginController = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'supersecretkey', // Fallback secret for dev
       { expiresIn: '1h' }
     );
 
     res.status(200).json({
       message: 'Login successful',
       token,
-      user: { email: user.email },
+      user: { 
+        id: user._id,
+        email: user.email, 
+        username: user.username,
+        status: user.status
+      },
     });
 
   } catch (error) {
     console.error('Error in login:', error);
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

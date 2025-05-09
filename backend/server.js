@@ -14,6 +14,8 @@ import commentRoutes from './Routes/comment.route.js';
 import userProfileRoutes from './Routes/userprofile.route.js';
 import matchRoutes from './Routes/match.route.js';
 
+import reportRoutes from './Routes/report.route.js';
+import adminReportRoutes from "./Routes/admin.report.route.js";
 import postHistoryRoutes from "./Routes/postHistory.route.js";
 
 import leaderboardRoutes from './Routes/leaderboard.route.js';
@@ -33,7 +35,7 @@ app.use(cors({
 app.use(express.json()); // Parse JSON bodies
 
 // API Routes
-app.use("/api/posthistory", postHistoryRoutes);
+app.use("/api/admin/reports", adminReportRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/admin", adminRoutes); // 👈 Admin routes here
@@ -42,6 +44,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/userprofile', userProfileRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/posthistory', postHistoryRoutes);
 
 app.use('/api/posthistory', postRoutes);  // Ensure that this is pointing to the right route
 
@@ -51,6 +54,12 @@ app.use('/api/leaderboard', leaderboardRoutes)
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
+
+
+// ... other imports and middleware
+
+// Register the admin post routes
+app.use("/api/admin/posts", adminPostRoutes);
 
 // Add this to your main server file (e.g., server.js or app.js)
 
