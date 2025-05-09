@@ -7,7 +7,31 @@ const postSchema = new mongoose.Schema({
   image: { type: String, required: true },  // Image URL or path to the image
   createdAt: { type: Date, default: Date.now },
   status: { type: String, enum: ['lost', 'found'], default: 'lost' },  // 'lost' or 'found'
-  location: { type: String,  required: true, },
+  location: { type: String, required: true },
+  
+  // New fields for archiving system
+  resolutionStatus: { 
+    type: String, 
+    enum: ['Active', 'Resolved', 'Unresolved'], 
+    default: 'Active' 
+  },
+  isArchived: { 
+    type: Boolean, 
+    default: false 
+  },
+  resolvedAt: { 
+    type: Date, 
+    default: null 
+  },
+  resolvedBy: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User',
+    default: null
+  },
+  resolutionNote: { 
+    type: String, 
+    default: '' 
+  }
 },
 { timestamps: true }
 );
