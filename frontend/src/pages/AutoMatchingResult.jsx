@@ -1,39 +1,93 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Heading, Text, VStack, HStack, Badge, Spinner, Divider, Image, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Flex } from '@chakra-ui/react';
+import { Box, Heading, Text, VStack, HStack, Badge, Spinner, Divider, Image, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Flex, Button, useToast } from '@chakra-ui/react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
 
 const AutoMatchingResult = () => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [runningMatch, setRunningMatch] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
+
+  const runMatching = async () => {
+    try {
+      setRunningMatch(true);
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        navigate('/admin/login');
+        return;
+      }
+      
+      await axios.post('http://localhost:5000/api/matches/run', {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      toast({
+        title: "Matching completed",
+        description: "Successfully ran the matching process",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      
+      // Fetch the updated matches after running
+      fetchMatches();
+    } catch (error) {
+      console.error('Error running matching:', error.response?.data || error.message);
+      toast({
+        title: "Error running matching",
+        description: error.response?.data?.message || "Failed to run matching process",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setRunningMatch(false);
+    }
+  };
+
+  const fetchMatches = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.log('No admin token found, redirecting to login');
+        navigate('/admin/login');
+        return;
+      }
+      console.log('Fetching matches with token:', token);
+      const response = await axios.get('http://localhost:5000/api/matches', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('Matches response:', response.data);
+      setMatches(response.data);
+    } catch (error) {
+      console.error('Error fetching matches:', error.response?.data || error.message);
+      setMatches([]);
+      if (error.response?.status === 401) {
+        navigate('/admin/login');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchMatches = async () => {
-      try {
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-          navigate('/admin/login');
-          return;
-        }
-        const response = await axios.get('http://localhost:5000/api/matches', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMatches(response.data);
-      } catch (error) {
-        setMatches([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMatches();
   }, [navigate]);
 
   // Group matches by lost post
   const grouped = {};
   matches.forEach(match => {
-    const lostId = match.lostPost?._id;
-    if (!lostId) return;
+    if (!match.lostPost || !match.foundPost) {
+      console.log('Invalid match data:', match);
+      return;
+    }
+    const lostId = match.lostPost._id;
+    if (!lostId) {
+      console.log('No lost post ID:', match);
+      return;
+    }
     if (!grouped[lostId]) grouped[lostId] = { lost: match.lostPost, found: [] };
     grouped[lostId].found.push({ found: match.foundPost, similarity: match.similarity });
   });
@@ -44,9 +98,19 @@ const AutoMatchingResult = () => {
 
   return (
     <Box maxW="6xl" mx="auto" mt={10} p={6} bg="white" boxShadow="md" rounded="md">
-      <Heading as="h2" size="xl" mb={6}>Auto Matching Results</Heading>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading as="h2" size="xl">Auto Matching Results</Heading>
+        <Button
+          colorScheme="blue"
+          onClick={runMatching}
+          isLoading={runningMatch}
+          loadingText="Running Match..."
+        >
+          Run Matching
+        </Button>
+      </Flex>
       {Object.keys(grouped).length === 0 ? (
-        <Text>No matches found.</Text>
+        <Text>No matches found. Click "Run Matching" to find potential matches.</Text>
       ) : (
         <Accordion allowMultiple defaultIndex={[0]}>
           {Object.values(grouped).map(({ lost, found }) => (

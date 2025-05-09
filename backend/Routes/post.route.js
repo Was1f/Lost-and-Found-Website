@@ -198,6 +198,55 @@ router.get('/user', protect, async (req, res) => {
   }
 });
 
+// Helper function to run matching for a post
+async function runMatchingForPost(post, isNewPost = false) {
+  console.log(`Running matching for ${isNewPost ? 'new' : 'updated'} post:`, post._id);
+  let matches = [];
+  
+  try {
+    const otherType = post.status === 'lost' ? 'found' : 'lost';
+    const otherPosts = await Post.find({ 
+      status: otherType,
+      resolutionStatus: 'Active',
+      isArchived: false
+    });
+    
+    console.log(`Found ${otherPosts.length} ${otherType} posts to compare against`);
+    
+    for (const other of otherPosts) {
+      const textA = `${post.title} ${post.description} ${post.location}`;
+      const textB = `${other.title} ${other.description} ${other.location}`;
+      const similarity = stringSimilarity.compareTwoStrings(textA, textB);
+      
+      console.log(`Comparing with post ${other._id}: similarity = ${similarity}`);
+      
+      if (similarity >= 0.3) {
+        const exists = post.status === 'lost'
+          ? await Match.findOne({ lostPost: post._id, foundPost: other._id })
+          : await Match.findOne({ lostPost: other._id, foundPost: post._id });
+          
+        if (!exists) {
+          console.log(`Creating new match with similarity ${similarity}`);
+          const match = await Match.create({
+            lostPost: post.status === 'lost' ? post._id : other._id,
+            foundPost: post.status === 'found' ? post._id : other._id,
+            similarity
+          });
+          matches.push(match);
+        } else {
+          console.log('Match already exists, skipping');
+        }
+      }
+    }
+    
+    console.log(`Created ${matches.length} new matches for post ${post._id}`);
+    return matches;
+  } catch (error) {
+    console.error('Error in runMatchingForPost:', error);
+    throw error;
+  }
+}
+
 // Create a new post
 router.post('/create', protect, upload.single('image'), async (req, res) => {
   try {
@@ -219,32 +268,13 @@ router.post('/create', protect, upload.single('image'), async (req, res) => {
       isArchived: false
     });
 
-    // --- Auto-matching logic ---
+    // Run matching for the new post
     let matches = [];
-    if (newPost.status === 'lost' || newPost.status === 'found') {
-      const otherType = newPost.status === 'lost' ? 'found' : 'lost';
-      const otherPosts = await Post.find({ status: otherType });
-      
-      for (const other of otherPosts) {
-        const textA = `${newPost.title} ${newPost.description} ${newPost.location}`;
-        const textB = `${other.title} ${other.description} ${other.location}`;
-        const similarity = stringSimilarity.compareTwoStrings(textA, textB);
-        
-        if (similarity >= 0.3) {
-          const exists = newPost.status === 'lost'
-            ? await Match.findOne({ lostPost: newPost._id, foundPost: other._id })
-            : await Match.findOne({ lostPost: other._id, foundPost: newPost._id });
-            
-          if (!exists) {
-            const match = await Match.create({
-              lostPost: newPost.status === 'lost' ? newPost._id : other._id,
-              foundPost: newPost.status === 'found' ? newPost._id : other._id,
-              similarity
-            });
-            matches.push(match);
-          }
-        }
-      }
+    try {
+      matches = await runMatchingForPost(newPost, true);
+    } catch (error) {
+      console.error('Error during automatching:', error);
+      // Don't fail the post creation if matching fails
     }
 
     // Add 5 points to user if they posted a found item
@@ -323,7 +353,22 @@ router.put('/:id', protect, upload.single('image'), async (req, res) => {
       ...(req.file && { image: `/uploads/${req.file.filename}` })
     });
 
-    res.json({ message: 'Post updated successfully', post: updatedPost });
+    // Run matching for the updated post if relevant fields changed
+    let matches = [];
+    if (title || description || location || status) {
+      try {
+        matches = await runMatchingForPost(updatedPost, false);
+      } catch (error) {
+        console.error('Error during automatching after update:', error);
+        // Don't fail the update if matching fails
+      }
+    }
+
+    res.json({ 
+      message: 'Post updated successfully', 
+      post: updatedPost,
+      matches 
+    });
   } catch (error) {
     console.error('Error updating post:', error);
     res.status(500).json({ message: 'Error updating post' });

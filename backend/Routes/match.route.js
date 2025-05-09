@@ -6,8 +6,11 @@ import Post from '../models/post.model.js';
 
 const router = express.Router();
 
+// Apply adminAuth middleware to all routes in this router
+router.use(adminAuth);
+
 // Run matching (admin only)
-router.post('/run', adminAuth, async (req, res) => {
+router.post('/run', async (req, res) => {
   try {
     // Get all active lost and found posts
     const lostPosts = await Post.find({ status: 'lost', resolutionStatus: 'Active' });
@@ -49,11 +52,11 @@ router.post('/run', adminAuth, async (req, res) => {
 });
 
 // Get all matches (admin only)
-router.get('/', adminAuth, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const matches = await Match.find()
-      .populate('lostPost', 'title description location')
-      .populate('foundPost', 'title description location')
+      .populate('lostPost', 'title description location image createdAt')
+      .populate('foundPost', 'title description location image createdAt')
       .sort({ similarity: -1 });
 
     res.json(matches);
@@ -64,7 +67,7 @@ router.get('/', adminAuth, async (req, res) => {
 });
 
 // Delete a match
-router.delete('/:id', adminAuth, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const match = await Match.findById(req.params.id);
     if (!match) {
