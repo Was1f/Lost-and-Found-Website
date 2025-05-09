@@ -41,6 +41,12 @@ app.use('/api/posthistory', postHistoryRoutes);
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
+import adminPostRoutes from "./routes/admin.post.route.js";
+
+// ... other imports and middleware
+
+// Register the admin post routes
+app.use("/api/admin/posts", adminPostRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === "production") {
