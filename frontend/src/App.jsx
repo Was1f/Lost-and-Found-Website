@@ -22,6 +22,7 @@ import Dashboard from "./pages/Dashboard";
 import PostManagement from "./pages/PostManagement";
 import UserManagement from "./pages/UserManagement";
 import PostDetailsPage from "./pages/PostDetailsPage";
+import AutoMatchingResult from "./pages/AutoMatchingResult";
 
 function App() {
   useEffect(() => {
@@ -60,6 +61,7 @@ function App() {
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/admin/posts' element={<PostManagement />} />
         <Route path='/admin/users' element={<UserManagement />} />
+        <Route path='/auto-matching-result' element={<AutoMatchingResult />} />
       </Routes>
     </Box>
   );

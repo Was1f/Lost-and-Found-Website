@@ -1,7 +1,7 @@
 import { Box, Heading, VStack, Text, Button, Image, Badge, HStack, Flex, Avatar, Link, Container, Divider, keyframes, Input, InputGroup, InputLeftElement } from "@chakra-ui/react";
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { FaMapMarkerAlt, FaCalendarAlt, FaUser, FaSearch } from "react-icons/fa";
 import debounce from 'lodash/debounce';
 
@@ -85,6 +85,8 @@ const RecentPostsPage = () => {
     setSearchQuery(query);
     debouncedSearch(query);
   };
+
+  const isAdmin = userProfile?.email === 'zidan@gmail.com';
 
   return (
     <Container maxW="1400px" py={8}>

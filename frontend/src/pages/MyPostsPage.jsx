@@ -17,7 +17,9 @@ const MyPostsPage = () => {
             Authorization: `Bearer ${token}`, // Send the token for user-specific data
           },
         });
-        setPosts(response.data); // Store the posts
+        // Sort posts by createdAt descending (most recent first)
+        const sortedPosts = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setPosts(sortedPosts);
       } catch (error) {
         console.error("Failed to fetch user posts", error);
       }

@@ -26,14 +26,12 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { PlusSquareIcon, HamburgerIcon } from "@chakra-ui/icons";
-import { IoMoon } from "react-icons/io5";
-import { LuSun } from "react-icons/lu";
 import { FaHome, FaHistory, FaUser } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
 const Navbar = () => {
-	const { colorMode, toggleColorMode } = useColorMode();
+	const { colorMode } = useColorMode();
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { isOpen, onOpen, onClose } = useDisclosure();
@@ -41,6 +39,8 @@ const Navbar = () => {
 	const [userProfile, setUserProfile] = useState(null);
 
 	const token = localStorage.getItem("authToken");
+	const adminToken = localStorage.getItem("adminToken");
+	const isAdmin = userProfile?.email === 'zidan@gmail.com';
 
 	useEffect(() => {
 		const fetchUserProfile = async () => {
@@ -107,8 +107,15 @@ const Navbar = () => {
 					<VStack spacing={4} align="stretch">
 						<NavButton to="/" icon={<FaHome />}>Home</NavButton>
 						<NavButton to="/recent" icon={<FaHistory />}>Recent Posts</NavButton>
-						<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-						<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
+						{!isAdmin && (
+							<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
+						)}
+						{!isAdmin && (
+							<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
+						)}
+						{isAdmin && (
+							<NavButton to="/dashboard" icon={<FaUser />}>Dashboard</NavButton>
+						)}
 						<Button
 							onClick={handleLogout}
 							colorScheme="red"
@@ -169,10 +176,17 @@ const Navbar = () => {
 								<HStack spacing={4}>
 									<NavButton to="/" icon={<FaHome />}>Home</NavButton>
 									<NavButton to="/recent" icon={<FaHistory />}>Recent Posts</NavButton>
-									<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-									<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
+									{!isAdmin && (
+										<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
+									)}
+									{!isAdmin && (
+										<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
+									)}
+									{isAdmin && (
+										<NavButton to="/dashboard" icon={<FaUser />}>Dashboard</NavButton>
+									)}
 									
-									<Menu>
+									<Menu>	
 										<MenuButton
 											as={Button}
 											variant="ghost"
@@ -195,13 +209,6 @@ const Navbar = () => {
 											<MenuItem onClick={handleLogout} color="red.500">Logout</MenuItem>
 										</MenuList>
 									</Menu>
-
-									<IconButton
-										icon={colorMode === "light" ? <IoMoon /> : <LuSun />}
-										onClick={toggleColorMode}
-										variant="ghost"
-										aria-label="Toggle color mode"
-									/>
 								</HStack>
 							)}
 						</>

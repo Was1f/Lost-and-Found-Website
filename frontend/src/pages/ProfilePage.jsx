@@ -136,18 +136,6 @@ const Profile = () => {
         >
           Edit Profile
         </Button>
-        <Button
-          leftIcon={<BsGrid3X3 />}
-          colorScheme="gray"
-          variant="solid"
-          size="md"
-          bg="#1a202c"
-          color="white"
-          _hover={{ bg: "#2d3748" }}
-          onClick={() => navigate('/userdashboard')}
-        >
-          Dashboard
-        </Button>
       </Flex>
 
       {/* Profile Info */}
