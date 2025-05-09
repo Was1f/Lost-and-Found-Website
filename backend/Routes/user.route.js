@@ -82,4 +82,38 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+router.get('/leaderboard', async (req, res) => {
+  try {
+    // Find all users, sorted by points in descending order
+    // For testing, we're not filtering by points > 0 yet
+    const users = await User.find()
+      .select('username email bio profilePic coverPic studentId isVerified points')
+      .sort({ points: -1 })
+      .limit(100); // Limit to top 100 users for performance
+    
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    res.status(500).json({ message: 'Error fetching leaderboard', error: error.message });
+  }
+});
+
+// Get user profile by ID (for viewing other users' profiles)
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('username email bio profilePic coverPic studentId isVerified points');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Error fetching user', error: error.message });
+  }
+});
+
+
 export default router;

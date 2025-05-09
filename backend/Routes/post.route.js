@@ -4,6 +4,7 @@ import { protect } from '../middleware/auth.js'; // Protect middleware to ensure
 import multer from 'multer';
 import path from 'path';
 import PostHistory from '../models/PostHistory.js';
+import { updateUserPoints } from '../controllers/leaderboard.controller.js'; // Import the points function
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -69,6 +70,10 @@ router.post('/create', protect, upload.single('image'), async (req, res) => {
     });
 
     await newPost.save();
+    // Add 5 points to user if they posted a found item
+    if (status === 'found') {
+      await updateUserPoints(req.user.id, 5);
+    }  
     res.status(201).json({ message: 'Post created successfully', post: newPost });
   } catch (error) {
     res.status(500).json({ message: 'Error creating post', error: error.message });
@@ -119,6 +124,19 @@ router.put('/:id', protect, upload.single('image'), async (req, res) => {
     });
     await history.save();
 
+        // Check if status is changing and handle points adjustment
+    if (status && post.status !== status) {
+      // If changing from lost to found - add 5 points
+      if (post.status === 'lost' && status === 'found') {
+        await updateUserPoints(req.user._id, 5);
+        console.log(`✅ Added 5 points to user ${req.user._id} for changing post from lost to found`);
+      }
+      // If changing from found to lost - deduct 5 points
+      else if (post.status === 'found' && status === 'lost') {
+        await updateUserPoints(req.user._id, -5);
+        console.log(`✅ Deducted 5 points from user ${req.user._id} for changing post from found to lost`);
+      }
+    }
     // ✅ Update actual post fields
    // Safely update only if fields are present
     if (title) post.title = title;

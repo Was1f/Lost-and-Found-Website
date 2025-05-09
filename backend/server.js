@@ -13,7 +13,11 @@ import postRoutes from './Routes/post.route.js';
 import adminRoutes from "./Routes/admin.route.js"; // 👈 Import Admin Routes
 import commentRoutes from './Routes/comment.route.js';
 import userProfileRoutes from './Routes/userprofile.route.js';
+
 import postHistoryRoutes from "./Routes/postHistory.route.js";
+
+import leaderboardRoutes from './Routes/leaderboard.route.js';
+
 dotenv.config();
 
 const app = express(); // Initialize app
@@ -35,7 +39,11 @@ app.use("/api/admin", adminRoutes); // 👈 Admin routes here
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/comments', commentRoutes);
 app.use('/api/userprofile', userProfileRoutes);
+
 app.use('/api/posthistory', postRoutes);  // Ensure that this is pointing to the right route
+
+app.use('/api/leaderboard', leaderboardRoutes)
+
 // Base API Check
 app.get("/", (req, res) => {
   res.send("API is running...");

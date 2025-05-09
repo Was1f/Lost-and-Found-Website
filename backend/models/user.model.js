@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema({
      type: String,
       default: ""
   },
+  points: {
+    type: Number,
+    default: 0
+  },
 });
 
 // Hash the password before saving to DB
