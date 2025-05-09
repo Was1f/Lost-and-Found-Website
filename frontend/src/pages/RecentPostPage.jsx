@@ -1,10 +1,28 @@
-import { Box, Heading, VStack, Text, Button, Image, Badge,HStack } from "@chakra-ui/react"; // Corrected imports
-import { useEffect, useState } from "react";
+import { Box, Heading, VStack, Text, Button, Image, Badge, HStack, Flex, Avatar, Link, Container, Divider, keyframes, Input, InputGroup, InputLeftElement } from "@chakra-ui/react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { FaMapMarkerAlt, FaCalendarAlt, FaUser, FaSearch } from "react-icons/fa";
+import debounce from 'lodash/debounce';
+
+// Define keyframes for animations
+const float = keyframes`
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
 
 const RecentPostsPage = () => {
-  const [posts, setPosts] = useState([]); // Use setPosts for an array of posts
+  const [posts, setPosts] = useState([]);
+  const [filteredPosts, setFilteredPosts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
 
   // Fetch recent posts
@@ -13,99 +31,398 @@ const RecentPostsPage = () => {
       try {
         const response = await axios.get("http://localhost:5000/api/posts/recent");
         console.log(response.data);
-        setPosts(response.data); // Set the posts data
+        setPosts(response.data);
+        setFilteredPosts(response.data);
       } catch (error) {
         console.error("Failed to fetch posts", error);
       }
     };
 
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (token) {
+          const response = await axios.get("http://localhost:5000/api/userprofile/me", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setUserProfile(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile", error);
+      }
+    };
+
     fetchPosts();
-  }, []); // Empty dependency array to fetch only once when component mounts
+    fetchUserProfile();
+  }, []);
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    debounce((query) => {
+      if (!query.trim()) {
+        setFilteredPosts(posts);
+        return;
+      }
+
+      const searchLower = query.toLowerCase();
+      const filtered = posts.filter((post) => {
+        return (
+          post.title.toLowerCase().includes(searchLower) ||
+          post.description.toLowerCase().includes(searchLower) ||
+          post.location.toLowerCase().includes(searchLower)
+        );
+      });
+      setFilteredPosts(filtered);
+    }, 300),
+    [posts]
+  );
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
+
+  const isAdmin = userProfile?.email === 'zidan@gmail.com';
 
   return (
-    <Box maxW="2xl" mx="auto" mt={10} p={6} bg="white" boxShadow="md" rounded="md">
-    <Heading as="h2" size="xl" mb={6}>
-      Recent Posts
-    </Heading>
-    <VStack spacing={4} align="stretch">
-      {posts.length > 0 ? (
-        posts.map((post) => (
-          <Box key={post._id} borderWidth={1} borderRadius="md" p={4} mb={4}>
-            <HStack spacing={6} align="start">
-              {/* Item Image */}
-              <Image
-                src={`http://localhost:5000${post.image}`}
-                alt={post.title}
-                boxSize="250px" // Adjusted image size
-                objectFit="cover"
-                borderRadius="md"
-              />
+    <Container maxW="1400px" py={8}>
+      <Flex gap={8}>
+        {/* Profile Section */}
+        {userProfile && (
+          <Box w="320px" position="sticky" top="100px">
+            <VStack 
+              spacing={0} 
+              align="center" 
+              bg="white" 
+              boxShadow="lg" 
+              rounded="xl" 
+              overflow="hidden"
+              transition="all 0.3s ease"
+              _hover={{ transform: 'translateY(-5px)', boxShadow: '2xl' }}
+            >
+              {/* Cover Photo */}
+              <Box 
+                w="100%" 
+                h="180px" 
+                position="relative" 
+                mt={2}
+                overflow="hidden"
+              >
+                {userProfile.coverPic ? (
+                  <Image
+                    src={`http://localhost:5000/${userProfile.coverPic}`}
+                    alt="Cover"
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                    transition="all 0.5s ease"
+                    _hover={{ transform: 'scale(1.1)' }}
+                  />
+                ) : (
+                  <Box
+                    w="100%"
+                    h="100%"
+                    bgGradient="linear(to-r, blue.400, purple.500)"
+                    animation={`${pulse} 3s infinite ease-in-out`}
+                  />
+                )}
+              </Box>
 
-              {/* Post Details */}
-              <Box flex="1">
-                {/* User Info */}
-                <Text fontSize="sm" color="gray.500" mb={2}>
-                  User: {post.user && post.user.email ? post.user.email : "Anonymous"}
-                </Text>
-
-                {/* Title */}
-                <Heading as="h3" size="md" fontWeight="bold" mb={2}>
-                  {post.title}
-                </Heading>
-
-                {/* Status */}
-                <Badge
-                  colorScheme={post.status === "lost" ? "red" : "green"}
-                  fontSize="md"
-                  p={2}
-                  borderRadius="full"
-                  textTransform="uppercase"
-                  fontWeight="bold"
-                  mb={4}
+              {/* Profile Content */}
+              <VStack spacing={4} align="center" p={6} w="100%" bg="white">
+                <Box 
+                  mt="-70px" 
+                  position="relative"
+                  animation={`${float} 3s infinite ease-in-out`}
                 >
-                  {post.status.toUpperCase()}
-                </Badge>
-
-                {/* Post Description */}
-                <Text
-                    mb={4}
-                    style={{
-                        display: "-webkit-box",
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        WebkitLineClamp: "1", // Limit to 1 line
-                    }}
-                    >
-                    {post.description}
-                    </Text>
-                    
-                {/* Location */}
-                <Text fontSize="sm" color="blue.500" fontWeight="medium" mb={2}>
-                  Location: {post.location}
+                  {userProfile.profilePic ? (
+                    <Image
+                      src={`http://localhost:5000/${userProfile.profilePic}`}
+                      alt={userProfile.username}
+                      boxSize="120px"
+                      borderRadius="full"
+                      objectFit="cover"
+                      border="4px solid white"
+                      boxShadow="lg"
+                      transition="all 0.3s ease"
+                      _hover={{ transform: 'scale(1.1)', boxShadow: '2xl' }}
+                    />
+                  ) : (
+                    <Avatar
+                      size="2xl"
+                      name={userProfile.username}
+                      border="4px solid white"
+                      boxShadow="lg"
+                      transition="all 0.3s ease"
+                      _hover={{ transform: 'scale(1.1)', boxShadow: '2xl' }}
+                    />
+                  )}
+                </Box>
+                <Link 
+                  onClick={() => navigate('/profile')}
+                  _hover={{ textDecoration: 'none' }}
+                >
+                  <Heading 
+                    as="h3" 
+                    size="lg" 
+                    textAlign="center" 
+                    cursor="pointer" 
+                    color="gray.700"
+                    transition="all 0.3s ease"
+                    _hover={{ color: 'blue.500', transform: 'scale(1.05)' }}
+                  >
+                    {userProfile.username}
+                  </Heading>
+                </Link>
+                <Text 
+                  fontSize="md" 
+                  color="gray.600" 
+                  textAlign="center" 
+                  px={4}
+                  transition="all 0.3s ease"
+                  _hover={{ color: 'gray.800' }}
+                >
+                  {userProfile.bio || "No bio yet"}
                 </Text>
-
-                {/* Date and Time */}
-                <Text fontSize="sm" color="gray.400" mb={4}>
-                  Posted on: {new Date(post.createdAt).toLocaleString()}
-                </Text>
-
-                {/* View Post Button */}
+                <Divider my={2} />
                 <Button
                   colorScheme="blue"
-                  onClick={() => navigate(`/post/${post._id}`)} // Redirect to individual post page
+                  variant="solid"
+                  size="md"
+                  width="full"
+                  onClick={() => navigate('/profile')}
+                  _hover={{ 
+                    transform: 'translateY(-2px) scale(1.02)', 
+                    boxShadow: 'lg',
+                    bg: 'blue.600'
+                  }}
+                  transition="all 0.3s ease"
                 >
-                  View Details
+                  View Profile
                 </Button>
-              </Box>
-            </HStack>
+              </VStack>
+            </VStack>
           </Box>
-        ))
-      ) : (
-        <Text>No recent posts available</Text>  // No posts available
-      )}
-    </VStack>
-  </Box>
-);
+        )}
+
+        {/* Main Content */}
+        <Box flex="1">
+          <Box 
+            bg="white" 
+            boxShadow="lg" 
+            rounded="xl" 
+            p={6} 
+            mb={6}
+            position="relative"
+            overflow="hidden"
+            _before={{
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "3px",
+              background: "linear-gradient(90deg, #3182ce, #805ad5)",
+            }}
+          >
+            <Flex align="center" mb={4}>
+              <Box
+                p={2}
+                bg="blue.50"
+                borderRadius="full"
+                mr={3}
+                animation={`${pulse} 2s infinite ease-in-out`}
+              >
+                <FaSearch size="20px" color="#3182ce" />
+              </Box>
+              <Box flex="1">
+                <Heading 
+                  as="h2" 
+                  size="lg" 
+                  bgGradient="linear(to-r, blue.500, purple.500)"
+                  bgClip="text"
+                  fontWeight="bold"
+                >
+                  Recent Posts
+                </Heading>
+                <Text 
+                  color="gray.500" 
+                  fontSize="md"
+                  mt={0.5}
+                >
+                  Discover the latest lost and found items in your area
+                </Text>
+              </Box>
+            </Flex>
+
+            {/* Search Input */}
+            <InputGroup size="md" mt={4}>
+              <InputLeftElement pointerEvents="none">
+                <FaSearch color="gray.300" />
+              </InputLeftElement>
+              <Input
+                placeholder="Search by title, description, or location..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                bg="gray.50"
+                border="1px"
+                borderColor="gray.200"
+                _hover={{ borderColor: "gray.300" }}
+                _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #3182ce" }}
+                transition="all 0.2s"
+              />
+            </InputGroup>
+          </Box>
+
+          <VStack spacing={6} align="stretch">
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map((post) => (
+                <Box 
+                  key={post._id} 
+                  bg="white" 
+                  boxShadow="md" 
+                  rounded="xl" 
+                  overflow="hidden"
+                  transition="all 0.3s ease"
+                  _hover={{ 
+                    transform: 'translateY(-5px) scale(1.01)', 
+                    boxShadow: '2xl',
+                    bg: 'gray.50'
+                  }}
+                >
+                  <HStack spacing={6} align="start" p={6}>
+                    {/* Item Image */}
+                    <Image
+                      src={`http://localhost:5000${post.image}`}
+                      alt={post.title}
+                      boxSize="280px"
+                      objectFit="cover"
+                      borderRadius="lg"
+                      transition="all 0.5s ease"
+                      _hover={{ transform: 'scale(1.05)' }}
+                    />
+
+                    {/* Post Details */}
+                    <Box flex="1">
+                      <HStack spacing={3} mb={3}>
+                        <Badge
+                          colorScheme={post.status === "lost" ? "red" : "green"}
+                          fontSize="sm"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
+                          textTransform="uppercase"
+                          fontWeight="bold"
+                          transition="all 0.3s ease"
+                          _hover={{ transform: 'scale(1.05)' }}
+                        >
+                          {post.status.toUpperCase()}
+                        </Badge>
+                        <Text 
+                          fontSize="sm" 
+                          color="gray.500"
+                          transition="all 0.3s ease"
+                          _hover={{ color: 'gray.700' }}
+                        >
+                          Posted {new Date(post.createdAt).toLocaleDateString()}
+                        </Text>
+                      </HStack>
+
+                      <Heading 
+                        as="h3" 
+                        size="lg" 
+                        fontWeight="bold" 
+                        mb={3} 
+                        color="gray.700"
+                        transition="all 0.3s ease"
+                        _hover={{ color: 'blue.500' }}
+                      >
+                        {post.title}
+                      </Heading>
+
+                      <Text
+                        mb={4}
+                        color="gray.600"
+                        fontSize="md"
+                        style={{
+                          display: "-webkit-box",
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          WebkitLineClamp: "2",
+                        }}
+                        transition="all 0.3s ease"
+                        _hover={{ color: 'gray.800' }}
+                      >
+                        {post.description}
+                      </Text>
+
+                      <HStack spacing={4} mb={6}>
+                        <HStack 
+                          transition="all 0.3s ease"
+                          _hover={{ transform: 'translateX(5px)' }}
+                        >
+                          <FaMapMarkerAlt color="#3182CE" />
+                          <Text color="blue.500" fontWeight="medium">
+                            {post.location}
+                          </Text>
+                        </HStack>
+                        <HStack 
+                          transition="all 0.3s ease"
+                          _hover={{ transform: 'translateX(5px)' }}
+                        >
+                          <FaUser color="#718096" />
+                          <Text color="gray.500">
+                            {post.user && post.user.email ? post.user.email : "Anonymous"}
+                          </Text>
+                        </HStack>
+                      </HStack>
+
+                      <Button
+                        colorScheme="blue"
+                        size="md"
+                        onClick={() => navigate(`/post/${post._id}`)}
+                        _hover={{ 
+                          transform: 'translateY(-2px) scale(1.05)', 
+                          boxShadow: 'lg',
+                          bg: 'blue.600'
+                        }}
+                        transition="all 0.3s ease"
+                      >
+                        View Details
+                      </Button>
+                    </Box>
+                  </HStack>
+                </Box>
+              ))
+            ) : (
+              <Box 
+                bg="white" 
+                boxShadow="md" 
+                rounded="xl" 
+                p={8} 
+                textAlign="center"
+                transition="all 0.3s ease"
+                _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+              >
+                <Text 
+                  fontSize="lg" 
+                  color="gray.500"
+                  transition="all 0.3s ease"
+                  _hover={{ color: 'gray.700' }}
+                >
+                  {searchQuery ? "No posts found matching your search" : "No recent posts available"}
+                </Text>
+              </Box>
+            )}
+          </VStack>
+        </Box>
+      </Flex>
+    </Container>
+  );
 };
 
 export default RecentPostsPage;

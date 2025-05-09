@@ -12,6 +12,7 @@ import postRoutes from './Routes/post.route.js';
 import adminRoutes from "./Routes/admin.route.js"; // 👈 Import Admin Routes
 import commentRoutes from './Routes/comment.route.js';
 import userProfileRoutes from './Routes/userprofile.route.js';
+import matchRoutes from './Routes/match.route.js';
 
 import postHistoryRoutes from "./Routes/postHistory.route.js";
 
@@ -39,6 +40,7 @@ app.use("/api/admin", adminRoutes); // 👈 Admin routes here
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/comments', commentRoutes);
 app.use('/api/userprofile', userProfileRoutes);
+app.use('/api/matches', matchRoutes);
 app.use('/api/reports', reportRoutes);
 
 app.use('/api/posthistory', postRoutes);  // Ensure that this is pointing to the right route

@@ -11,12 +11,12 @@ import {
   useToast, 
   Image,
   Text,
-  Flex,
   Spinner,
   Divider
 } from "@chakra-ui/react";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
+import './EditProfile.css';
 
 const EditProfile = () => {
   const [formData, setFormData] = useState({
@@ -175,96 +175,101 @@ const EditProfile = () => {
   }
 
   return (
-    <Box maxW="lg" mx="auto" mt={10} p={6} boxShadow="lg" rounded="md" bg="white">
-      <Heading as="h2" size="xl" mb={6}>
-        Edit Profile
-      </Heading>
+    <Box className="edit-profile-container">
+      <Box className="edit-profile-header">
+        <Heading as="h2" size="xl">
+          Edit Profile
+        </Heading>
+      </Box>
       
-      <form onSubmit={handleSubmit}>
-        <VStack spacing={5} align="stretch">
-          <FormControl isRequired>
-            <FormLabel>Username</FormLabel>
-            <Input
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Enter your username"
-            />
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>Bio</FormLabel>
-            <Textarea
-              name="bio"
-              value={formData.bio}
-              onChange={handleChange}
-              placeholder="Tell us about yourself"
-              resize="vertical"
-              minH="100px"
-            />
-            <Text fontSize="xs" color="gray.500" mt={1}>
-              {formData.bio ? `${formData.bio.length}/500` : "0/500"} characters
-            </Text>
-          </FormControl>
-
-          <Divider my={3} />
-
-          <FormControl>
-            <FormLabel>Profile Picture</FormLabel>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleProfilePicChange}
-            />
-            {profilePicPreview && (
-              <Box mt={3} borderWidth="1px" borderRadius="md" overflow="hidden" maxW="200px">
-                <Image
-                  src={profilePicPreview}
-                  alt="Profile picture preview"
-                  fallback={<Box bg="gray.100" p={4} textAlign="center">Preview not available</Box>}
-                  boxSize="150px"
-                  objectFit="cover"
+      <Box className="edit-profile-form">
+        <form onSubmit={handleSubmit}>
+          <VStack spacing={5} align="stretch">
+            <Box className="form-group">
+              <FormControl isRequired>
+                <FormLabel>Username</FormLabel>
+                <Input
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  placeholder="Enter your username"
                 />
-              </Box>
-            )}
-          </FormControl>
+              </FormControl>
+            </Box>
 
-          <FormControl>
-            <FormLabel>Cover Picture</FormLabel>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleCoverPicChange}
-            />
-            {coverPicPreview && (
-              <Box mt={3} borderWidth="1px" borderRadius="md" overflow="hidden" w="100%">
-                <Image
-                  src={coverPicPreview}
-                  alt="Cover picture preview"
-                  fallback={<Box bg="gray.100" p={4} textAlign="center">Preview not available</Box>}
-                  width="100%"
-                  height="100px"
-                  objectFit="cover"
+            <Box className="form-group">
+              <FormControl>
+                <FormLabel>Bio</FormLabel>
+                <Textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  placeholder="Tell us about yourself"
+                  resize="vertical"
+                  minH="100px"
                 />
-              </Box>
-            )}
-          </FormControl>
+                <Text className="character-count">
+                  {formData.bio ? `${formData.bio.length}/500` : "0/500"} characters
+                </Text>
+              </FormControl>
+            </Box>
 
-          <Flex mt={4} justify="space-between">
-            <Button variant="outline" onClick={() => navigate('/profile')}>
-              Cancel
-            </Button>
+            <Divider my={3} />
+
+            <Box className="form-group">
+              <FormControl>
+                <FormLabel>Profile Picture</FormLabel>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePicChange}
+                />
+                {profilePicPreview && (
+                  <Box className="image-preview-container" mt={3}>
+                    <Image
+                      src={profilePicPreview}
+                      alt="Profile picture preview"
+                      className="profile-pic-preview"
+                      fallback={<Box bg="gray.100" p={4} textAlign="center">Preview not available</Box>}
+                    />
+                  </Box>
+                )}
+              </FormControl>
+            </Box>
+
+            <Box className="form-group">
+              <FormControl>
+                <FormLabel>Cover Picture</FormLabel>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverPicChange}
+                />
+                {coverPicPreview && (
+                  <Box className="image-preview-container" mt={3}>
+                    <Image
+                      src={coverPicPreview}
+                      alt="Cover picture preview"
+                      className="cover-pic-preview"
+                      fallback={<Box bg="gray.100" p={4} textAlign="center">Preview not available</Box>}
+                    />
+                  </Box>
+                )}
+              </FormControl>
+            </Box>
+
             <Button
               type="submit"
               colorScheme="blue"
+              size="lg"
               isLoading={loading}
-              loadingText="Updating"
+              className="submit-button"
             >
               Save Changes
             </Button>
-          </Flex>
-        </VStack>
-      </form>
+          </VStack>
+        </form>
+      </Box>
     </Box>
   );
 };

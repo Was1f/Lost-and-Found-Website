@@ -5,6 +5,8 @@ import multer from 'multer';
 import path from 'path';
 import PostHistory from '../models/PostHistory.js';
 import { updateUserPoints } from '../controllers/leaderboard.controller.js'; // Import the points function
+import Match from '../models/match.model.js';
+import stringSimilarity from 'string-similarity';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -232,6 +234,36 @@ router.post('/create', protect, upload.single('image'), async (req, res) => {
     });
 
     await newPost.save();
+
+    // --- Auto-matching logic ---
+    let matches = [];
+    if (newPost.status === 'lost' || newPost.status === 'found') {
+      // Find posts of the opposite type
+      const otherType = newPost.status === 'lost' ? 'found' : 'lost';
+      const otherPosts = await Post.find({ status: otherType });
+      for (const other of otherPosts) {
+        // Combine title, description, location for both
+        const textA = `${newPost.title} ${newPost.description} ${newPost.location}`;
+        const textB = `${other.title} ${other.description} ${other.location}`;
+        const similarity = stringSimilarity.compareTwoStrings(textA, textB);
+        if (similarity >= 0.3) {
+          // Check if match already exists
+          const exists = newPost.status === 'lost'
+            ? await Match.findOne({ lostPost: newPost._id, foundPost: other._id })
+            : await Match.findOne({ lostPost: other._id, foundPost: newPost._id });
+          if (!exists) {
+            const match = newPost.status === 'lost'
+              ? new Match({ lostPost: newPost._id, foundPost: other._id, similarity })
+              : new Match({ lostPost: other._id, foundPost: newPost._id, similarity });
+            await match.save();
+            matches.push(match);
+          }
+        }
+      }
+    }
+    // --- End auto-matching logic ---
+
+    res.status(201).json({ message: 'Post created successfully', post: newPost, matches });
     // Add 5 points to user if they posted a found item
     if (status === 'found') {
       await updateUserPoints(req.user.id, 5);

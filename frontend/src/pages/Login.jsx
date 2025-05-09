@@ -1,12 +1,14 @@
-import { Box, Button, Container, FormControl, FormLabel, Heading, Input, useToast, VStack } from "@chakra-ui/react";
+import { Box, Button, Container, FormControl, FormLabel, Heading, Input, useToast, VStack, Text, Link as ChakraLink, useColorModeValue } from "@chakra-ui/react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const toast = useToast();
   const navigate = useNavigate();
+  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const cardBg = useColorModeValue("white", "gray.800");
 
   const handleLogin = async () => {
     try {
@@ -59,42 +61,95 @@ const LoginPage = () => {
   };
 
   return (
-    <Container maxW={"lg"} py={{ base: "12", sm: "24" }} px={{ base: "0", sm: "10" }} centerContent>
-      <VStack spacing={4} w="100%">
-        <Heading as="h1" size="xl" textAlign="center">
-          Log In
-        </Heading>
-        <Box w="100%" p={6} bg="white" boxShadow="lg" rounded="md" border="1px solid" borderColor="gray.200">
-          <VStack spacing={4} align="stretch">
-            <FormControl>
-              <FormLabel>Email</FormLabel>
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Password</FormLabel>
-              <Input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </FormControl>
-
-            <Button colorScheme="blue" size="lg" onClick={handleLogin} width="full">
-              Log In
-            </Button>
+    <Box minH="100vh" bg={bgColor} py={20}>
+      <Container maxW="lg">
+        <VStack spacing={8}>
+          <VStack spacing={3} textAlign="center">
+            <Heading
+              as="h1"
+              size="2xl"
+              bgGradient="linear(to-r, blue.400, blue.600)"
+              bgClip="text"
+              fontWeight="bold"
+            >
+              Welcome Back
+            </Heading>
+            <Text fontSize="lg" color="gray.600">
+              Sign in to access your account
+            </Text>
           </VStack>
-        </Box>
-      </VStack>
-    </Container>
+
+          <Box
+            w="full"
+            p={8}
+            bg={cardBg}
+            rounded="xl"
+            boxShadow="lg"
+            border="1px solid"
+            borderColor="gray.200"
+          >
+            <VStack spacing={6}>
+              <FormControl>
+                <FormLabel>Email</FormLabel>
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  size="lg"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                  }}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Password</FormLabel>
+                <Input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  size="lg"
+                  _focus={{
+                    borderColor: "blue.400",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                  }}
+                />
+              </FormControl>
+
+              <Button
+                colorScheme="blue"
+                size="lg"
+                width="full"
+                onClick={handleLogin}
+                _hover={{
+                  transform: "translateY(-2px)",
+                  boxShadow: "lg",
+                }}
+                transition="all 0.2s"
+              >
+                Sign In
+              </Button>
+
+              <Text textAlign="center" color="gray.600">
+                Don't have an account?{" "}
+                <ChakraLink
+                  as={RouterLink}
+                  to="/signup"
+                  color="blue.500"
+                  fontWeight="bold"
+                  _hover={{ textDecoration: "underline" }}
+                >
+                  Sign Up
+                </ChakraLink>
+              </Text>
+            </VStack>
+          </Box>
+        </VStack>
+      </Container>
+    </Box>
   );
 };
 

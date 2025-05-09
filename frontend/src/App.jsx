@@ -14,12 +14,14 @@ import MyPostsPage from "./pages/MyPostsPage";
 import EditPostPage from "./pages/EditPostPage";
 import EditProfile from "./pages/EditProfile";
 import UserDashboard from "./pages/UserDashboard";
+import FAQPage from "./pages/FAQPage";
 // ✅ Admin Pages
 import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
 import PostManagement from "./pages/PostManagement";
 import UserManagement from "./pages/UserManagement";
 import PostDetailsPage from "./pages/PostDetailsPage";
+import AutoMatchingResult from "./pages/AutoMatchingResult";
 import ViewMyReportsPage from './pages/ViewMyReportsPage';
 
 
@@ -56,6 +58,7 @@ function App() {
         <Route path='/my-posts' element={<MyPostsPage />} />
         <Route path='/edit-post/:id' element={<EditPostPage />} />
         <Route path='/edit-profile' element={<EditProfile/>} />
+        <Route path='/faq' element={<FAQPage />} />
         <Route path="/my-reports" element={<ViewMyReportsPage/>} />
         <Route path='/leaderboard' element={<Leaderboard/>} />
         <Route path="/visituserprofile/:userId" element={<VisitUserProfile />} />
@@ -65,6 +68,7 @@ function App() {
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/admin/posts' element={<PostManagement />} />
         <Route path='/admin/users' element={<UserManagement />} />
+        <Route path='/auto-matching-result' element={<AutoMatchingResult />} />
         <Route path='/admin/history' element={<PostHistoryPage />} />
       </Routes>
     </Box>
