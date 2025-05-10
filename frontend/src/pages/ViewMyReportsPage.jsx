@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Text, VStack, Spinner, Button, Alert, AlertIcon, AlertTitle, AlertDescription } from '@chakra-ui/react';
+import { Box, Text, VStack, Spinner, Button, Alert, AlertIcon, AlertTitle, AlertDescription, useToast, SimpleGrid, Stat, StatLabel, StatNumber, StatHelpText } from '@chakra-ui/react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';  // Using useNavigate for redirection
 
@@ -17,6 +17,7 @@ const ViewMyReportsPage = () => {
   });
   const token = localStorage.getItem('authToken');
   const navigate = useNavigate();
+  const toast = useToast();
 
   useEffect(() => {
     // Check if token exists and redirect if not
@@ -151,6 +152,27 @@ const ViewMyReportsPage = () => {
     setNotifications([]);
   };
 
+  const handleCopyReportId = (reportId) => {
+    navigator.clipboard.writeText(reportId);
+    toast({
+      title: "Report ID Copied",
+      description: "The report ID has been copied to your clipboard",
+      status: "success",
+      duration: 2000,
+      isClosable: true,
+    });
+  };
+
+  // Calculate report statistics
+  const reportStats = {
+    total: reports.length,
+    resolved: reports.filter(report => report.status === 'Resolved').length,
+    pending: reports.filter(report => report.status === 'Pending').length,
+    resolutionRate: reports.length > 0 
+      ? Math.round((reports.filter(report => report.status === 'Resolved').length / reports.length) * 100) 
+      : 0
+  };
+
   if (loading) {
     return <Spinner size="lg" />;
   }
@@ -158,7 +180,31 @@ const ViewMyReportsPage = () => {
   return (
     <Box className="reports-container" p={6}>
       <Text className="page-title">My Reports</Text>
-      
+
+      {/* Report Statistics */}
+      <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={6}>
+        <Stat bg="white" p={4} borderRadius="md" boxShadow="sm">
+          <StatLabel>Total Reports</StatLabel>
+          <StatNumber>{reportStats.total}</StatNumber>
+          <StatHelpText>All time</StatHelpText>
+        </Stat>
+        <Stat bg="white" p={4} borderRadius="md" boxShadow="sm">
+          <StatLabel>Resolved</StatLabel>
+          <StatNumber color="green.500">{reportStats.resolved}</StatNumber>
+          <StatHelpText>Successfully handled</StatHelpText>
+        </Stat>
+        <Stat bg="white" p={4} borderRadius="md" boxShadow="sm">
+          <StatLabel>Pending</StatLabel>
+          <StatNumber color="yellow.500">{reportStats.pending}</StatNumber>
+          <StatHelpText>Under review</StatHelpText>
+        </Stat>
+        <Stat bg="white" p={4} borderRadius="md" boxShadow="sm">
+          <StatLabel>Resolution Rate</StatLabel>
+          <StatNumber color="blue.500">{reportStats.resolutionRate}%</StatNumber>
+          <StatHelpText>Of total reports</StatHelpText>
+        </Stat>
+      </SimpleGrid>
+
       {/* Dismiss All Notifications button */}
       {notifications.length > 1 && (
         <Box textAlign="right" mb={2}>
@@ -172,6 +218,7 @@ const ViewMyReportsPage = () => {
         </Box>
       )}
 
+     {/* Simple notification alert matching the design */}
       {notifications.length > 0 &&
         notifications.map((notification, index) => (
           <Alert 
@@ -226,15 +273,17 @@ const ViewMyReportsPage = () => {
               className={`report-card ${!report.postId ? 'deleted-post' : ''}`}
               borderLeft={report.status === 'Resolved' ? '4px solid green' : undefined}
             >
-              <Text className="report-title">
-                {report.postId ? (
-                  <>Post: {report.postId.title}</>
-                ) : (
-                  <span className="deleted-post-indicator">
-                    <i className="fa fa-exclamation-triangle" aria-hidden="true"></i> This post has been permanently removed
-                  </span>
-                )}
-              </Text>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Text className="report-title">
+                  {report.postId ? (
+                    <>Post: {report.postId.title}</>
+                  ) : (
+                    <span className="deleted-post-indicator">
+                      <i className="fa fa-exclamation-triangle" aria-hidden="true"></i> This post has been permanently removed
+                    </span>
+                  )}
+                </Text>
+              </Box>
               <Text className="report-type">Category: {report.reportType}</Text>
               <Text className="report-description">
                 <Text className="description-label">Description:</Text> {report.description}
