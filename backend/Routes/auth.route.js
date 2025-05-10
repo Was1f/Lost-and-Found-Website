@@ -51,13 +51,13 @@ router.post('/signup', async (req, res) => {
 
 // Login Route
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Please provide email and password' });
-  }
-
   try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
     // Find the user by email
     const user = await User.findOne({ email });
     if (!user) {
@@ -97,7 +97,8 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Error logging in:', err);
-    res.status(500).json({ message: 'Server error' });
+    // Ensure all server errors return JSON responses
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 

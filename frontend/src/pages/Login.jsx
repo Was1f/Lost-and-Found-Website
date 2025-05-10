@@ -21,34 +21,65 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
-
+      // Check if response is OK before trying to parse JSON
       if (!response.ok) {
-        // If login fails, check if it's because the user is an admin
-        const adminCheckResponse = await fetch("http://localhost:5000/api/admin/check", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        });
-
-        const adminCheckData = await adminCheckResponse.json();
-
-        if (adminCheckData.isAdmin) {
-          toast({
-            title: "Admin Account Detected",
-            description: "Please use the admin login page to access your account.",
-            status: "warning",
-            isClosable: true,
-          });
-          navigate('/admin/login');
-          return;
+        // First check if response is JSON by inspecting content-type
+        const contentType = response.headers.get("content-type");
+        
+        if (contentType && contentType.includes("application/json")) {
+          // It's JSON, safe to parse
+          const errorData = await response.json();
+          
+          // Handle banned user case
+          if (response.status === 403 && errorData.message === 'banned') {
+            toast({
+              title: "Account Banned",
+              description: "You have been banned. Please contact support.",
+              status: "error",
+              isClosable: true,
+            });
+            navigate('/banned');
+            return;
+          }
+          
+          // If login fails, check if it's because the user is an admin
+          try {
+            const adminCheckResponse = await fetch("http://localhost:5000/api/admin/check", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email }),
+            });
+            
+            if (adminCheckResponse.ok) {
+              const adminCheckData = await adminCheckResponse.json();
+              
+              if (adminCheckData.isAdmin) {
+                toast({
+                  title: "Admin Account Detected",
+                  description: "Please use the admin login page to access your account.",
+                  status: "warning",
+                  isClosable: true,
+                });
+                navigate('/admin/login');
+                return;
+              }
+            }
+          } catch (adminCheckError) {
+            console.error("Admin check error:", adminCheckError);
+          }
+          
+          // If not an admin, throw the original error
+          throw new Error(errorData.message || "Login failed");
+        } else {
+          // Not JSON, likely a server error
+          throw new Error("Server error. Please try again later.");
         }
-
-        // If not an admin, throw the original error
-        throw new Error(data.message || "Login failed");
       }
+
+      // Response is OK, safe to parse JSON
+      const data = await response.json();
 
       // ✅ If the user is banned, redirect to the banned page
       if (data.user && data.user.status === 'banned') {

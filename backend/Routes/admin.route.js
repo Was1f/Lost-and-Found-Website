@@ -178,7 +178,7 @@ router.get('/users', adminAuth, async (req, res) => {
     // Get users with pagination and sorting
     const users = await User.getModel()
       .find(query)
-      .select('email username studentId status createdAt')
+      .select('email username studentId status createdAt profilePic')
       .sort({ [sort]: order === 'asc' ? 1 : -1 })
       .skip(skip)
       .limit(parseInt(limit))
@@ -243,7 +243,7 @@ router.get('/users/:id', adminAuth, async (req, res) => {
   try {
     const user = await User.getModel()
       .findById(req.params.id)
-      .select('-password') // Exclude password
+      .select('-password') // Exclude password, includes all other fields including profilePic
       .exec();
     
     if (!user) {

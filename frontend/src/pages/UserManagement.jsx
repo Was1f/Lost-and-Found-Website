@@ -329,15 +329,19 @@ const UserManagement = () => {
   
   const handleSearch = (e) => {
     e.preventDefault();
+    // Reset to first page when searching
+    setPage(1);
     fetchUsers();
   };
   
   const clearSearch = () => {
     setSearchTerm('');
+    setPage(1); // Reset to first page when clearing search
     if (searchInputRef.current) {
       searchInputRef.current.focus();
     }
-    fetchUsers();
+    // We'll call fetchUsers after the state is updated
+    setTimeout(fetchUsers, 0);
   };
   
   const nextPage = () => {
@@ -633,7 +637,7 @@ const UserManagement = () => {
                     <Avatar
                       size="xl"
                       name={user.username || user.email}
-                      src={user.profilePic ? `http://localhost:5000${user.profilePic}` : undefined}
+                      src={user.profilePic ? `http://localhost:5000/${user.profilePic.startsWith('/') ? user.profilePic.slice(1) : user.profilePic}` : undefined}
                       border="3px solid"
                       borderColor={user.status === 'banned' ? "red.400" : "blue.400"}
                     >
@@ -796,7 +800,7 @@ const UserManagement = () => {
                     <Avatar
                       size="2xl"
                       name={selectedUser.username || selectedUser.email}
-                      src={selectedUser.profilePic ? `http://localhost:5000${selectedUser.profilePic}` : undefined}
+                      src={selectedUser.profilePic ? `http://localhost:5000/${selectedUser.profilePic.startsWith('/') ? selectedUser.profilePic.slice(1) : selectedUser.profilePic}` : undefined}
                       border="4px solid"
                       borderColor={selectedUser.status === 'banned' ? "red.400" : "blue.400"}
                     >
