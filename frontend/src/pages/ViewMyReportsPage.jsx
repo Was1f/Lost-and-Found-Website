@@ -172,50 +172,34 @@ const ViewMyReportsPage = () => {
         </Box>
       )}
 
-      {/* Show Notifications */}
       {notifications.length > 0 &&
         notifications.map((notification, index) => (
           <Alert 
-            status={notification.hasResponse ? "info" : "success"} 
+            status="info"
             key={notification.reportId} 
             mb={4}
+            variant="subtle"
+            borderRadius="md"
+            py={2}
+            display="flex"
+            alignItems="center"
+            bg="blue.50"
           >
-            <AlertIcon />
-            <Box flex="1">
-              <AlertTitle>{notification.message}</AlertTitle>
+            <AlertIcon color="blue.400" />
+            <Box flex="1" whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
+              <Text mb={0} fontWeight="medium">{notification.message}</Text>
             </Box>
-            {notification.postId ? (
-              <Button
-                colorScheme="blue"
-                size="sm"
-                mr={2}
-                onClick={() => handleViewPost(notification.postId)}
-              >
-                View Post
-              </Button>
-            ) : (
-              <Button
-                className="deleted-post-btn"
-                size="sm"
-                mr={2}
-                isDisabled
-              >
-                Post Permanently Removed
-              </Button>
-            )}
             <Button
               colorScheme="gray"
               size="sm"
+              variant="outline"
               onClick={() => {
-                // Add this notification's report ID to processed set
                 const newProcessedIds = new Set(processedReportIds);
                 newProcessedIds.add(notification.reportId);
                 setProcessedReportIds(newProcessedIds);
                 
-                // Save to localStorage
                 localStorage.setItem('processedReportIds', JSON.stringify([...newProcessedIds]));
                 
-                // Remove from current notifications
                 setNotifications(prev => prev.filter(n => n.reportId !== notification.reportId));
               }}
             >
