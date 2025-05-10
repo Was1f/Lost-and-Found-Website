@@ -4,7 +4,7 @@
   width: 90%;
   margin: 3rem auto;
   padding: 2.5rem;
-  background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+  background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -20,8 +20,7 @@
   right: 0;
   height: 4px;
   background: linear-gradient(90deg, #4299E1, #667EEA);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  opacity: 1;
 }
 
 .post-form-container:hover::before {
@@ -82,7 +81,6 @@
   border: 2px solid #E2E8F0;
   border-radius: 12px;
   font-size: 1.1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background-color: #ffffff;
   color: #2D3748;
   resize: none;
@@ -93,7 +91,6 @@
   border-color: #4299E1;
   box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.15);
   outline: none;
-  transform: translateY(-1px);
 }
 
 .form-textarea {
@@ -134,7 +131,6 @@
 
 .file-input-container {
   position: relative;
-  overflow: hidden;
   display: inline-block;
   width: 100%;
   min-width: 200px;
@@ -148,7 +144,6 @@
   border-radius: 12px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 1.1rem;
   color: #4A5568;
   font-weight: 500;
@@ -158,7 +153,6 @@
 .file-input-label:hover {
   background: #EDF2F7;
   border-color: #4299E1;
-  transform: translateY(-1px);
 }
 
 .file-input {
@@ -174,47 +168,23 @@
 .submit-button {
   width: 100%;
   padding: 1.2rem;
-  background: linear-gradient(135deg, #4299E1, #667EEA);
+  background: #4299E1;
   color: white;
   border: none;
   border-radius: 12px;
   font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  position: relative;
-  overflow: hidden;
-}
-
-.submit-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-  transition: 0.5s;
-}
-
-.submit-button:hover::before {
-  left: 100%;
 }
 
 .submit-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(66, 153, 225, 0.3);
+  background: #3182CE;
 }
 
 .submit-button:active {
-  transform: translateY(0);
+  background: #2B6CB0;
 }
 
 .submit-button:disabled {
@@ -262,15 +232,11 @@
 .status-selector {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1rem;
-  width: 100%;
-  min-width: 200px;
-  flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
 .status-option {
   flex: 1;
-  min-width: 120px;
   position: relative;
 }
 
@@ -282,35 +248,28 @@
 }
 
 .status-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   padding: 1rem;
   background: #F7FAFC;
   border: 2px solid #E2E8F0;
   border-radius: 12px;
+  text-align: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 600;
+  font-size: 1.1rem;
   color: #4A5568;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-size: 1rem;
-  min-height: 50px;
-  word-wrap: break-word;
+  font-weight: 500;
 }
 
 .status-label:hover {
   background: #EDF2F7;
   border-color: #4299E1;
-  transform: translateY(-1px);
 }
 
 .status-option input[type="radio"]:checked + .status-label {
-  background: #4299E1;
+  background: #EBF8FF;
   border-color: #4299E1;
-  color: white;
-  box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);
+  color: #2B6CB0;
+  font-weight: 600;
 }
 
 .status-option input[type="radio"]:focus + .status-label {
@@ -326,33 +285,31 @@
   .post-form-container {
     width: 95%;
     padding: 1.5rem;
+    margin: 2rem auto;
   }
-
+  
   .form-group {
-    min-width: 200px;
+    margin-bottom: 1.5rem;
   }
-
+  
   .status-selector {
     flex-direction: column;
-  }
-
-  .status-option {
-    width: 100%;
   }
 }
 
 @media screen and (max-width: 480px) {
   .post-form-container {
     width: 100%;
-    margin: 1rem auto;
     padding: 1rem;
+    margin: 1rem auto;
+    border-radius: 8px;
   }
-
+  
   .form-input,
   .form-textarea,
-  .form-select,
-  .file-input-container {
-    min-width: 150px;
+  .file-input-label {
+    font-size: 1rem;
+    padding: 0.8rem;
   }
 }
 
