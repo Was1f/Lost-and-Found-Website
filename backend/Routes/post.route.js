@@ -8,6 +8,7 @@ import { updateUserPoints } from '../controllers/leaderboard.controller.js'; // 
 import Match from '../models/match.model.js';
 import stringSimilarity from 'string-similarity';
 import User from '../models/user.model.js';
+import Comment from '../models/comment.model.js';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -233,6 +234,35 @@ async function runMatchingForPost(post, isNewPost = false) {
             similarity
           });
           matches.push(match);
+          
+          // Add automatic comments on both posts about the potential match
+          try {
+            // Calculate percent match for display
+            const percentMatch = Math.round(similarity * 100);
+            
+            // Create comment on the current post
+            const commentOnCurrentPost = {
+              postId: post._id,
+              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${otherType} item that matches this ${post.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${other._id}`,
+              isAdmin: true
+            };
+            
+            await Comment.create(commentOnCurrentPost);
+            
+            // Create comment on the other post
+            const commentOnOtherPost = {
+              postId: other._id,
+              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${post.status} item that matches this ${other.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${post._id}`,
+              isAdmin: true
+            };
+            
+            await Comment.create(commentOnOtherPost);
+            
+            console.log(`Added automatic match comments to posts ${post._id} and ${other._id}`);
+          } catch (commentError) {
+            console.error('Error adding automatic match comments:', commentError);
+            // Don't fail the matching if comments can't be added
+          }
         } else {
           console.log('Match already exists, skipping');
         }

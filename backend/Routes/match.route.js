@@ -3,6 +3,7 @@ import Match from '../models/match.model.js';
 import { adminAuth } from '../middleware/adminAuthmiddleware.js';
 import stringSimilarity from 'string-similarity';
 import Post from '../models/post.model.js';
+import Comment from '../models/comment.model.js';
 
 const router = express.Router();
 
@@ -39,6 +40,35 @@ router.post('/run', async (req, res) => {
               similarity
             });
             matches.push(match);
+            
+            // Add automatic comments on both posts about the potential match
+            try {
+              // Calculate percent match for display
+              const percentMatch = Math.round(similarity * 100);
+              
+              // Create comment on the lost post
+              const commentOnLostPost = {
+                postId: lost._id,
+                text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential found item that matches this lost item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${found._id}`,
+                isAdmin: true
+              };
+              
+              await Comment.create(commentOnLostPost);
+              
+              // Create comment on the found post
+              const commentOnFoundPost = {
+                postId: found._id,
+                text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential lost item that matches this found item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${lost._id}`,
+                isAdmin: true
+              };
+              
+              await Comment.create(commentOnFoundPost);
+              
+              console.log(`Added automatic match comments to posts ${lost._id} and ${found._id}`);
+            } catch (commentError) {
+              console.error('Error adding automatic match comments:', commentError);
+              // Don't fail the matching if comments can't be added
+            }
           }
         }
       }

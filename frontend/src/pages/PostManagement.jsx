@@ -51,7 +51,8 @@ import {
   EditIcon,
   SettingsIcon,
   TimeIcon,
-  StarIcon
+  StarIcon,
+  SearchIcon
 } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
 
@@ -195,10 +196,33 @@ const PostManagement = () => {
   };
 
   // Handle update resolution status
-  const handleUpdateResolution = async (postId, resolutionStatus, resolutionNote) => {
+  const handleUpdateResolution = async () => {
+    if (!selectedPost) {
+      toast({
+        title: "Error",
+        description: "No post selected",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Validate required fields for resolved status
+    if (resolutionStatus === 'Resolved' && !resolvedBy) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a user to award points to when marking a post as resolved",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       const response = await fetch(
-        `http://localhost:5000/api/admin/posts/${postId}/resolution`,
+        `http://localhost:5000/api/admin/posts/${selectedPost._id}/resolution`,
         {
           method: "PUT",
           headers: {
@@ -214,9 +238,16 @@ const PostManagement = () => {
         }
       );
 
+      const contentType = response.headers.get("content-type");
+      let errorData;
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update resolution status");
+        if (contentType && contentType.includes("application/json")) {
+          errorData = await response.json();
+          throw new Error(errorData.message || "Failed to update resolution status");
+        } else {
+          throw new Error("Server error - Failed to update resolution status");
+        }
       }
 
       const data = await response.json();
@@ -419,6 +450,43 @@ const PostManagement = () => {
     }
   };
 
+  // Run matching for a post to find potential matches
+  const handleRunMatching = async (postId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/posts/${postId}/run-matching`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to run matching');
+      }
+
+      const data = await response.json();
+      const matchCount = data.matches?.length || 0;
+      
+      toast({
+        title: matchCount > 0 ? 'Matches found!' : 'No new matches',
+        description: matchCount > 0 
+          ? `Found ${matchCount} new matches. Automatic comments have been added to relevant posts.`
+          : 'No new matches were found for this post.',
+        status: matchCount > 0 ? 'success' : 'info',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        status: 'error',
+        isClosable: true,
+      });
+    }
+  };
+
   // Get status badge color
   const getStatusBadgeColor = (status) => {
     switch (status) {
@@ -558,6 +626,14 @@ const PostManagement = () => {
                             title="View Comments"
                           />
                           <IconButton
+                            colorScheme="purple"
+                            icon={<SearchIcon />}
+                            size="sm"
+                            onClick={() => handleRunMatching(post._id)}
+                            aria-label="Run Matching"
+                            title="Find Potential Matches"
+                          />
+                          <IconButton
                             colorScheme="red"
                             icon={<DeleteIcon />}
                             size="sm"
@@ -632,18 +708,23 @@ const PostManagement = () => {
                   
                   {resolutionStatus === 'Resolved' && (
                     <>
-                      <FormControl>
+                      <FormControl isRequired>
                         <FormLabel>Resolved By User</FormLabel>
                         <Select 
                           placeholder="Select user to award points" 
                           value={resolvedBy} 
                           onChange={(e) => setResolvedBy(e.target.value)}
+                          isRequired
                         >
-                          {users.map(user => (
-                            <option key={user._id} value={user._id}>
-                              {user.email} ({user.username})
-                            </option>
-                          ))}
+                          {users && users.length > 0 ? (
+                            users.map(user => (
+                              <option key={user._id} value={user._id}>
+                                {user.email} ({user.username || 'No Username'})
+                              </option>
+                            ))
+                          ) : (
+                            <option value="" disabled>No users available</option>
+                          )}
                         </Select>
                         <Text fontSize="xs" color="green.500" mt={1}>
                           <StarIcon mr={1} boxSize={3} />
@@ -691,7 +772,7 @@ const PostManagement = () => {
               <Button 
                 colorScheme="teal" 
                 leftIcon={<CheckIcon />}
-                onClick={() => handleUpdateResolution(selectedPost._id, resolutionStatus, resolutionNote)}
+                onClick={handleUpdateResolution}
               >
                 Update Resolution
               </Button>

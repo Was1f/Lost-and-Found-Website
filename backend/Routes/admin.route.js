@@ -135,11 +135,36 @@ router.delete('/comments/:id', adminAuth, async (req, res) => {
       return res.status(404).json({ message: 'Comment not found' });
     }
 
-    await Comment.deleteById(req.params.id);
-    res.json({ message: 'Comment deleted successfully' });
+    // Use the removeComment method from the Comment model
+    // which sets isRemoved: true and text: "[Removed]"
+    await Comment.removeComment(req.params.id);
+    
+    // Update the text to be more specific about admin removal reason
+    const updatedComment = await Comment.getModel().findByIdAndUpdate(
+      req.params.id,
+      { 
+        text: "This comment has been removed by admin for violating community guidelines."
+      },
+      { new: true }
+    );
+
+    // Also mark any child comments/replies as removed
+    const replies = await Comment.getModel().find({ parentCommentId: req.params.id });
+    for (const reply of replies) {
+      await Comment.removeComment(reply._id);
+      await Comment.getModel().findByIdAndUpdate(
+        reply._id,
+        { text: "This comment has been removed by admin for violating community guidelines." }
+      );
+    }
+
+    res.json({ 
+      message: 'Comment removed for violating community guidelines',
+      comment: updatedComment
+    });
   } catch (error) {
-    console.error('Error deleting comment:', error);
-    res.status(500).json({ message: 'Error deleting comment', error: error.message });
+    console.error('Error removing comment:', error);
+    res.status(500).json({ message: 'Error removing comment', error: error.message });
   }
 });
 

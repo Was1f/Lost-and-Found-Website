@@ -361,20 +361,29 @@ const PostDetailsPage = () => {
                         </Box>
                       </HStack>
 
-                      <Text fontSize="md" mb={4} lineHeight="1.6">
+                      <Text 
+                        fontSize="md" 
+                        mb={4} 
+                        lineHeight="1.6"
+                        fontStyle={comment.isRemoved ? "italic" : "normal"}
+                        color={comment.isRemoved ? "red.500" : "inherit"}
+                      >
                         {comment.text}
                       </Text>
 
-                      <Button
-                        size="md"
-                        variant="ghost"
-                        colorScheme="blue"
-                        onClick={() => setSelectedCommentId(comment._id)}
-                        _hover={{ transform: "translateX(5px)" }}
-                        transition="all 0.3s"
-                      >
-                        Reply
-                      </Button>
+                      {/* Only show reply button if comment is not removed */}
+                      {!comment.isRemoved && (
+                        <Button
+                          size="md"
+                          variant="ghost"
+                          colorScheme="blue"
+                          onClick={() => setSelectedCommentId(comment._id)}
+                          _hover={{ transform: "translateX(5px)" }}
+                          transition="all 0.3s"
+                        >
+                          Reply
+                        </Button>
+                      )}
 
                       {/* Replies Section */}
                       {comment.replies && comment.replies.length > 0 && (
@@ -402,7 +411,14 @@ const PostDetailsPage = () => {
                                   </Text>
                                 </Box>
                               </HStack>
-                              <Text fontSize="sm" lineHeight="1.6">{reply.text}</Text>
+                              <Text 
+                                fontSize="sm" 
+                                lineHeight="1.6"
+                                fontStyle={reply.isRemoved ? "italic" : "normal"}
+                                color={reply.isRemoved ? "red.500" : "inherit"}
+                              >
+                                {reply.text}
+                              </Text>
                             </Box>
                           ))}
                         </Box>

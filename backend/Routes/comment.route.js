@@ -86,14 +86,15 @@ router.get('/:postId', async (req, res) => {
       return res.status(400).json({ message: 'Invalid postId format' });
     }
     
+    // Fetch top-level comments - include removed comments
     const comments = await Comment.find({ 
       postId: req.params.postId, 
       parentCommentId: null // Fetch top-level comments
     })
-      .populate('userId', 'email') // Populate user's email
+      .populate('userId', 'email profilePic') // Populate user's email and profile pic
       .sort({ createdAt: -1 }); // Latest comments first
 
-    // For each main comment, fetch its replies
+    // For each main comment, fetch its replies - including removed ones
     for (let comment of comments) {
       // Create a replies array if it doesn't exist
       if (!comment._doc) {
@@ -101,7 +102,7 @@ router.get('/:postId', async (req, res) => {
       }
       
       comment._doc.replies = await Comment.find({ parentCommentId: comment._id })
-        .populate('userId', 'email')
+        .populate('userId', 'email profilePic')
         .sort({ createdAt: 1 }); // Oldest replies first
     }
 
