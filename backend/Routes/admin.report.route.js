@@ -58,8 +58,7 @@ router.put("/:id", async (req, res) => {
     });
 
     // If report is being resolved, add 5 points to the user who reported
-    // But only if it's not a 'Claim Item' report
-    if (status === "Resolved" && report.userId && report.reportType !== 'Claim Item') {
+    if (status === "Resolved" && report.userId && report.reportType !== 'Item Claim') {
       await updateUserPoints(report.userId, 5);
     }
 

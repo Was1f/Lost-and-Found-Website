@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, Text, Spinner, Flex, Icon, Image,
-  Badge, Tooltip, Button
+  Badge, Tooltip, Button, VStack
 } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FaHandsHelping, FaShieldAlt, FaMedal, FaAward, FaCrown, FaGem,
-  FaIdCard, FaCheckCircle, FaCalendarAlt, FaTrophy
+  FaIdCard, FaCheckCircle, FaCalendarAlt, FaTrophy, FaMapMarkerAlt
 } from 'react-icons/fa';
 import axios from 'axios';
 
@@ -171,6 +171,101 @@ const VisitUserProfilePage = () => {
           </Box>
         </Box>
       </Box>
+
+      {/* User's Posts Section */}
+      {userData.posts && userData.posts.length > 0 && (
+        <Box mt={8} maxW="900px" mx="auto">
+          <Text fontSize="2xl" fontWeight="bold" mb={4} textAlign="center">
+            Posts by {userData.username}
+          </Text>
+          <VStack spacing={6} align="stretch">
+            {userData.posts.map(post => (
+              <Box
+                key={post._id}
+                bg="white"
+                boxShadow="md"
+                rounded="xl"
+                overflow="hidden"
+                transition="all 0.3s ease"
+                _hover={{
+                  transform: 'translateY(-5px) scale(1.01)',
+                  boxShadow: '2xl',
+                  bg: 'gray.50'
+                }}
+              >
+                <Flex align="start" p={6} gap={6}>
+                  <Image
+                    src={`http://localhost:5000${post.image}`}
+                    alt={post.title}
+                    boxSize="120px"
+                    objectFit="cover"
+                    borderRadius="lg"
+                    transition="all 0.5s ease"
+                    _hover={{ transform: 'scale(1.05)' }}
+                  />
+                  <Box flex="1">
+                    <Flex align="center" gap={3} mb={3}>
+                      <Badge
+                        colorScheme={post.status === "lost" ? "red" : "green"}
+                        fontSize="sm"
+                        px={3}
+                        py={1}
+                        borderRadius="full"
+                        textTransform="uppercase"
+                        fontWeight="bold"
+                        transition="all 0.3s ease"
+                        _hover={{ transform: 'scale(1.05)' }}
+                      >
+                        {post.status?.toUpperCase() || 'POST'}
+                      </Badge>
+                      <Text fontSize="sm" color="gray.500">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </Text>
+                    </Flex>
+                    <Text fontWeight="bold" fontSize="xl" mb={2} color="gray.700">
+                      {post.title}
+                    </Text>
+                    <Text
+                      mb={4}
+                      color="gray.600"
+                      fontSize="md"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        WebkitLineClamp: "2",
+                      }}
+                    >
+                      {post.description}
+                    </Text>
+                    <Flex gap={4} mb={4}>
+                      <Flex align="center" gap={1}>
+                        <Icon as={FaMapMarkerAlt} color="blue.500" />
+                        <Text color="blue.500" fontWeight="medium">
+                          {post.location}
+                        </Text>
+                      </Flex>
+                    </Flex>
+                    <Button
+                      colorScheme="blue"
+                      size="md"
+                      onClick={() => navigate(`/post/${post._id}`)}
+                      _hover={{
+                        transform: 'translateY(-2px) scale(1.05)',
+                        boxShadow: 'lg',
+                        bg: 'blue.600'
+                      }}
+                      transition="all 0.3s ease"
+                    >
+                      View Details
+                    </Button>
+                  </Box>
+                </Flex>
+              </Box>
+            ))}
+          </VStack>
+        </Box>
+      )}
     </Box>
   );
 };

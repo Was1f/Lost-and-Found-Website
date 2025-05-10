@@ -23,7 +23,7 @@ const RecentPostsPage = () => {
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [userProfile, setUserProfile] = useState(null);
-  const [topUsers, setTopUsers] = useState([]);
+  const [topUserProfiles, setTopUserProfiles] = useState([]);
   const [bookmarkedPosts, setBookmarkedPosts] = useState([]);
   const [isLoadingBookmark, setIsLoadingBookmark] = useState(null);
   const navigate = useNavigate();
@@ -58,18 +58,30 @@ const RecentPostsPage = () => {
       }
     };
 
-    const fetchTopUsers = async () => {
+    const fetchTopUsersAndProfiles = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/leaderboard");
-        setTopUsers(response.data.slice(0, 3)); // Get top 3 users
+        const topUsers = response.data.slice(0, 3);
+        const token = localStorage.getItem('authToken');
+        // Fetch full profiles in parallel with auth header
+        const profilePromises = topUsers.map(user =>
+          axios.get(`http://localhost:5000/api/userprofile/${user._id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          })
+            .then(res => res.data)
+            .catch(() => user) // fallback to leaderboard user if error
+        );
+        const profiles = await Promise.all(profilePromises);
+        setTopUserProfiles(profiles);
+        console.log("Top user profiles:", profiles);
       } catch (error) {
-        console.error("Failed to fetch top users", error);
+        setTopUserProfiles([]);
       }
     };
 
     fetchPosts();
     fetchUserProfile();
-    fetchTopUsers();
+    fetchTopUsersAndProfiles();
   }, []);
 
   // Fetch user's bookmarks on mount
@@ -281,7 +293,7 @@ const RecentPostsPage = () => {
                   <FaMedal color="#F6E05E" /> Top Contributors
                 </Heading>
                 <VStack spacing={4} align="stretch">
-                  {topUsers.map((user, index) => (
+                  {topUserProfiles.map((user, index) => (
                     <HStack 
                       key={user._id} 
                       p={3} 
@@ -291,8 +303,6 @@ const RecentPostsPage = () => {
                       _hover={{ transform: 'translateX(5px)', bg: 'gray.100' }}
                       cursor="pointer"
                       onClick={() => {
-                        // If the clicked user is the current user, go to profile page
-                        // Otherwise, go to the user's profile page
                         if (userProfile && user._id === userProfile._id) {
                           navigate('/profile');
                         } else {
@@ -313,8 +323,8 @@ const RecentPostsPage = () => {
                       >
                         {index + 1}
                       </Box>
-                      <Avatar 
-                        size="sm" 
+                      <Avatar
+                        size="sm"
                         name={user.username}
                         src={user.profilePic ? `http://localhost:5000/${user.profilePic}` : undefined}
                       />

@@ -35,7 +35,7 @@ import {
 } from "@chakra-ui/react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaBookmark, FaRegBookmark, FaMapMarkerAlt, FaUser, FaClock, FaFlag, FaComment } from 'react-icons/fa';
+import { FaBookmark, FaRegBookmark, FaMapMarkerAlt, FaUser, FaClock, FaFlag, FaComment, FaHandshake } from 'react-icons/fa';
 import './CommentSection.css';
 import { motion } from "framer-motion";
 
@@ -50,14 +50,15 @@ const PostDetailsPage = () => {
   const [selectedCommentId, setSelectedCommentId] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [isReportModalOpen, setReportModalOpen] = useState(false);
+  const [isClaimModalOpen, setClaimModalOpen] = useState(false);
   const [reportType, setReportType] = useState('');
   const [description, setDescription] = useState('');
+  const [claimDescription, setClaimDescription] = useState('');
   const [isBookmarked, setIsBookmarked] = useState(false);  
   const toast = useToast(); 
   const token = localStorage.getItem("authToken");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isClaimModalOpen, setClaimModalOpen] = useState(false);
-  const [claimDescription, setClaimDescription] = useState('');
+  const [commentUserProfiles, setCommentUserProfiles] = useState({});
 
   // Fetch post details and comments
   useEffect(() => {
@@ -72,6 +73,26 @@ const PostDetailsPage = () => {
 
         const commentsRes = await axios.get(`http://localhost:5000/api/comments/${id}`);
         setComments(commentsRes.data);
+
+        // Fetch full user profiles for all unique user IDs in comments and replies
+        const userIds = new Set();
+        commentsRes.data.forEach(comment => {
+          if (comment.userId?._id) userIds.add(comment.userId._id);
+          if (comment.replies) {
+            comment.replies.forEach(reply => {
+              if (reply.userId?._id) userIds.add(reply.userId._id);
+            });
+          }
+        });
+        const profilePromises = Array.from(userIds).map(userId =>
+          axios.get(`http://localhost:5000/api/userprofile/${userId}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          })
+            .then(res => [userId, res.data])
+            .catch(() => [userId, null])
+        );
+        const results = await Promise.all(profilePromises);
+        setCommentUserProfiles(Object.fromEntries(results));
       } catch (error) {
         console.error("Error fetching post or comments", error);
       }
@@ -346,25 +367,7 @@ const handleDeleteComment = async (commentId, isReply = false) => {
 
   const handleClaimSubmit = async () => {
     if (!claimDescription) {
-      toast({
-        title: "Error",
-        description: "Please provide a description for your claim",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    // Check if user is trying to claim their own post
-    if (post.user?._id === currentUserId) {
-      toast({
-        title: "Error",
-        description: "You cannot claim your own post",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      alert("Please provide a description for your claim");
       return;
     }
 
@@ -373,8 +376,8 @@ const handleDeleteComment = async (commentId, isReply = false) => {
         'http://localhost:5000/api/reports',
         {
           postId: id,
-          reportType: 'Claim Item',
-          description: claimDescription,
+          reportType: 'Item Claim',
+          description: claimDescription
         },
         {
           headers: {
@@ -382,26 +385,12 @@ const handleDeleteComment = async (commentId, isReply = false) => {
           },
         }
       );
-      
+      console.log(response.data);
       setClaimModalOpen(false);
-      setClaimDescription('');
-      
-      toast({
-        title: "Success",
-        description: "Your claim has been submitted for review",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      alert('Your claim has been submitted!');
     } catch (error) {
       console.error('Error submitting claim:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit claim",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      alert('Failed to submit claim');
     }
   };
 
@@ -552,18 +541,16 @@ const handleDeleteComment = async (commentId, isReply = false) => {
 
           {/* Action Buttons */}
           <HStack spacing={4} mb={6}>
-            {post.user?._id !== currentUserId && (
-              <Button 
-                onClick={() => setClaimModalOpen(true)} 
-                colorScheme="green" 
-                variant="outline"
-                leftIcon={<FaComment />}
-                _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
-                transition="all 0.3s"
-              >
-                Claim Item
-              </Button>
-            )}
+            <Button 
+              onClick={() => setClaimModalOpen(true)} 
+              colorScheme="green" 
+              variant="outline"
+              leftIcon={<FaHandshake />}
+              _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+              transition="all 0.3s"
+            >
+              Claim Item
+            </Button>
             <Button 
               onClick={() => setReportModalOpen(true)} 
               colorScheme="blue" 
@@ -572,7 +559,7 @@ const handleDeleteComment = async (commentId, isReply = false) => {
               _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
               transition="all 0.3s"
             >
-              Report
+              Report Post
             </Button>
           </HStack>
         </SlideFade>
@@ -644,13 +631,13 @@ const handleDeleteComment = async (commentId, isReply = false) => {
                     >
                       <HStack mb={3}>
                         <Avatar 
-                          size="md" 
-                          name={comment.userId?.email || "Anonymous"}
-                          src={comment.userId?.profilePic ? `http://localhost:5000${comment.userId.profilePic}` : undefined}
+                          size="md"
+                          name={commentUserProfiles[comment.userId?._id]?.username || comment.userId?.email || "Anonymous"}
+                          src={commentUserProfiles[comment.userId?._id]?.profilePic ? `http://localhost:5000/${commentUserProfiles[comment.userId._id].profilePic}` : undefined}
                         />
                         <Box>
                           <Text fontWeight="bold" fontSize="md">
-                            {comment.userId?.email || "Anonymous"}
+                            {commentUserProfiles[comment.userId?._id]?.username || comment.userId?.email || "Anonymous"}
                           </Text>
                           <Text fontSize="sm" color="gray.500">
                             {new Date(comment.createdAt).toLocaleString()}
@@ -695,13 +682,13 @@ const handleDeleteComment = async (commentId, isReply = false) => {
                             >
                               <HStack mb={3}>
                                 <Avatar 
-                                  size="sm" 
-                                  name={reply.userId?.email || "Anonymous"}
-                                  src={reply.userId?.profilePic ? `http://localhost:5000${reply.userId.profilePic}` : undefined}
+                                  size="sm"
+                                  name={commentUserProfiles[reply.userId?._id]?.username || reply.userId?.email || "Anonymous"}
+                                  src={commentUserProfiles[reply.userId?._id]?.profilePic ? `http://localhost:5000/${commentUserProfiles[reply.userId._id].profilePic}` : undefined}
                                 />
                                 <Box>
                                   <Text fontWeight="bold" fontSize="sm">
-                                    {reply.userId?.email || "Anonymous"}
+                                    {commentUserProfiles[reply.userId?._id]?.username || reply.userId?.email || "Anonymous"}
                                   </Text>
                                   <Text fontSize="xs" color="gray.500">
                                     {new Date(reply.createdAt).toLocaleString()}
@@ -760,53 +747,6 @@ const handleDeleteComment = async (commentId, isReply = false) => {
         </Fade>
       </ScaleFade>
 
-      {/* Claim Modal */}
-      <Modal 
-        isOpen={isClaimModalOpen} 
-        onClose={() => setClaimModalOpen(false)}
-        size="xl"
-        isCentered
-      >
-        <ModalOverlay backdropFilter="blur(10px)" />
-        <ModalContent maxW="800px" mx={4}>
-          <ModalHeader fontSize="2xl" pb={4}>Claim Item</ModalHeader>
-          <ModalBody pb={6}>
-            <FormControl isRequired>
-              <FormLabel fontSize="lg" mb={3}>Why do you think this item belongs to you?</FormLabel>
-              <Textarea
-                placeholder="Please provide details about why you believe this item belongs to you..."
-                value={claimDescription}
-                onChange={(e) => setClaimDescription(e.target.value)}
-                _focus={{ borderColor: "green.500", boxShadow: "0 0 0 1px var(--chakra-colors-green-500)" }}
-                size="lg"
-                minH="200px"
-                fontSize="md"
-              />
-            </FormControl>
-          </ModalBody>
-
-          <ModalFooter pt={4} pb={6}>
-            <Button 
-              variant="ghost" 
-              mr={4} 
-              onClick={() => setClaimModalOpen(false)}
-              size="lg"
-            >
-              Cancel
-            </Button>
-            <Button 
-              colorScheme="green" 
-              onClick={handleClaimSubmit}
-              _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
-              transition="all 0.3s"
-              size="lg"
-            >
-              Submit Claim
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
       {/* Report Modal */}
       <Modal 
         isOpen={isReportModalOpen} 
@@ -862,6 +802,53 @@ const handleDeleteComment = async (commentId, isReply = false) => {
               size="lg"
             >
               Submit Report
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Claim Modal */}
+      <Modal 
+        isOpen={isClaimModalOpen} 
+        onClose={() => setClaimModalOpen(false)}
+        size="xl"
+        isCentered
+      >
+        <ModalOverlay backdropFilter="blur(10px)" />
+        <ModalContent maxW="800px" mx={4}>
+          <ModalHeader fontSize="2xl" pb={4}>Claim Item</ModalHeader>
+          <ModalBody pb={6}>
+            <FormControl isRequired>
+              <FormLabel fontSize="lg" mb={3}>Why do you think this item belongs to you?</FormLabel>
+              <Textarea
+                placeholder="Please describe why you believe this item belongs to you..."
+                value={claimDescription}
+                onChange={(e) => setClaimDescription(e.target.value)}
+                _focus={{ borderColor: "green.500", boxShadow: "0 0 0 1px var(--chakra-colors-green-500)" }}
+                size="lg"
+                minH="200px"
+                fontSize="md"
+              />
+            </FormControl>
+          </ModalBody>
+
+          <ModalFooter pt={4} pb={6}>
+            <Button 
+              variant="ghost" 
+              mr={4} 
+              onClick={() => setClaimModalOpen(false)}
+              size="lg"
+            >
+              Cancel
+            </Button>
+            <Button 
+              colorScheme="green" 
+              onClick={handleClaimSubmit}
+              _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+              transition="all 0.3s"
+              size="lg"
+            >
+              Submit Claim
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -137,6 +137,7 @@ const BadgeInfo = () => (
 
 const Leaderboard = () => {
   const [users, setUsers] = useState([]);
+  const [userProfiles, setUserProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -144,7 +145,7 @@ const Leaderboard = () => {
 
   useEffect(() => {
     // Fetch users with points
-    const fetchLeaderboard = async () => {
+    const fetchLeaderboardAndProfiles = async () => {
       try {
         const token = localStorage.getItem('authToken');
         const response = await axios.get('http://localhost:5000/api/leaderboard', {
@@ -152,10 +153,19 @@ const Leaderboard = () => {
             Authorization: `Bearer ${token}`
           }
         });
-        
         // Sort users by points in descending order
         const sortedUsers = response.data.sort((a, b) => b.points - a.points);
         setUsers(sortedUsers);
+        // Fetch full profiles in parallel with auth header
+        const profilePromises = sortedUsers.map(user =>
+          axios.get(`http://localhost:5000/api/userprofile/${user._id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          })
+            .then(res => res.data)
+            .catch(() => user) // fallback to leaderboard user if error
+        );
+        const profiles = await Promise.all(profilePromises);
+        setUserProfiles(profiles);
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
         setError('Failed to load leaderboard data');
@@ -171,7 +181,7 @@ const Leaderboard = () => {
       }
     };
 
-    fetchLeaderboard();
+    fetchLeaderboardAndProfiles();
   }, [toast]);
 
   const handleUserClick = (userId) => {
@@ -209,7 +219,7 @@ const Leaderboard = () => {
   }
 
   // Filter users with points greater than 0
-  const usersWithPoints = users.filter(user => user.points > 0);
+  const usersWithPoints = userProfiles.filter(user => user.points > 0);
 
   return (
     <Box maxW="1200px" mx="auto" p={5} bg="gray.50" minH="100vh">

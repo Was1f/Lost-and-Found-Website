@@ -21,7 +21,8 @@ import {
 	DrawerBody,
 	VStack,
 	useBreakpointValue,
-	Image
+	Image,
+	Badge
 } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +39,7 @@ const Navbar = () => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const isMobile = useBreakpointValue({ base: true, md: false });
 	const [userProfile, setUserProfile] = useState(null);
+	const [reportNotifications, setReportNotifications] = useState(0);
 
 	const token = localStorage.getItem("authToken");
 	const adminToken = localStorage.getItem("adminToken");
@@ -61,6 +63,47 @@ const Navbar = () => {
 		fetchUserProfile();
 	}, [token]);
 
+	useEffect(() => {
+		// Fetch resolved reports for notification badge
+		if (!token) return;
+		const fetchReports = async () => {
+			try {
+				const response = await axios.get("http://localhost:5000/api/reports/me", {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const processed = new Set(JSON.parse(localStorage.getItem('processedReportIds') || '[]'));
+				const resolved = response.data.filter(r => r.status === 'Resolved' && !processed.has(r._id));
+				setReportNotifications(resolved.length);
+			} catch (e) {
+				setReportNotifications(0);
+			}
+		};
+		fetchReports();
+	}, [token]);
+
+	// Listen for changes in localStorage to update the notification badge
+	useEffect(() => {
+		const handleStorageChange = (e) => {
+			if (e.key === 'processedReportIds') {
+				const processed = new Set(JSON.parse(e.newValue || '[]'));
+				const fetchReports = async () => {
+					try {
+						const response = await axios.get("http://localhost:5000/api/reports/me", {
+							headers: { Authorization: `Bearer ${token}` },
+						});
+						const resolved = response.data.filter(r => r.status === 'Resolved' && !processed.has(r._id));
+						setReportNotifications(resolved.length);
+					} catch (e) {
+						setReportNotifications(0);
+					}
+				};
+				fetchReports();
+			}
+		};
+		window.addEventListener('storage', handleStorageChange);
+		return () => window.removeEventListener('storage', handleStorageChange);
+	}, [token]);
+
 	const handleLogout = () => {
 		localStorage.removeItem("authToken");
 		navigate("/login");
@@ -70,8 +113,8 @@ const Navbar = () => {
 		return location.pathname === path;
 	};
 
-	const NavButton = ({ to, icon, children, isHighlighted }) => (
-		<Link to={to}>
+	const NavButton = ({ to, icon, children, isHighlighted, showBadge }) => (
+		<Link to={to} style={{ position: 'relative', display: 'inline-block' }}>
 			<Button
 				variant={isHighlighted ? "solid" : "ghost"}
 				colorScheme={isHighlighted ? "blue" : "gray"}
@@ -94,6 +137,11 @@ const Navbar = () => {
 				fontWeight={isActive(to) ? "medium" : "normal"}
 			>
 				{children}
+				{showBadge && (
+					<Badge ml={2} colorScheme="blue" bgGradient="linear(to-r, blue.400, blue.600)" color="white" borderRadius="full" px={2} fontSize="0.7em">
+						{reportNotifications}
+					</Badge>
+				)}
 			</Button>
 		</Link>
 	);
@@ -114,7 +162,7 @@ const Navbar = () => {
 						{!isAdmin && (
 							<>
 								<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-								<NavButton to="/my-reports" icon={<FaFlag />}>My Reports</NavButton>
+								<NavButton to="/my-reports" icon={<FaFlag />} showBadge={reportNotifications > 0}>My Reports</NavButton>
 								<NavButton to="/userdashboard" icon={<FaBoxArchive />}>Archived</NavButton>
 								<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
 							</>
@@ -188,7 +236,7 @@ const Navbar = () => {
 									{!isAdmin && (
 										<>
 											<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-											<NavButton to="/my-reports" icon={<FaFlag />}>My Reports</NavButton>
+											<NavButton to="/my-reports" icon={<FaFlag />} showBadge={reportNotifications > 0}>My Reports</NavButton>
 											<NavButton to="/userdashboard" icon={<FaBoxArchive />}>Archived</NavButton>
 											<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
 										</>

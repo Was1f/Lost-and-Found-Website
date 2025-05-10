@@ -215,6 +215,9 @@ const ViewMyReportsPage = () => {
                 // Save to localStorage
                 localStorage.setItem('processedReportIds', JSON.stringify([...newProcessedIds]));
                 
+                // Trigger storage event for Navbar badge update
+                window.dispatchEvent(new Event('storage'));
+                
                 // Remove from current notifications
                 setNotifications(prev => prev.filter(n => n.reportId !== notification.reportId));
               }}
