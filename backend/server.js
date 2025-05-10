@@ -21,7 +21,6 @@ import adminPostRoutes from "./Routes/admin.post.route.js";
 import leaderboardRoutes from './Routes/leaderboard.route.js';
 import bookmarkRoutes from './Routes/bookmark.route.js';
 import reportRoutes from './Routes/report.route.js';
-import userRoutes from './Routes/user.route.js';
 
 dotenv.config();
 

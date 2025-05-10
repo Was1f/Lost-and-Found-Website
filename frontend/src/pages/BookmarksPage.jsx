@@ -57,19 +57,20 @@ const BookmarksPage = () => {
 
       try {
         setLoading(true);
-        // Updated URL to use the new route
         const response = await axios.get('http://localhost:5000/api/bookmarks', {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        setBookmarks(response.data);
+        // Check if response has data property (wrapper)
+        const bookmarksData = response.data.data || response.data;
+        setBookmarks(bookmarksData);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching bookmarks:', error);
-        setError('Failed to load bookmarks'); 
+        setError(error.response?.data?.message || 'Failed to load bookmarks');
         toast({
           title: 'Error',
-          description: 'Failed to load bookmarks',
+          description: error.response?.data?.message || 'Failed to load bookmarks',
           status: 'error',
           duration: 5000,
           isClosable: true
@@ -83,16 +84,19 @@ const BookmarksPage = () => {
 
   const handleRemoveBookmark = async (postId) => {
     try {
-      // Updated URL to use the new route
-      await axios.delete(`http://localhost:5000/api/bookmarks/${postId}`, {
+      const response = await axios.delete(`http://localhost:5000/api/bookmarks/${postId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      // Check if response has data property (wrapper)
+      const responseData = response.data.data || response.data;
 
       // Remove from local state
       setBookmarks(bookmarks.filter(bookmark => bookmark._id !== postId));
 
       toast({
         title: 'Bookmark removed',
+        description: responseData.message || 'Bookmark removed successfully',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -104,7 +108,7 @@ const BookmarksPage = () => {
       console.error('Error removing bookmark:', error);
       toast({
         title: 'Error',
-        description: 'Failed to remove bookmark',
+        description: error.response?.data?.message || 'Failed to remove bookmark',
         status: 'error',
         duration: 5000,
         isClosable: true

@@ -26,8 +26,7 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { PlusSquareIcon, HamburgerIcon } from "@chakra-ui/icons";
-import { FaHome, FaHistory, FaUser, FaBookmark } from "react-icons/fa";
-import { FaHome, FaHistory, FaUser, FaHandshake, FaFlag } from "react-icons/fa";
+import { FaHome, FaHistory, FaUser, FaBookmark, FaHandshake, FaFlag } from "react-icons/fa";
 import { FaBoxArchive } from "react-icons/fa6";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -113,21 +112,12 @@ const Navbar = () => {
 						)}
 						<NavButton to="/recent" icon={<FaHistory />}>Recent Posts</NavButton>
 						{!isAdmin && (
-							<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-						)}
-						 {!isAdmin && (
-		
-							<NavButton to="/bookmarks" icon={<FaBookmark />}>Bookmarks</NavButton>
-						)}
-						{!isAdmin && (
 							<>
 								<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-								<NavButton to="/bookmarks" icon={<FaBookmark />}>Bookmarks</NavButton>
 								<NavButton to="/my-reports" icon={<FaFlag />}>My Reports</NavButton>
 								<NavButton to="/userdashboard" icon={<FaBoxArchive />}>Archived</NavButton>
 								<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
 							</>
-							
 						)}
 						{isAdmin && (
 							<NavButton to="/dashboard" icon={<FaUser />}>Dashboard</NavButton>
@@ -196,21 +186,12 @@ const Navbar = () => {
 									)}
 									<NavButton to="/recent" icon={<FaHistory />}>Recent Posts</NavButton>
 									{!isAdmin && (
-										<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-									)}
-									 {!isAdmin && (
-								
-											<NavButton to="/bookmarks" icon={<FaBookmark />}>Bookmarks</NavButton>
-										)}
-									{!isAdmin && (
-											<>
-								<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-								<NavButton to="/bookmarks" icon={<FaBookmark />}>Bookmarks</NavButton>
-								<NavButton to="/my-reports" icon={<FaFlag />}>My Reports</NavButton>
-								<NavButton to="/userdashboard" icon={<FaBoxArchive />}>Archived</NavButton>
-								<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
-							</>
-									
+										<>
+											<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
+											<NavButton to="/my-reports" icon={<FaFlag />}>My Reports</NavButton>
+											<NavButton to="/userdashboard" icon={<FaBoxArchive />}>Archived</NavButton>
+											<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
+										</>
 									)}
 									{isAdmin && (
 										<NavButton to="/dashboard" icon={<FaUser />}>Dashboard</NavButton>
@@ -238,6 +219,26 @@ const Navbar = () => {
 											<MenuItem onClick={handleLogout} color="red.500">Logout</MenuItem>
 										</MenuList>
 									</Menu>
+									{/* Bookmarks icon only for non-admins */}
+									{!isAdmin && (
+										<Link to="/bookmarks" style={{ marginLeft: "4px" }}>
+											<IconButton
+												icon={<FaBookmark size="24px" />}
+												variant="ghost"
+												aria-label="Bookmarks"
+												size="lg"
+												color={isActive('/bookmarks') ? "blue.500" : "gray.500"}
+												_hover={{
+													transform: "translateY(-2px)",
+													boxShadow: "sm",
+												}}
+												_active={{
+													transform: "translateY(0px)"
+												}}
+												transition="all 0.2s ease"
+											/>
+										</Link>
+									)}
 								</HStack>
 							)}
 						</>

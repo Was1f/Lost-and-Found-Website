@@ -55,6 +55,9 @@ const PostDetailsPage = () => {
   const [isBookmarked, setIsBookmarked] = useState(false);  
   const toast = useToast(); 
   const token = localStorage.getItem("authToken");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isClaimModalOpen, setClaimModalOpen] = useState(false);
+  const [claimDescription, setClaimDescription] = useState('');
 
   // Fetch post details and comments
   useEffect(() => {
@@ -215,6 +218,33 @@ useEffect(() => {
     }
   }
 }, [token]);
+
+// Robust isAdmin logic with debug log
+useEffect(() => {
+  if (token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      const payload = JSON.parse(jsonPayload);
+      console.log('Decoded email for admin check:', payload.email); // Debug log
+      if (payload.email && payload.email.trim().toLowerCase() === 'zidan@gmail.com') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    } catch (error) {
+      setIsAdmin(false);
+    }
+  } else if (localStorage.getItem('adminToken')) {
+    setIsAdmin(true);
+  } else {
+    setIsAdmin(false);
+  }
+}, [token]);
+
   // Add this function for handling comment/reply deletion
 const handleDeleteComment = async (commentId, isReply = false) => {
   if (!window.confirm("Are you sure you want to delete this comment?")) {
@@ -314,6 +344,67 @@ const handleDeleteComment = async (commentId, isReply = false) => {
     }
   };
 
+  const handleClaimSubmit = async () => {
+    if (!claimDescription) {
+      toast({
+        title: "Error",
+        description: "Please provide a description for your claim",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Check if user is trying to claim their own post
+    if (post.user?._id === currentUserId) {
+      toast({
+        title: "Error",
+        description: "You cannot claim your own post",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/api/reports',
+        {
+          postId: id,
+          reportType: 'Claim Item',
+          description: claimDescription,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      setClaimModalOpen(false);
+      setClaimDescription('');
+      
+      toast({
+        title: "Success",
+        description: "Your claim has been submitted for review",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error submitting claim:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit claim",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   if (!post) {
     return (
       <Flex justify="center" align="center" minH="60vh">
@@ -361,119 +452,131 @@ const handleDeleteComment = async (commentId, isReply = false) => {
           </Box>
 
       {/* Post Info */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-        <Heading as="h2" size="xl">
-          {post.title}
-        </Heading>
-        
-        {/* ADD THIS BOOKMARK BUTTON */}
-        <Tooltip label={isBookmarked ? "Remove bookmark" : "Add to bookmarks"}>
-          <IconButton
-            aria-label={isBookmarked ? "Remove bookmark" : "Add to bookmarks"}
-            icon={isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
-            onClick={toggleBookmark}
-            colorScheme={isBookmarked ? "blue" : "gray"}
-            variant="ghost"
-            size="lg"
-          />
-        </Tooltip>
-      </Box>
-          {/* Post Content */}
-          <Box p={8}>
-            <SlideFade in={true} offsetY="20px">
-              <Heading 
-                as="h1" 
-                size="2xl" 
-                mb={6}
-                bgGradient="linear(to-r, blue.400, blue.600)"
-                bgClip="text"
-                fontWeight="extrabold"
-                lineHeight="1.2"
-                pb={2}
+      <Box p={8}>
+        <SlideFade in={true} offsetY="20px">
+          <Flex justify="space-between" align="center" mb={6}>
+            <Heading 
+              as="h1" 
+              size="2xl" 
+              bgGradient="linear(to-r, blue.400, blue.600)"
+              bgClip="text"
+              fontWeight="extrabold"
+              lineHeight="1.2"
+            >
+              {post.title}
+            </Heading>
+            
+            {/* Bookmark Button with Tooltip - only for non-admins */}
+            {!isAdmin && (
+              <Tooltip 
+                label={isBookmarked ? "Remove bookmark" : "Add to bookmarks"}
+                placement="left"
+                hasArrow
               >
-                {post.title}
-              </Heading>
-
-              <Text 
-                fontSize="lg" 
-                color={useColorModeValue("gray.700", "gray.300")} 
-                mb={8}
-                lineHeight="1.8"
-              >
-                {post.description}
-              </Text>
-
-              <HStack spacing={8} mb={8} wrap="wrap">
-                <Tooltip label="Location">
-                  <HStack 
-                    color="blue.500"
-                    transition="all 0.3s"
-                    _hover={{ transform: "translateX(5px)" }}
-                  >
-                    <Icon as={FaMapMarkerAlt} />
-                    <Text fontWeight="medium">{post.location}</Text>
-                  </HStack>
-                </Tooltip>
-
-                <Tooltip label="Posted By">
-                  <HStack 
-                    color="gray.500"
-                    transition="all 0.3s"
-                    _hover={{ transform: "translateX(5px)" }}
-                  >
-                    <Icon as={FaUser} />
-                    <Text>{post.user?.email || "Anonymous"}</Text>
-                  </HStack>
-                </Tooltip>
-
-                <Tooltip label="Posted On">
-                  <HStack 
-                    color="gray.500"
-                    transition="all 0.3s"
-                    _hover={{ transform: "translateX(5px)" }}
-                  >
-                    <Icon as={FaClock} />
-                    <Text>{new Date(post.createdAt).toLocaleString()}</Text>
-                  </HStack>
-                </Tooltip>
-              </HStack>
-
-              <Text fontSize="sm" color="gray.500" mb={6}>
-                🕒 Posted On: {new Date(post.createdAt).toLocaleString()}
-              </Text>
-
-              {/* Report Post Button */}
-              <HStack spacing={4} mb={6}>
-                <Button 
-                  onClick={() => setReportModalOpen(true)} 
-                  colorScheme="blue" 
-                  variant="outline"
-                >
-                  Report
-                </Button>
-                
                 <Button
                   onClick={toggleBookmark}
                   colorScheme={isBookmarked ? "blue" : "gray"}
+                  variant={isBookmarked ? "solid" : "outline"}
+                  size="lg"
                   leftIcon={isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
+                  borderRadius="full"
+                  px={6}
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    boxShadow: "lg",
+                    bg: isBookmarked ? "blue.500" : "gray.50",
+                    borderColor: isBookmarked ? "blue.500" : "gray.300"
+                  }}
+                  _active={{
+                    transform: "scale(0.95)"
+                  }}
+                  bg={isBookmarked ? "blue.400" : "white"}
+                  color={isBookmarked ? "white" : "gray.600"}
+                  fontWeight="semibold"
+                  letterSpacing="wide"
+                  textTransform="uppercase"
+                  fontSize="sm"
+                  borderWidth="2px"
+                  borderColor={isBookmarked ? "blue.400" : "gray.200"}
                 >
                   {isBookmarked ? "Bookmarked" : "Bookmark"}
                 </Button>
-              </HStack>
+              </Tooltip>
+            )}
+          </Flex>
 
-              <Button
-                leftIcon={<FaFlag />}
-                colorScheme="blue"
+          <Text 
+            fontSize="lg" 
+            color={useColorModeValue("gray.700", "gray.300")} 
+            mb={8}
+            lineHeight="1.8"
+          >
+            {post.description}
+          </Text>
+
+          <HStack spacing={8} mb={8} wrap="wrap">
+            <Tooltip label="Location">
+              <HStack 
+                color="blue.500"
+                transition="all 0.3s"
+                _hover={{ transform: "translateX(5px)" }}
+              >
+                <Icon as={FaMapMarkerAlt} />
+                <Text fontWeight="medium">{post.location}</Text>
+              </HStack>
+            </Tooltip>
+
+            <Tooltip label="Posted By">
+              <HStack 
+                color="gray.500"
+                transition="all 0.3s"
+                _hover={{ transform: "translateX(5px)" }}
+              >
+                <Icon as={FaUser} />
+                <Text>{post.user?.email || "Anonymous"}</Text>
+              </HStack>
+            </Tooltip>
+
+            <Tooltip label="Posted On">
+              <HStack 
+                color="gray.500"
+                transition="all 0.3s"
+                _hover={{ transform: "translateX(5px)" }}
+              >
+                <Icon as={FaClock} />
+                <Text>{new Date(post.createdAt).toLocaleString()}</Text>
+              </HStack>
+            </Tooltip>
+          </HStack>
+
+          {/* Action Buttons */}
+          <HStack spacing={4} mb={6}>
+            {post.user?._id !== currentUserId && (
+              <Button 
+                onClick={() => setClaimModalOpen(true)} 
+                colorScheme="green" 
                 variant="outline"
-                onClick={() => setReportModalOpen(true)}
-                mb={8}
+                leftIcon={<FaComment />}
                 _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
                 transition="all 0.3s"
               >
-                Report Post
+                Claim Item
               </Button>
-            </SlideFade>
-          </Box>
+            )}
+            <Button 
+              onClick={() => setReportModalOpen(true)} 
+              colorScheme="blue" 
+              variant="outline"
+              leftIcon={<FaFlag />}
+              _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+              transition="all 0.3s"
+            >
+              Report
+            </Button>
+          </HStack>
+        </SlideFade>
+      </Box>
         </Box>
 
         {/* Comments Section */}
@@ -656,6 +759,53 @@ const handleDeleteComment = async (commentId, isReply = false) => {
           </Box>
         </Fade>
       </ScaleFade>
+
+      {/* Claim Modal */}
+      <Modal 
+        isOpen={isClaimModalOpen} 
+        onClose={() => setClaimModalOpen(false)}
+        size="xl"
+        isCentered
+      >
+        <ModalOverlay backdropFilter="blur(10px)" />
+        <ModalContent maxW="800px" mx={4}>
+          <ModalHeader fontSize="2xl" pb={4}>Claim Item</ModalHeader>
+          <ModalBody pb={6}>
+            <FormControl isRequired>
+              <FormLabel fontSize="lg" mb={3}>Why do you think this item belongs to you?</FormLabel>
+              <Textarea
+                placeholder="Please provide details about why you believe this item belongs to you..."
+                value={claimDescription}
+                onChange={(e) => setClaimDescription(e.target.value)}
+                _focus={{ borderColor: "green.500", boxShadow: "0 0 0 1px var(--chakra-colors-green-500)" }}
+                size="lg"
+                minH="200px"
+                fontSize="md"
+              />
+            </FormControl>
+          </ModalBody>
+
+          <ModalFooter pt={4} pb={6}>
+            <Button 
+              variant="ghost" 
+              mr={4} 
+              onClick={() => setClaimModalOpen(false)}
+              size="lg"
+            >
+              Cancel
+            </Button>
+            <Button 
+              colorScheme="green" 
+              onClick={handleClaimSubmit}
+              _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+              transition="all 0.3s"
+              size="lg"
+            >
+              Submit Claim
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* Report Modal */}
       <Modal 

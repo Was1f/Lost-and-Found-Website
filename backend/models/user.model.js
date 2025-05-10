@@ -100,6 +100,74 @@ class User extends BaseModel {
   async updatePoints(userId, points) {
     return await this.updateById(userId, { $inc: { points } });
   }
+
+  // Bookmark-related methods
+  async findByIdWithPopulatedBookmarks(userId) {
+    try {
+      return await this.model.findById(userId).populate({
+        path: 'bookmarks',
+        populate: {
+          path: 'user',
+          select: 'email username profilePic'
+        }
+      });
+    } catch (error) {
+      console.error('Error in findByIdWithPopulatedBookmarks:', error);
+      throw error;
+    }
+  }
+
+  async addBookmark(userId, postId) {
+    try {
+      const user = await this.model.findById(userId);
+      if (!user) return null;
+
+      if (!user.bookmarks.includes(postId)) {
+        user.bookmarks.push(postId);
+        await user.save();
+      }
+      return user;
+    } catch (error) {
+      console.error('Error in addBookmark:', error);
+      throw error;
+    }
+  }
+
+  async removeBookmark(userId, postId) {
+    try {
+      const user = await this.model.findById(userId);
+      if (!user) return null;
+
+      const bookmarkIndex = user.bookmarks.findIndex(
+        bookmark => bookmark.toString() === postId
+      );
+
+      if (bookmarkIndex !== -1) {
+        user.bookmarks.splice(bookmarkIndex, 1);
+        await user.save();
+      }
+      return user;
+    } catch (error) {
+      console.error('Error in removeBookmark:', error);
+      throw error;
+    }
+  }
+
+  async isPostBookmarked(userId, postId) {
+    try {
+      const user = await this.model.findById(userId);
+      if (!user) return false;
+
+      return user.bookmarks.some(
+        bookmark => bookmark.toString() === postId
+      );
+    } catch (error) {
+      console.error('Error in isPostBookmarked:', error);
+      throw error;
+    }
+  }
 }
 
-export default new User();
+// Create and export a single instance
+const userInstance = new User();
+export default userInstance;

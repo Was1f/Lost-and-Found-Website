@@ -8,11 +8,10 @@ const router = express.Router();
 // Route to get all bookmarked posts
 router.get('/', protect, async (req, res) => {
   try {
-    // Get user from auth middleware
     const userId = req.user._id;
     
-    // Find user and populate bookmarks
-     const user = await User.findById(userId).populate('bookmarks'); // Using populate to fetch full post data
+    // Use the new wrapper method
+    const user = await User.findByIdWithPopulatedBookmarks(userId);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -23,12 +22,7 @@ router.get('/', protect, async (req, res) => {
       return res.json([]);
     }
     
-    // Get all bookmarked posts
-    const bookmarkedPosts = await Post.find({
-      _id: { $in: user.bookmarks }
-    }).populate('user', 'email username profilePic');
-
-    res.status(200).json(bookmarkedPosts);
+    res.status(200).json(user.bookmarks);
   } catch (error) {
     console.error('Error fetching bookmarks:', error.message);
     console.error(error.stack);
@@ -48,19 +42,19 @@ router.post('/:postId', protect, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    // Get user
-    const user = await User.findById(userId);
+    // Use the new wrapper method
+    const user = await User.addBookmark(userId, postId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Corrected: Check if the post is already bookmarked before adding
-    if (!user.bookmarks.includes(postId)) {
-      user.bookmarks.push(postId); // Add postId to bookmarks
-      await user.save(); // Save the updated user document
-      return res.status(200).json({ message: 'Post bookmarked successfully', bookmarks: user.bookmarks });
+    if (user.bookmarks.includes(postId)) {
+      return res.status(200).json({ 
+        message: 'Post bookmarked successfully', 
+        bookmarks: user.bookmarks 
+      });
     } else {
-      return res.status(400).json({ message: 'Post already bookmarked' }); // Handle the case if already bookmarked
+      return res.status(400).json({ message: 'Post already bookmarked' });
     }
   } catch (error) {
     console.error('Error bookmarking post:', error);
@@ -68,36 +62,17 @@ router.post('/:postId', protect, async (req, res) => {
   }
 });
 
-
 // Route to remove a bookmark
 router.delete('/:postId', protect, async (req, res) => {
   try {
     const postId = req.params.postId;
     const userId = req.user._id;
     
-    // Get user
-    const user = await User.findById(userId);
+    // Use the new wrapper method
+    const user = await User.removeBookmark(userId, postId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // Check if user has bookmarks
-    if (!user.bookmarks) {
-      return res.status(400).json({ message: 'No bookmarks found' });
-    }
-    
-    // Check if post is bookmarked
-    const bookmarkIndex = user.bookmarks.findIndex(
-      bookmark => bookmark.toString() === postId
-    );
-    
-    if (bookmarkIndex === -1) {
-      return res.status(400).json({ message: 'Post not bookmarked' });
-    }
-    
-    // Remove post from bookmarks
-    user.bookmarks.splice(bookmarkIndex, 1);
-    await user.save();
     
     res.status(200).json({ 
       message: 'Bookmark removed successfully', 
@@ -118,14 +93,8 @@ router.get('/status/:postId', protect, async (req, res) => {
     const postId = req.params.postId;
     const userId = req.user._id;
     
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    const isBookmarked = user.bookmarks && user.bookmarks.some(
-      bookmark => bookmark.toString() === postId
-    );
+    // Use the new wrapper method
+    const isBookmarked = await User.isPostBookmarked(userId, postId);
     
     res.status(200).json({ isBookmarked });
   } catch (error) {
