@@ -251,15 +251,17 @@ router.post("/:id/run-matching", adminAuth, async (req, res) => {
             // Create comment on the current post
             const commentOnCurrentPost = await Comment.getModel().create({
               postId: post._id,
-              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${otherType} item that matches this ${post.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${other._id}`,
-              isAdmin: true
+              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${otherType} item that matches this ${post.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${other._id}\n\n${post.status === 'lost' ? 'Please reply to this comment if you have found the item.' : 'Please reply to this comment if you have found the owner.'}`,
+              isAdmin: true,
+              botName: 'L.O.K.I'
             });
             
             // Create comment on the other post
             const commentOnOtherPost = await Comment.getModel().create({
               postId: other._id,
-              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${post.status} item that matches this ${other.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${post._id}`,
-              isAdmin: true
+              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${post.status} item that matches this ${other.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${post._id}\n\n${other.status === 'lost' ? 'Please reply to this comment if you have found the item.' : 'Please reply to this comment if you have found the owner.'}`,
+              isAdmin: true,
+              botName: 'L.O.K.I'
             });
             
             console.log(`Added automatic match comments to posts ${post._id} and ${other._id}`);

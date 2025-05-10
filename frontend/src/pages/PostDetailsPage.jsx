@@ -645,12 +645,12 @@ const handleDeleteComment = async (commentId, isReply = false) => {
                       <HStack mb={3}>
                         <Avatar 
                           size="md" 
-                          name={comment.userId?.email || "Anonymous"}
+                          name={comment.botName || (comment.isAdmin ? "Admin" : comment.userId?.email) || "Anonymous"}
                           src={comment.userId?.profilePic ? `http://localhost:5000${comment.userId.profilePic}` : undefined}
                         />
                         <Box>
                           <Text fontWeight="bold" fontSize="md">
-                            {comment.userId?.email || "Anonymous"}
+                            {comment.botName || (comment.isAdmin ? "Admin" : comment.userId?.email) || "Anonymous"}
                           </Text>
                           <Text fontSize="sm" color="gray.500">
                             {new Date(comment.createdAt).toLocaleString()}
@@ -696,12 +696,12 @@ const handleDeleteComment = async (commentId, isReply = false) => {
                               <HStack mb={3}>
                                 <Avatar 
                                   size="sm" 
-                                  name={reply.userId?.email || "Anonymous"}
+                                  name={reply.botName || (reply.isAdmin ? "Admin" : reply.userId?.email) || "Anonymous"}
                                   src={reply.userId?.profilePic ? `http://localhost:5000${reply.userId.profilePic}` : undefined}
                                 />
                                 <Box>
                                   <Text fontWeight="bold" fontSize="sm">
-                                    {reply.userId?.email || "Anonymous"}
+                                    {reply.botName || (reply.isAdmin ? "Admin" : reply.userId?.email) || "Anonymous"}
                                   </Text>
                                   <Text fontSize="xs" color="gray.500">
                                     {new Date(reply.createdAt).toLocaleString()}

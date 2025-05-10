@@ -16,6 +16,10 @@ const commentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,   // Flag to indicate if it's an admin comment
   },
+  botName: {
+    type: String,
+    default: null,    // Name to display for automated bot comments
+  },
   text: {
     type: String,
     required: true,   // Comment text
