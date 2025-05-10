@@ -198,26 +198,7 @@ router.get('/user', protect, async (req, res) => {
     res.status(500).json({ message: "Error fetching user posts" });
   }
 });
-// Route to fetch posts made by any user (by user ID)
-router.get('/by-user/:userId', protect, async (req, res) => {
-  try {
-    const { userId } = req.params;
-    
-    // Run automatic archive check to ensure posts are up-to-date
-    await checkAndArchiveOldPosts();
-    
-    // Find posts made by the specified user
-    const userPosts = await Post.find({ user: userId })
-      .populate('user', 'email username')
-      .sort({ createdAt: -1 })  // Newest first
-      .exec();
-    
-    res.json(userPosts);
-  } catch (error) {
-    console.error("Error fetching user posts:", error);
-    res.status(500).json({ message: "Error fetching user posts", error: error.message });
-  }
-});
+
 // Helper function to run matching for a post
 async function runMatchingForPost(post, isNewPost = false) {
   console.log(`Running matching for ${isNewPost ? 'new' : 'updated'} post:`, post._id);
