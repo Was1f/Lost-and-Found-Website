@@ -865,7 +865,7 @@ const PostManagement = () => {
                         <HStack>
                           <Text fontWeight="bold">
                             {comment.isAdmin 
-                              ? 'Admin'
+                              ? (comment.botName || 'Admin')
                               : (comment.userId?.username || comment.userId?.email || 'Unknown User')
                             }
                           </Text>

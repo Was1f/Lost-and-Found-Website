@@ -23,15 +23,17 @@ export const addMatchComments = async (lostPost, foundPost, similarity, isAdminV
     // Create comment on the lost post
     const commentOnLostPost = await Comment.create({
       postId: lostPost._id,
-      text: `${prefix}: We found a potential FOUND item that matches your lost item.\n\n👉 Please check: ${baseUrl}/post/${foundPost._id}\n\n${isAdminVerified ? 'An admin has verified this match. Please contact the finder to coordinate item return.' : 'This automated message is generated when our system finds items that might be related.'}`,
-      isAdmin: true
+      text: `${prefix}: We found a potential FOUND item that matches your lost item.\n\n👉 Please check: ${baseUrl}/post/${foundPost._id}\n\n${isAdminVerified ? 'An admin has verified this match. Please contact the finder to coordinate item return.' : 'Please reply to this comment if you have found the item.'}`,
+      isAdmin: true,
+      botName: isAdminVerified ? null : 'L.O.K.I'
     });
     
     // Create comment on the found post
     const commentOnFoundPost = await Comment.create({
       postId: foundPost._id,
-      text: `${prefix}: We found a potential LOST item that matches your found item.\n\n👉 Please check: ${baseUrl}/post/${lostPost._id}\n\n${isAdminVerified ? 'An admin has verified this match. Please contact the owner to coordinate item return.' : 'This automated message is generated when our system finds items that might be related.'}`,
-      isAdmin: true
+      text: `${prefix}: We found a potential LOST item that matches your found item.\n\n👉 Please check: ${baseUrl}/post/${lostPost._id}\n\n${isAdminVerified ? 'An admin has verified this match. Please contact the owner to coordinate item return.' : 'Please reply to this comment if you have found the owner.'}`,
+      isAdmin: true,
+      botName: isAdminVerified ? null : 'L.O.K.I'
     });
     
     console.log(`Added ${isAdminVerified ? 'admin verified' : 'automatic'} match comments to posts ${lostPost._id} and ${foundPost._id}`);

@@ -243,8 +243,9 @@ async function runMatchingForPost(post, isNewPost = false) {
             // Create comment on the current post
             const commentOnCurrentPost = {
               postId: post._id,
-              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${otherType} item that matches this ${post.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${other._id}`,
-              isAdmin: true
+              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${otherType} item that matches this ${post.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${other._id}\n\n${post.status === 'lost' ? 'Please reply to this comment if you have found the item.' : 'Please reply to this comment if you have found the owner.'}`,
+              isAdmin: true,
+              botName: 'L.O.K.I'
             };
             
             await Comment.create(commentOnCurrentPost);
@@ -252,8 +253,9 @@ async function runMatchingForPost(post, isNewPost = false) {
             // Create comment on the other post
             const commentOnOtherPost = {
               postId: other._id,
-              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${post.status} item that matches this ${other.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${post._id}`,
-              isAdmin: true
+              text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential ${post.status} item that matches this ${other.status} item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${post._id}\n\n${other.status === 'lost' ? 'Please reply to this comment if you have found the item.' : 'Please reply to this comment if you have found the owner.'}`,
+              isAdmin: true,
+              botName: 'L.O.K.I'
             };
             
             await Comment.create(commentOnOtherPost);

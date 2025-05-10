@@ -39,8 +39,9 @@ export const runMatching = async (req, res) => {
               // Create comment on the lost post
               const commentOnLostPost = {
                 postId: lost._id,
-                text: `📢 POTENTIAL MATCH ALERT! 📢\n\n🔍 We've detected a ${percentMatch}% similarity match with a FOUND item.\n\n👉 Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${found._id}\n\nThis automated message is generated when our system finds items that might be related. If this is your lost item, please contact the finder!`,
-                isAdmin: true
+                text: `🔄 POTENTIAL MATCH ALERT! (${percentMatch}% similarity)\n\n🔍 We've detected a match with a FOUND item.\n\n👉 Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${found._id}\n\nPlease reply to this comment if you have found the item.`,
+                isAdmin: true,
+                botName: 'L.O.K.I'
               };
               
               await Comment.create(commentOnLostPost);
@@ -48,8 +49,9 @@ export const runMatching = async (req, res) => {
               // Create comment on the found post
               const commentOnFoundPost = {
                 postId: found._id,
-                text: `📢 POTENTIAL MATCH ALERT! 📢\n\n🔍 We've detected a ${percentMatch}% similarity match with a LOST item.\n\n👉 Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${lost._id}\n\nThis automated message is generated when our system finds items that might be related. If you're the finder, the owner might be looking for this item!`,
-                isAdmin: true
+                text: `🔄 POTENTIAL MATCH ALERT! (${percentMatch}% similarity)\n\n🔍 We've detected a match with a LOST item.\n\n👉 Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${lost._id}\n\nPlease reply to this comment if you have found the owner.`,
+                isAdmin: true,
+                botName: 'L.O.K.I'
               };
               
               await Comment.create(commentOnFoundPost);

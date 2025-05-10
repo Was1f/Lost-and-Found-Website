@@ -49,8 +49,9 @@ router.post('/run', async (req, res) => {
               // Create comment on the lost post
               const commentOnLostPost = {
                 postId: lost._id,
-                text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential found item that matches this lost item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${found._id}`,
-                isAdmin: true
+                text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential found item that matches this lost item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${found._id}\n\nPlease reply to this comment if you have found the item.`,
+                isAdmin: true,
+                botName: 'L.O.K.I'
               };
               
               await Comment.create(commentOnLostPost);
@@ -58,8 +59,9 @@ router.post('/run', async (req, res) => {
               // Create comment on the found post
               const commentOnFoundPost = {
                 postId: found._id,
-                text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential lost item that matches this found item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${lost._id}`,
-                isAdmin: true
+                text: `🔄 AUTOMATIC MATCH DETECTED (${percentMatch}% similarity): We found a potential lost item that matches this found item. Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${lost._id}\n\nPlease reply to this comment if you have found the owner.`,
+                isAdmin: true,
+                botName: 'L.O.K.I'
               };
               
               await Comment.create(commentOnFoundPost);
