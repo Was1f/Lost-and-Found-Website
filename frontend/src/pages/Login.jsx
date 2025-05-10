@@ -12,6 +12,7 @@ const LoginPage = () => {
 
   const handleLogin = async () => {
     try {
+      // Try regular user login first
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: {
@@ -20,11 +21,65 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
-
+      // Check if response is OK before trying to parse JSON
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        // First check if response is JSON by inspecting content-type
+        const contentType = response.headers.get("content-type");
+        
+        if (contentType && contentType.includes("application/json")) {
+          // It's JSON, safe to parse
+          const errorData = await response.json();
+          
+          // Handle banned user case
+          if (response.status === 403 && errorData.message === 'banned') {
+            toast({
+              title: "Account Banned",
+              description: "You have been banned. Please contact support.",
+              status: "error",
+              isClosable: true,
+            });
+            navigate('/banned');
+            return;
+          }
+          
+          // If login fails, check if it's because the user is an admin
+          try {
+            const adminCheckResponse = await fetch("http://localhost:5000/api/admin/check", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email }),
+            });
+            
+            if (adminCheckResponse.ok) {
+              const adminCheckData = await adminCheckResponse.json();
+              
+              if (adminCheckData.isAdmin) {
+                toast({
+                  title: "Admin Account Detected",
+                  description: "Please use the admin login page to access your account.",
+                  status: "warning",
+                  isClosable: true,
+                });
+                navigate('/admin/login');
+                return;
+              }
+            }
+          } catch (adminCheckError) {
+            console.error("Admin check error:", adminCheckError);
+          }
+          
+          // If not an admin, throw the original error
+          throw new Error(errorData.message || "Login failed");
+        } else {
+          // Not JSON, likely a server error
+          throw new Error("Server error. Please try again later.");
+        }
       }
+
+      // Response is OK, safe to parse JSON
+      const data = await response.json();
 
       // ✅ If the user is banned, redirect to the banned page
       if (data.user && data.user.status === 'banned') {
@@ -34,13 +89,12 @@ const LoginPage = () => {
           status: "error",
           isClosable: true,
         });
-        navigate('/banned'); // Redirect to Banned page
-        return; // Stop further login actions
+        navigate('/banned');
+        return;
       }
 
       // ✅ Store the JWT token in localStorage
       localStorage.setItem("authToken", data.token);
-      
 
       toast({
         title: "Login Successful",
@@ -49,7 +103,7 @@ const LoginPage = () => {
         isClosable: true,
       });
 
-      navigate("/profile"); // Navigate to homepage or dashboard after successful login
+      navigate("/recent");
     } catch (error) {
       toast({
         title: "Login Failed",
@@ -143,6 +197,18 @@ const LoginPage = () => {
                   _hover={{ textDecoration: "underline" }}
                 >
                   Sign Up
+                </ChakraLink>
+              </Text>
+              <Text textAlign="center" fontSize="sm" color="gray.500">
+                Are you an admin?{" "}
+                <ChakraLink
+                  as={RouterLink}
+                  to="/admin/login"
+                  color="blue.500"
+                  fontWeight="bold"
+                  _hover={{ textDecoration: "underline" }}
+                >
+                  Admin Login
                 </ChakraLink>
               </Text>
             </VStack>

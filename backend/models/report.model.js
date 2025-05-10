@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import BaseModel from './base.model.js';
 
 const reportSchema = new mongoose.Schema({
   postId: {
@@ -13,7 +14,7 @@ const reportSchema = new mongoose.Schema({
   },
   reportType: {
     type: String,
-    enum: ['False Information', 'Hate Speech', 'Spam', 'Irrelevant Content', 'Others'],
+    enum: ['False Information', 'Hate Speech', 'Spam', 'Irrelevant Content', 'Others', 'Item Claim'],
     required: true,
   },
   description: {
@@ -39,5 +40,42 @@ const reportSchema = new mongoose.Schema({
   },
 });
 
-const Report = mongoose.model('Report', reportSchema);
-export default Report;
+const ReportModel = mongoose.model('Report', reportSchema);
+
+// Create Report class that extends BaseModel
+class Report extends BaseModel {
+  constructor() {
+    super(ReportModel);
+  }
+
+  // Add report-specific methods
+  async findByPost(postId) {
+    return await this.find({ postId });
+  }
+
+  async findByUser(userId) {
+    return await this.find({ userId });
+  }
+
+  async findPendingReports() {
+    return await this.find({ status: 'Pending' });
+  }
+
+  async findResolvedReports() {
+    return await this.find({ status: 'Resolved' });
+  }
+
+  async resolveReport(reportId, adminResponse) {
+    return await this.updateById(reportId, {
+      status: 'Resolved',
+      adminResponse,
+      updatedAt: new Date()
+    });
+  }
+
+  async findByReportType(reportType) {
+    return await this.find({ reportType });
+  }
+}
+
+export default new Report();

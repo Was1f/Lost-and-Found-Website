@@ -21,12 +21,14 @@ import {
 	DrawerBody,
 	VStack,
 	useBreakpointValue,
-	Image
+	Image,
+	Badge
 } from "@chakra-ui/react";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { PlusSquareIcon, HamburgerIcon } from "@chakra-ui/icons";
-import { FaHome, FaHistory, FaUser } from "react-icons/fa";
+import { FaHome, FaHistory, FaUser, FaBookmark, FaHandshake, FaFlag } from "react-icons/fa";
+import { FaBoxArchive } from "react-icons/fa6";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -37,6 +39,7 @@ const Navbar = () => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const isMobile = useBreakpointValue({ base: true, md: false });
 	const [userProfile, setUserProfile] = useState(null);
+	const [reportNotifications, setReportNotifications] = useState(0);
 
 	const token = localStorage.getItem("authToken");
 	const adminToken = localStorage.getItem("adminToken");
@@ -60,6 +63,47 @@ const Navbar = () => {
 		fetchUserProfile();
 	}, [token]);
 
+	useEffect(() => {
+		// Fetch resolved reports for notification badge
+		if (!token) return;
+		const fetchReports = async () => {
+			try {
+				const response = await axios.get("http://localhost:5000/api/reports/me", {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const processed = new Set(JSON.parse(localStorage.getItem('processedReportIds') || '[]'));
+				const resolved = response.data.filter(r => r.status === 'Resolved' && !processed.has(r._id));
+				setReportNotifications(resolved.length);
+			} catch (e) {
+				setReportNotifications(0);
+			}
+		};
+		fetchReports();
+	}, [token]);
+
+	// Listen for changes in localStorage to update the notification badge
+	useEffect(() => {
+		const handleStorageChange = (e) => {
+			if (e.key === 'processedReportIds') {
+				const processed = new Set(JSON.parse(e.newValue || '[]'));
+				const fetchReports = async () => {
+					try {
+						const response = await axios.get("http://localhost:5000/api/reports/me", {
+							headers: { Authorization: `Bearer ${token}` },
+						});
+						const resolved = response.data.filter(r => r.status === 'Resolved' && !processed.has(r._id));
+						setReportNotifications(resolved.length);
+					} catch (e) {
+						setReportNotifications(0);
+					}
+				};
+				fetchReports();
+			}
+		};
+		window.addEventListener('storage', handleStorageChange);
+		return () => window.removeEventListener('storage', handleStorageChange);
+	}, [token]);
+
 	const handleLogout = () => {
 		localStorage.removeItem("authToken");
 		navigate("/login");
@@ -69,8 +113,8 @@ const Navbar = () => {
 		return location.pathname === path;
 	};
 
-	const NavButton = ({ to, icon, children, isHighlighted }) => (
-		<Link to={to}>
+	const NavButton = ({ to, icon, children, isHighlighted, showBadge }) => (
+		<Link to={to} style={{ position: 'relative', display: 'inline-block' }}>
 			<Button
 				variant={isHighlighted ? "solid" : "ghost"}
 				colorScheme={isHighlighted ? "blue" : "gray"}
@@ -93,6 +137,11 @@ const Navbar = () => {
 				fontWeight={isActive(to) ? "medium" : "normal"}
 			>
 				{children}
+				{showBadge && (
+					<Badge ml={2} colorScheme="blue" bgGradient="linear(to-r, blue.400, blue.600)" color="white" borderRadius="full" px={2} fontSize="0.7em">
+						{reportNotifications}
+					</Badge>
+				)}
 			</Button>
 		</Link>
 	);
@@ -106,12 +155,17 @@ const Navbar = () => {
 				<DrawerBody>
 					<VStack spacing={4} align="stretch">
 						<NavButton to="/" icon={<FaHome />}>Home</NavButton>
+						{isAdmin && (
+							<NavButton to="/auto-matching-result" icon={<FaHandshake />}>Matches</NavButton>
+						)}
 						<NavButton to="/recent" icon={<FaHistory />}>Recent Posts</NavButton>
 						{!isAdmin && (
-							<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-						)}
-						{!isAdmin && (
-							<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
+							<>
+								<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
+								<NavButton to="/my-reports" icon={<FaFlag />} showBadge={reportNotifications > 0}>My Reports</NavButton>
+								<NavButton to="/userdashboard" icon={<FaBoxArchive />}>Archived</NavButton>
+								<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
+							</>
 						)}
 						{isAdmin && (
 							<NavButton to="/dashboard" icon={<FaUser />}>Dashboard</NavButton>
@@ -175,17 +229,21 @@ const Navbar = () => {
 							) : (
 								<HStack spacing={4}>
 									<NavButton to="/" icon={<FaHome />}>Home</NavButton>
+									{isAdmin && (
+										<NavButton to="/auto-matching-result" icon={<FaHandshake />}>Matches</NavButton>
+									)}
 									<NavButton to="/recent" icon={<FaHistory />}>Recent Posts</NavButton>
 									{!isAdmin && (
-										<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
-									)}
-									{!isAdmin && (
-										<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
+										<>
+											<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
+											<NavButton to="/my-reports" icon={<FaFlag />} showBadge={reportNotifications > 0}>My Reports</NavButton>
+											<NavButton to="/userdashboard" icon={<FaBoxArchive />}>Archived</NavButton>
+											<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
+										</>
 									)}
 									{isAdmin && (
 										<NavButton to="/dashboard" icon={<FaUser />}>Dashboard</NavButton>
 									)}
-									
 									<Menu>	
 										<MenuButton
 											as={Button}
@@ -209,6 +267,26 @@ const Navbar = () => {
 											<MenuItem onClick={handleLogout} color="red.500">Logout</MenuItem>
 										</MenuList>
 									</Menu>
+									{/* Bookmarks icon only for non-admins */}
+									{!isAdmin && (
+										<Link to="/bookmarks" style={{ marginLeft: "4px" }}>
+											<IconButton
+												icon={<FaBookmark size="24px" />}
+												variant="ghost"
+												aria-label="Bookmarks"
+												size="lg"
+												color={isActive('/bookmarks') ? "blue.500" : "gray.500"}
+												_hover={{
+													transform: "translateY(-2px)",
+													boxShadow: "sm",
+												}}
+												_active={{
+													transform: "translateY(0px)"
+												}}
+												transition="all 0.2s ease"
+											/>
+										</Link>
+									)}
 								</HStack>
 							)}
 						</>

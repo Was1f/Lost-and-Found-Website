@@ -1,5 +1,6 @@
 import Post from '../models/post.model.js';
 import Match from '../models/match.model.js';
+import Comment from '../models/comment.model.js';
 import stringSimilarity from 'string-similarity';
 
 // Helper: Calculate similarity between two posts
@@ -29,6 +30,37 @@ export const runMatching = async (req, res) => {
             const match = new Match({ lostPost: lost._id, foundPost: found._id, similarity });
             await match.save();
             matches.push(match);
+            
+            // Add automatic comments on both posts about the potential match
+            try {
+              // Calculate percent match for display
+              const percentMatch = Math.round(similarity * 100);
+              
+              // Create comment on the lost post
+              const commentOnLostPost = {
+                postId: lost._id,
+                text: `🔄 POTENTIAL MATCH ALERT! (${percentMatch}% similarity)\n\n🔍 We've detected a match with a FOUND item.\n\n👉 Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${found._id}\n\nPlease reply to this comment if you have found the item.`,
+                isAdmin: true,
+                botName: 'L.O.K.I'
+              };
+              
+              await Comment.create(commentOnLostPost);
+              
+              // Create comment on the found post
+              const commentOnFoundPost = {
+                postId: found._id,
+                text: `🔄 POTENTIAL MATCH ALERT! (${percentMatch}% similarity)\n\n🔍 We've detected a match with a LOST item.\n\n👉 Please check: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/post/${lost._id}\n\nPlease reply to this comment if you have found the owner.`,
+                isAdmin: true,
+                botName: 'L.O.K.I'
+              };
+              
+              await Comment.create(commentOnFoundPost);
+              
+              console.log(`Added automatic match comments to posts ${lost._id} and ${found._id}`);
+            } catch (commentError) {
+              console.error('Error adding automatic match comments:', commentError);
+              // Don't fail the matching if comments can't be added
+            }
           }
         }
       }

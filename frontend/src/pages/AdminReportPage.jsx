@@ -152,7 +152,11 @@ function AdminReportPage() {
       
       await axios.put(
         `http://localhost:5000/api/admin/reports/${selectedReport._id}`,
-        { status, adminResponse }
+        { 
+          status, 
+          adminResponse,
+          isClaim: selectedReport.reportType === 'Item Claim'
+        }
       );
 
       setSubmitting(false);
@@ -203,9 +207,14 @@ function AdminReportPage() {
     try {
       setSubmitting(true);
       
-      // Delete the post
+      // Delete the post with admin token
       await axios.delete(
-        `http://localhost:5000/api/admin/posts/${selectedReport.postId._id}`
+        `http://localhost:5000/api/admin/posts/${selectedReport.postId._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+          }
+        }
       );
 
       // Also update the report to resolved
@@ -214,6 +223,11 @@ function AdminReportPage() {
         { 
           status: "Resolved", 
           adminResponse: adminResponse || "Post has been deleted due to policy violation."
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+          }
         }
       );
 
@@ -399,7 +413,14 @@ function AdminReportPage() {
                     <Td>
                       <Flex align="center">
                         {getReportTypeIcon(report.reportType)}
-                        <Text ml={2}>{report.reportType}</Text>
+                        <Text ml={2}>
+                          {report.reportType}
+                          {report.reportType === 'Item Claim' && (
+                            <Badge ml={2} colorScheme="green" variant="subtle">
+                              Claim
+                            </Badge>
+                          )}
+                        </Text>
                       </Flex>
                     </Td>
                     <Td>
@@ -531,7 +552,14 @@ function AdminReportPage() {
                     <Text fontWeight="semibold">Report Type:</Text>
                     <Flex align="center">
                       {getReportTypeIcon(selectedReport.reportType)}
-                      <Text ml={2}>{selectedReport.reportType}</Text>
+                      <Text ml={2}>
+                        {selectedReport.reportType}
+                        {selectedReport.reportType === 'Item Claim' && (
+                          <Badge ml={2} colorScheme="green" variant="subtle">
+                            Claim
+                          </Badge>
+                        )}
+                      </Text>
                     </Flex>
                   </HStack>
                   

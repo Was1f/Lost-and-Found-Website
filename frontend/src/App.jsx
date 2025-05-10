@@ -1,5 +1,5 @@
 import { Box, useColorModeValue } from "@chakra-ui/react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 
 import Navbar from "./components/Navbar";
@@ -25,10 +25,16 @@ import AdminReportPage from "./pages/AdminReportPage";
 import AutoMatchingResult from "./pages/AutoMatchingResult";
 import ViewMyReportsPage from './pages/ViewMyReportsPage';
 
-
+import BookmarksPage from './pages/BookmarksPage';
 import PostHistoryPage from "./pages/PostHistoryPage";
 import Leaderboard from "./pages/leaderboard";
-import VisitUserProfile from "./pages/VisitUserProfile"
+import VisitUserProfile from "./pages/VisitUserProfile";
+
+const AdminProtectedRoute = ({ children }) => {
+  const isAdmin = localStorage.getItem('adminToken') !== null;
+  return isAdmin ? children : <Navigate to="/admin/login" />;
+};
+
 function App() {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -49,7 +55,7 @@ function App() {
       <Routes>
         {/* User Routes */}
         {/* Admin Routes */}
-        
+        <Route path="/bookmarks" element={<BookmarksPage />} />
         <Route path='/admin/reports' element={<AdminReportPage />} />
         <Route path='/' element={<LandingPage />} />
         <Route path='/post/:id' element={<PostDetailsPage />} />
@@ -72,7 +78,11 @@ function App() {
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/admin/posts' element={<PostManagement />} />
         <Route path='/admin/users' element={<UserManagement />} />
-        <Route path='/auto-matching-result' element={<AutoMatchingResult />} />
+        <Route path='/auto-matching-result' element={
+          <AdminProtectedRoute>
+            <AutoMatchingResult />
+          </AdminProtectedRoute>
+        } />
         <Route path='/admin/history' element={<PostHistoryPage />} />
       </Routes>
     </Box>

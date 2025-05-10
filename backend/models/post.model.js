@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import BaseModel from './base.model.js';
 
 const postSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },  // Reference to User model
@@ -36,6 +37,47 @@ const postSchema = new mongoose.Schema({
 { timestamps: true }
 );
 
-const Post = mongoose.model('Post', postSchema);
+const PostModel = mongoose.model('Post', postSchema);
 
-export default Post;
+// Create Post class that extends BaseModel
+class Post extends BaseModel {
+  constructor() {
+    super(PostModel);
+  }
+
+  // Add post-specific methods
+  async findByUser(userId) {
+    return await this.find({ user: userId });
+  }
+
+  async findActivePosts() {
+    return await this.find({ resolutionStatus: 'Active', isArchived: false });
+  }
+
+  async findLostPosts() {
+    return await this.find({ status: 'lost', resolutionStatus: 'Active' });
+  }
+
+  async findFoundPosts() {
+    return await this.find({ status: 'found', resolutionStatus: 'Active' });
+  }
+
+  async findResolvedPosts() {
+    return await this.find({ resolutionStatus: 'Resolved' });
+  }
+
+  async resolvePost(postId, resolvedBy, resolutionNote) {
+    return await this.updateById(postId, {
+      resolutionStatus: 'Resolved',
+      resolvedAt: new Date(),
+      resolvedBy,
+      resolutionNote
+    });
+  }
+
+  async archivePost(postId) {
+    return await this.updateById(postId, { isArchived: true });
+  }
+}
+
+export default new Post();

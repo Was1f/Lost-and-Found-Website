@@ -137,6 +137,7 @@ const BadgeInfo = () => (
 
 const Leaderboard = () => {
   const [users, setUsers] = useState([]);
+  const [userProfiles, setUserProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -144,7 +145,7 @@ const Leaderboard = () => {
 
   useEffect(() => {
     // Fetch users with points
-    const fetchLeaderboard = async () => {
+    const fetchLeaderboardAndProfiles = async () => {
       try {
         const token = localStorage.getItem('authToken');
         const response = await axios.get('http://localhost:5000/api/leaderboard', {
@@ -152,10 +153,19 @@ const Leaderboard = () => {
             Authorization: `Bearer ${token}`
           }
         });
-        
         // Sort users by points in descending order
         const sortedUsers = response.data.sort((a, b) => b.points - a.points);
         setUsers(sortedUsers);
+        // Fetch full profiles in parallel with auth header
+        const profilePromises = sortedUsers.map(user =>
+          axios.get(`http://localhost:5000/api/userprofile/${user._id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          })
+            .then(res => res.data)
+            .catch(() => user) // fallback to leaderboard user if error
+        );
+        const profiles = await Promise.all(profilePromises);
+        setUserProfiles(profiles);
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
         setError('Failed to load leaderboard data');
@@ -171,7 +181,7 @@ const Leaderboard = () => {
       }
     };
 
-    fetchLeaderboard();
+    fetchLeaderboardAndProfiles();
   }, [toast]);
 
   const handleUserClick = (userId) => {
@@ -209,22 +219,40 @@ const Leaderboard = () => {
   }
 
   // Filter users with points greater than 0
-  const usersWithPoints = users.filter(user => user.points > 0);
+  const usersWithPoints = userProfiles.filter(user => user.points > 0);
 
   return (
-    <Box maxW="1000px" mx="auto" p={5}>
-      <Heading as="h1" size="xl" textAlign="center" mb={2}>Leaderboard</Heading>
+    <Box maxW="1200px" mx="auto" p={5} bg="gray.50" minH="100vh">
+      <Heading 
+        as="h1" 
+        size="xl" 
+        textAlign="center" 
+        mb={2}
+        bgGradient="linear(to-r, blue.400, purple.500)"
+        bgClip="text"
+        fontWeight="extrabold"
+      >
+        Leaderboard
+      </Heading>
       
       <HStack justify="center" mb={8}>
-        <Text textAlign="center" color="gray.600">
+        <Text textAlign="center" color="gray.600" fontSize="lg">
           Top contributors who helped return lost items
         </Text>
         <BadgeInfo />
       </HStack>
 
       {usersWithPoints.length === 0 ? (
-        <Box textAlign="center" p={10} bg="gray.50" borderRadius="md">
-          <Text fontSize="lg">No users with points yet. Be the first to help!</Text>
+        <Box 
+          textAlign="center" 
+          p={10} 
+          bg="white" 
+          borderRadius="xl" 
+          boxShadow="lg"
+          border="1px solid"
+          borderColor="gray.200"
+        >
+          <Text fontSize="lg" color="gray.600">No users with points yet. Be the first to help!</Text>
         </Box>
       ) : (
         <>
@@ -242,42 +270,58 @@ const Leaderboard = () => {
                 <VStack 
                   key={user._id}
                   bg="white"
-                  boxShadow="md"
-                  borderRadius="lg"
-                  p={5}
+                  boxShadow="2xl"
+                  borderRadius="2xl"
+                  p={6}
                   spacing={4}
                   align="center"
-                  w={{ base: "full", md: `${index === 0 ? "280px" : "250px"}` }}
-                  h={{ base: "auto", md: `${index === 0 ? "380px" : "350px"}` }}
+                  w={{ base: "full", md: `${index === 0 ? "300px" : "270px"}` }}
+                  h={{ base: "auto", md: `${index === 0 ? "400px" : "370px"}` }}
                   cursor="pointer"
                   onClick={() => handleUserClick(user._id)}
                   position="relative"
                   transform={index === 0 ? "scale(1.05)" : "scale(1)"}
                   zIndex={index === 0 ? 2 : 1}
-                  border={index === 0 ? "2px solid gold" : index === 1 ? "2px solid silver" : index === 2 ? "2px solid #CD7F32" : "none"}
+                  border={index === 0 ? "3px solid gold" : index === 1 ? "3px solid silver" : index === 2 ? "3px solid #CD7F32" : "none"}
+                  _hover={{
+                    transform: "translateY(-5px)",
+                    transition: "all 0.3s ease"
+                  }}
                 >
                   {/* Trophy/Medal */}
-                  <Box position="absolute" top="-15px" bg={index === 0 ? "gold" : index === 1 ? "silver" : "#CD7F32"} p={2} borderRadius="full">
+                  <Box 
+                    position="absolute" 
+                    top="-20px" 
+                    bg={index === 0 ? "gold" : index === 1 ? "silver" : "#CD7F32"} 
+                    p={3} 
+                    borderRadius="full"
+                    boxShadow="lg"
+                  >
                     {getMedal(index)}
                   </Box>
                   
                   <Box position="relative">
                     <Avatar 
-                      size={index === 0 ? "xl" : "lg"}
+                      size={index === 0 ? "2xl" : "xl"}
                       src={user.profilePic ? `http://localhost:5000/${user.profilePic}` : null}
                       name={user.username}
-                      border={`3px solid ${index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "#CD7F32" : ""}`}
+                      border={`4px solid ${index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "#CD7F32" : ""}`}
+                      boxShadow="lg"
                     />
-                    
-
                   </Box>
                   
-                  <VStack spacing={1}>
-                    <Text fontWeight="bold" fontSize={index === 0 ? "xl" : "lg"}>{user.username}</Text>
+                  <VStack spacing={2}>
+                    <Text 
+                      fontWeight="bold" 
+                      fontSize={index === 0 ? "2xl" : "xl"}
+                      color="gray.700"
+                    >
+                      {user.username}
+                    </Text>
                     
                     <HStack>
                       <Icon as={FaIdCard} color="blue.500" />
-                      <Text fontSize="sm">{user.studentId || "Student"}</Text>
+                      <Text fontSize="md" color="gray.600">{user.studentId || "Student"}</Text>
                       {user.isVerified && (
                         <Icon as={FaCheckCircle} color="green.500" />
                       )}
@@ -287,40 +331,71 @@ const Leaderboard = () => {
                   <Badge 
                     colorScheme={index === 0 ? "yellow" : index === 1 ? "gray" : "orange"} 
                     fontSize="xl" 
-                    px={4} 
+                    px={6} 
                     py={2} 
                     borderRadius="full"
+                    boxShadow="md"
                   >
                     {user.points} points
                   </Badge>
                   
                   {/* Display highest badge only if earned */}
                   {user.points >= 20 && getHighestBadge(user.points) && (
-                    <Box>
-                      <Text fontSize="sm" fontWeight="medium" mb={1} color="purple.600">
-                        Current Badge:
-                      </Text>
-                      <HStack spacing={1} justify="center">
-                        {(() => {
-                          const badge = getHighestBadge(user.points);
-                          return (
-                            <>
-                              <Icon 
-                                as={badge.icon} 
-                                color={badge.color} 
-                                boxSize={5} 
-                              />
-                              <Text fontWeight="bold" fontSize="sm">
-                                {badge.name}
-                              </Text>
-                            </>
-                          );
-                        })()}
-                      </HStack>
+                    <Box 
+                      bg="white"
+                      p={3}
+                      borderRadius="xl"
+                      w="full"
+                      border="2px solid"
+                      borderColor="purple.200"
+                      boxShadow="sm"
+                    >
+                      <VStack spacing={1.5}>
+                        <HStack spacing={1.5}>
+                          <Icon as={FaMedal} color="purple.500" boxSize={4} />
+                          <Text fontSize="xs" fontWeight="semibold" color="purple.600">
+                            Badge
+                          </Text>
+                        </HStack>
+                        <HStack 
+                          spacing={2} 
+                          justify="center"
+                          bg="purple.50"
+                          p={1.5}
+                          borderRadius="lg"
+                          w="full"
+                        >
+                          {(() => {
+                            const badge = getHighestBadge(user.points);
+                            return (
+                              <>
+                                <Icon 
+                                  as={badge.icon} 
+                                  color={badge.color} 
+                                  boxSize={5} 
+                                />
+                                <Text 
+                                  fontWeight="bold" 
+                                  fontSize="sm" 
+                                  color="purple.700"
+                                >
+                                  {badge.name}
+                                </Text>
+                              </>
+                            );
+                          })()}
+                        </HStack>
+                      </VStack>
                     </Box>
                   )}
                   
-                  <Text fontSize="sm" color="gray.500" noOfLines={2} textAlign="center">
+                  <Text 
+                    fontSize="sm" 
+                    color="gray.600" 
+                    noOfLines={2} 
+                    textAlign="center"
+                    px={2}
+                  >
                     {user.bio || "Helping return lost items!"}
                   </Text>
                 </VStack>
@@ -328,15 +403,29 @@ const Leaderboard = () => {
             </Flex>
           )}
 
-          <Divider my={6} />
+          <Divider my={8} borderColor="gray.300" />
           
           {/* Other Users Table */}
           {usersWithPoints.length > 3 && (
-            <Box overflowX="auto">
-              <Heading as="h3" size="md" mb={4}>Other Top Contributors</Heading>
-              <Table variant="simple">
+            <Box 
+              overflowX="auto" 
+              bg="white" 
+              borderRadius="xl" 
+              boxShadow="lg"
+              p={6}
+            >
+              <Heading 
+                as="h3" 
+                size="lg" 
+                mb={6}
+                color="gray.700"
+                textAlign="center"
+              >
+                Other Top Contributors
+              </Heading>
+              <Table variant="simple" size="lg">
                 <Thead>
-                  <Tr>
+                  <Tr bg="gray.50">
                     <Th>Rank</Th>
                     <Th>User</Th>
                     <Th>Student ID</Th>
@@ -351,21 +440,28 @@ const Leaderboard = () => {
                       _hover={{ bg: "gray.50" }}
                       cursor="pointer"
                       onClick={() => handleUserClick(user._id)}
+                      transition="all 0.2s"
                     >
-                      <Td>{index + 4}</Td>
+                      <Td fontWeight="bold" color="gray.600">{index + 4}</Td>
                       <Td>
                         <Flex align="center">
-                          <Avatar size="sm" name={user.username} src={user.profilePic ? `http://localhost:5000/${user.profilePic}` : null} mr={2} />
-                          <Text fontWeight="medium">{user.username}</Text>
+                          <Avatar 
+                            size="md" 
+                            name={user.username} 
+                            src={user.profilePic ? `http://localhost:5000/${user.profilePic}` : null} 
+                            mr={3}
+                            boxShadow="sm"
+                          />
+                          <Text fontWeight="medium" color="gray.700">{user.username}</Text>
                           {user.isVerified && (
-                            <Icon as={FaCheckCircle} color="green.500" ml={1} />
+                            <Icon as={FaCheckCircle} color="green.500" ml={2} />
                           )}
                         </Flex>
                       </Td>
-                      <Td>{user.studentId || "Not provided"}</Td>
+                      <Td color="gray.600">{user.studentId || "Not provided"}</Td>
                       <Td>
                         {user.points >= 20 && getHighestBadge(user.points) ? (
-                          <HStack spacing={1}>
+                          <HStack spacing={2}>
                             {(() => {
                               const badge = getHighestBadge(user.points);
                               return (
@@ -373,9 +469,9 @@ const Leaderboard = () => {
                                   <Icon 
                                     as={badge.icon} 
                                     color={badge.color} 
-                                    boxSize={4} 
+                                    boxSize={5} 
                                   />
-                                  <Text fontSize="sm" color="gray.600">
+                                  <Text fontSize="md" color="gray.700" fontWeight="medium">
                                     {badge.name}
                                   </Text>
                                 </>
@@ -387,7 +483,15 @@ const Leaderboard = () => {
                         )}
                       </Td>
                       <Td isNumeric>
-                        <Badge colorScheme="blue">{user.points}</Badge>
+                        <Badge 
+                          colorScheme="blue" 
+                          fontSize="md" 
+                          px={3} 
+                          py={1}
+                          borderRadius="full"
+                        >
+                          {user.points}
+                        </Badge>
                       </Td>
                     </Tr>
                   ))}
