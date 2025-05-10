@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';  // bcryptjs to hash passwords
+import BaseModel from './base.model.js';
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -71,5 +72,34 @@ userSchema.methods.matchPassword = async function(password) {
   return await bcrypt.compare(password, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
-export default User;
+const UserModel = mongoose.model('User', userSchema);
+
+// Create User class that extends BaseModel
+class User extends BaseModel {
+  constructor() {
+    super(UserModel);
+  }
+
+  // Add user-specific methods
+  async findByEmail(email) {
+    return await this.findOne({ email: email.toLowerCase() });
+  }
+
+  async findByUsername(username) {
+    return await this.findOne({ username });
+  }
+
+  async findByStudentId(studentId) {
+    return await this.findOne({ studentId });
+  }
+
+  async findActiveUsers() {
+    return await this.find({ status: 'active' });
+  }
+
+  async updatePoints(userId, points) {
+    return await this.updateById(userId, { $inc: { points } });
+  }
+}
+
+export default new User();

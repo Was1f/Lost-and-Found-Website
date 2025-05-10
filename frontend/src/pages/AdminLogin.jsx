@@ -10,7 +10,8 @@ const AdminLogin = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/login', {
+      // First try to login as a regular user to get the user token
+      const userResponse = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -18,25 +19,40 @@ const AdminLogin = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const userData = await userResponse.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to log in');
+      if (!userResponse.ok) {
+        throw new Error(userData.message || 'Failed to log in as user');
       }
 
-      // Store the token in localStorage for future authentication
-      localStorage.setItem('adminToken', data.token);
+      // Then try to login as admin
+      const adminResponse = await fetch('http://localhost:5000/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
+      const adminData = await adminResponse.json();
+
+      if (!adminResponse.ok) {
+        throw new Error(adminData.message || 'Failed to log in as admin');
+      }
+
+      // Store both tokens
+      localStorage.setItem('authToken', userData.token);
+      localStorage.setItem('adminToken', adminData.token);
 
       toast({
-        title: 'Login successful',
-        description: 'Redirecting to Admin Dashboard...',
+        title: 'Login Successful',
+        description: 'Welcome back, Admin!',
         status: 'success',
         isClosable: true,
       });
 
-      // Redirect to the admin dashboard page
-      navigate('/dashboard');
+      // Redirect to recent posts page
+      navigate('/recent');
     } catch (error) {
       toast({
         title: 'Error',
@@ -59,7 +75,7 @@ const AdminLogin = () => {
               <FormLabel>Email</FormLabel>
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your admin email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -70,7 +86,7 @@ const AdminLogin = () => {
               <FormLabel>Password</FormLabel>
               <Input
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Enter your admin password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -78,7 +94,7 @@ const AdminLogin = () => {
             </FormControl>
 
             <Button colorScheme="blue" size="lg" onClick={handleLogin} width="full">
-              Log In
+              Admin Login
             </Button>
           </VStack>
         </Box>

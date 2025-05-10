@@ -17,10 +17,12 @@ import userRoutes from './Routes/user.route.js';
 // import reportRoutes from './Routes/report.route.js';
 import adminReportRoutes from "./Routes/admin.report.route.js";
 import postHistoryRoutes from "./Routes/postHistory.route.js";
-import adminPostRoutes from "./routes/admin.post.route.js";
+import adminPostRoutes from "./Routes/admin.post.route.js";
 import leaderboardRoutes from './Routes/leaderboard.route.js';
 import bookmarkRoutes from './Routes/bookmark.route.js';
 import reportRoutes from './Routes/report.route.js';
+import userRoutes from './Routes/user.route.js';
+
 dotenv.config();
 
 const app = express(); // Initialize app
@@ -48,6 +50,7 @@ app.use('/api/posthistory', postHistoryRoutes);
 app.use("/api/admin/posts", adminPostRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
+
 // app.use('/api/posthistory', postRoutes);  // Ensure that this is pointing to the right route
 
 app.use('/api/leaderboard', leaderboardRoutes)
@@ -56,16 +59,6 @@ app.use('/api/leaderboard', leaderboardRoutes)
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
-
-
-// ... other imports and middleware
-
-// Register the admin post routes
-app.use("/api/admin/posts", adminPostRoutes);
-
-// Add this to your main server file (e.g., server.js or app.js)
-
-
 
 // Schedule archive check to run at midnight every day
 cron.schedule('0 0 * * *', async () => {

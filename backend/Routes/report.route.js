@@ -14,14 +14,13 @@ router.post('/', protect, async (req, res) => {
   }
 
   try {
-    const report = new Report({
+    const report = await Report.create({
       postId,
       userId,
       reportType,
       description,
     });
 
-    await report.save();
     res.status(201).json({ message: 'Report submitted successfully', report });
   } catch (error) {
     console.error('Error submitting report:', error);
@@ -54,19 +53,13 @@ router.put('/:reportId', protect, async (req, res) => {
       return res.status(404).json({ message: 'Report not found' });
     }
 
-    // Set status to "Resolved" by default or use the provided status
-    report.status = status || 'Resolved';
-    
-    // Only set adminResponse if it's provided
-    if (adminResponse) {
-      report.adminResponse = adminResponse;
-    }
-    
-    report.updatedAt = Date.now();
+    const updatedReport = await Report.updateById(req.params.reportId, {
+      status: status || 'Resolved',
+      ...(adminResponse && { adminResponse }),
+      updatedAt: Date.now()
+    });
 
-    await report.save();
-
-    res.json({ message: 'Report updated successfully', report });
+    res.json({ message: 'Report updated successfully', report: updatedReport });
   } catch (error) {
     console.error('Error updating report:', error);
     res.status(500).json({ message: 'Error updating report' });

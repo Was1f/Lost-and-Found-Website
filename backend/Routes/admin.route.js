@@ -3,7 +3,8 @@ import { adminLoginController } from '../controllers/admin.controller.js';
 import { adminAuth } from '../middleware/adminAuthmiddleware.js';
 import User from '../models/user.model.js';
 import Post from '../models/post.model.js';
-import Comment from '../models/comment.model.js'; 
+import Comment from '../models/comment.model.js';
+import PostHistory from '../models/postHistory.model.js';
 
 const router = express.Router();
 
@@ -15,150 +16,285 @@ router.post('/login', adminLoginController);
 // Fetch all posts (only accessible to admin)
 router.get('/posts', adminAuth, async (req, res) => {
   try {
-    const posts = await Post.find().populate('user', 'email');  // Populate user email
+    const posts = await Post.getModel()
+      .find()
+      .populate('user', 'email')
+      .sort({ createdAt: -1 })
+      .exec();
     res.status(200).json(posts);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching posts', error });
+    console.error('Error fetching posts:', error);
+    res.status(500).json({ message: 'Error fetching posts', error: error.message });
   }
 });
 
-// Delete a post
-router.delete('/post/:id', adminAuth, async (req, res) => {
-  const { id } = req.params;
+// Delete a post (admin only)
+router.delete('/posts/:id', adminAuth, async (req, res) => {
   try {
-    const deletedPost = await Post.findByIdAndDelete(id);
-    if (!deletedPost) {
+    const post = await Post.getModel()
+      .findById(req.params.id)
+      .exec();
+      
+    if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    res.status(200).json({ message: 'Post deleted successfully' });
+
+    await Post.deleteById(req.params.id);
+    res.json({ message: 'Post deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting post', error });
+    console.error('Error deleting post:', error);
+    res.status(500).json({ message: 'Error deleting post', error: error.message });
   }
 });
 
 // ------------------- COMMENTS MANAGEMENT -------------------
 
-// Get all comments for a post
-router.get('/comments/:postId', adminAuth, async (req, res) => {
+// Fetch all comments (admin only)
+router.get('/comments', adminAuth, async (req, res) => {
   try {
-    const { postId } = req.params;
-    const comments = await Comment.find({ postId })
-      .populate('userId', 'username email')
-      .sort({ createdAt: -1 });
+    const { postId } = req.query;
+    const query = postId ? { postId } : {};
+    
+    const comments = await Comment.getModel()
+      .find(query)
+      .populate('userId', 'email username')
+      .populate('postId', 'title')
+      .sort({ createdAt: -1 })
+      .exec();
     res.status(200).json(comments);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching comments', error });
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Error fetching comments', error: error.message });
   }
 });
 
-// Add a comment as admin
-router.post('/comment', adminAuth, async (req, res) => {
+// Add admin comment
+router.post('/comments', adminAuth, async (req, res) => {
+  try {
+    const { postId, text } = req.body;
+
+    if (!postId || !text) {
+      return res.status(400).json({ message: 'Post ID and comment text are required' });
+    }
+
+    const comment = await Comment.getModel().create({
+      postId,
+      text,
+      isAdmin: true,
+      // userId is not required for admin comments
+    });
+
+    // Populate the comment with post details
+    await comment.populate('postId', 'title');
+
+    res.status(201).json(comment);
+  } catch (error) {
+    console.error('Error adding admin comment:', error);
+    res.status(500).json({ message: 'Error adding admin comment', error: error.message });
+  }
+});
+
+// Add admin reply to a comment
+router.post('/comments/reply', adminAuth, async (req, res) => {
   try {
     const { postId, text, parentCommentId } = req.body;
-    
-    // Create an admin comment
-    const newComment = new Comment({
+
+    if (!postId || !text || !parentCommentId) {
+      return res.status(400).json({ 
+        message: 'Post ID, comment text, and parent comment ID are required' 
+      });
+    }
+
+    const comment = await Comment.getModel().create({
       postId,
-      isAdmin: true, // Mark as admin comment
       text,
-      parentCommentId: parentCommentId || null,
+      parentCommentId,
+      isAdmin: true,
+      // userId is not required for admin comments
     });
-    
-    await newComment.save();
-    res.status(201).json(newComment);
+
+    // Populate the comment with post and parent comment details
+    await comment.populate('postId', 'title');
+    await comment.populate('parentCommentId', 'text');
+
+    res.status(201).json(comment);
   } catch (error) {
-    console.error('Admin comment error:', error);
-    res.status(500).json({ message: 'Error adding comment', error: error.message });
+    console.error('Error adding admin reply:', error);
+    res.status(500).json({ message: 'Error adding admin reply', error: error.message });
   }
 });
 
-// Delete/Remove a comment (marks as removed)
-router.delete('/comment/:id', adminAuth, async (req, res) => {
+// Delete a comment (admin only)
+router.delete('/comments/:id', adminAuth, async (req, res) => {
   try {
-    const { id } = req.params;
+    const comment = await Comment.getModel()
+      .findById(req.params.id)
+      .exec();
+      
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    // Use the removeComment method from the Comment model
+    // which sets isRemoved: true and text: "[Removed]"
+    await Comment.removeComment(req.params.id);
     
-    // Instead of deleting, mark as removed
-    const updatedComment = await Comment.findByIdAndUpdate(
-      id, 
+    // Update the text to be more specific about admin removal reason
+    const updatedComment = await Comment.getModel().findByIdAndUpdate(
+      req.params.id,
       { 
-        isRemoved: true,
         text: "This comment has been removed by admin for violating community guidelines."
       },
       { new: true }
     );
-    
-    if (!updatedComment) {
-      return res.status(404).json({ message: 'Comment not found' });
+
+    // Also mark any child comments/replies as removed
+    const replies = await Comment.getModel().find({ parentCommentId: req.params.id });
+    for (const reply of replies) {
+      await Comment.removeComment(reply._id);
+      await Comment.getModel().findByIdAndUpdate(
+        reply._id,
+        { text: "This comment has been removed by admin for violating community guidelines." }
+      );
     }
-    
-    // For any replies, also mark them as removed
-    await Comment.updateMany(
-      { parentCommentId: id },
-      { 
-        isRemoved: true,
-        text: "This comment has been removed by admin for violating community guidelines."
-      }
-    );
-    
-    res.status(200).json({ 
-      message: 'Comment and its replies have been removed', 
-      comment: updatedComment 
+
+    res.json({ 
+      message: 'Comment removed for violating community guidelines',
+      comment: updatedComment
     });
   } catch (error) {
+    console.error('Error removing comment:', error);
     res.status(500).json({ message: 'Error removing comment', error: error.message });
   }
 });
 
 // ------------------- USERS MANAGEMENT -------------------
 
-// Fetch all users
+// Fetch users with filtering, sorting, and pagination
 router.get('/users', adminAuth, async (req, res) => {
   try {
-    const users = await User.find({}, 'email username studentId status createdAt'); // Get necessary fields
-    res.status(200).json(users);
+    const { 
+      page = 1, 
+      limit = 12, 
+      sort = 'createdAt', 
+      order = 'desc',
+      status,
+      search 
+    } = req.query;
+
+    // Build query
+    const query = {};
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+    if (search) {
+      query.$or = [
+        { email: { $regex: search, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } },
+        { studentId: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const total = await User.getModel().countDocuments(query);
+    const pages = Math.ceil(total / parseInt(limit));
+
+    // Get users with pagination and sorting
+    const users = await User.getModel()
+      .find(query)
+      .select('email username studentId status createdAt profilePic')
+      .sort({ [sort]: order === 'asc' ? 1 : -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .exec();
+
+    res.status(200).json({
+      users,
+      pagination: {
+        total,
+        pages,
+        page: parseInt(page),
+        limit: parseInt(limit)
+      }
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching users', error });
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
   }
 });
 
-// Delete a user
-router.delete('/user/:id', adminAuth, async (req, res) => {
-  const { id } = req.params;
+// Update user status
+router.put('/users/:id/status', adminAuth, async (req, res) => {
   try {
-    await User.findByIdAndDelete(id);
-    res.status(200).json({ message: 'User deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting user', error });
-  }
-});
-
-// Ban a user
-router.put('/user/ban/:id', adminAuth, async (req, res) => {
-  const { id } = req.params;
-  try {
-    // Find the user first to check current status
-    const user = await User.findById(id);
+    const { status } = req.body;
+    const user = await User.getModel()
+      .findById(req.params.id)
+      .exec();
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    const updatedUser = await User.updateById(req.params.id, { status });
+    res.json({ message: 'User status updated successfully', user: updatedUser });
+  } catch (error) {
+    console.error('Error updating user status:', error);
+    res.status(500).json({ message: 'Error updating user status', error: error.message });
+  }
+});
+
+// Delete a user
+router.delete('/users/:id', adminAuth, async (req, res) => {
+  try {
+    const user = await User.getModel()
+      .findById(req.params.id)
+      .exec();
+      
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await User.deleteById(req.params.id);
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Error deleting user', error: error.message });
+  }
+});
+
+// Get single user details with stats
+router.get('/users/:id', adminAuth, async (req, res) => {
+  try {
+    const user = await User.getModel()
+      .findById(req.params.id)
+      .select('-password') // Exclude password, includes all other fields including profilePic
+      .exec();
     
-    // Toggle the status between 'active' and 'banned'
-    const newStatus = user.status === 'banned' ? 'active' : 'banned';
-    
-    // Update the user status
-    const updatedUser = await User.findByIdAndUpdate(
-      id, 
-      { status: newStatus },
-      { new: true }
-    );
-    
-    res.status(200).json({ 
-      message: newStatus === 'banned' ? 'User banned successfully' : 'User activated successfully',
-      user: updatedUser
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get user's post count
+    const postsCount = await Post.getModel()
+      .countDocuments({ user: req.params.id })
+      .exec();
+
+    // Get user's comment count
+    const commentsCount = await Comment.getModel()
+      .countDocuments({ userId: req.params.id })
+      .exec();
+
+    res.json({
+      user,
+      stats: {
+        postsCount,
+        commentsCount
+      }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating user status', error: error.message });
+    console.error('Error fetching user details:', error);
+    res.status(500).json({ message: 'Error fetching user details', error: error.message });
   }
 });
 

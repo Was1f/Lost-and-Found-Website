@@ -114,7 +114,7 @@ const BadgeDisplay = ({ badge, size = "md" }) => {
 const Profile = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
-   const [badgesModalOpen, setbadgesModalOpen] = useState(false);
+  const [badgesModalOpen, setbadgesModalOpen] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
   const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -168,7 +168,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, [toast, navigate]);
+  }, [navigate, toast]);
 
   const openImageModal = (imageUrl) => {
     setSelectedImage(imageUrl);
@@ -235,26 +235,7 @@ const Profile = () => {
             e.target.src = "/avatar-placeholder.png";
           }}
         />
-        {/* Display highest badge if earned */}
-        {highestBadge && (
-          <Tooltip label={`${highestBadge.name}: ${highestBadge.description}`}>
-            <Box 
-              position="absolute" 
-              bottom="0" 
-              right="0" 
-              bg="white" 
-              borderRadius="full" 
-              p={1}
-              boxShadow="md"
-              border={`2px solid ${highestBadge.color}`}
-            >
-              <Icon as={highestBadge.icon} boxSize={5} color={highestBadge.color} />
-            </Box>
-          </Tooltip>
-        )}
       </Box>
-
-      
 
       {/* Action Buttons */}
       <Flex justify="flex-end" mt={4} px={6}>

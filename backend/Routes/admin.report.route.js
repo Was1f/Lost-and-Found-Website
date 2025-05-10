@@ -1,6 +1,7 @@
 import express from "express";
 import Report from "../models/report.model.js";
 import Post from "../models/post.model.js";
+import { updateUserPoints } from "../controllers/leaderboard.controller.js";
 
 const router = express.Router();
 
@@ -40,42 +41,43 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update report status and admin response
+// Update report status
 router.put("/:id", async (req, res) => {
   try {
     const { status, adminResponse } = req.body;
     
     const report = await Report.findById(req.params.id);
-    
     if (!report) {
       return res.status(404).json({ message: "Report not found" });
     }
-    
-    // Update only allowed fields
-    if (status) report.status = status;
-    if (adminResponse !== undefined) report.adminResponse = adminResponse;
-    report.updatedAt = Date.now();
-    
-    await report.save();
-    
-    res.json(report);
+
+    const updatedReport = await Report.updateById(req.params.id, {
+      status: status || report.status,
+      ...(adminResponse && { adminResponse }),
+      updatedAt: Date.now()
+    });
+
+    // If report is being resolved, add 5 points to the user who reported
+    if (status === "Resolved" && report.userId) {
+      await updateUserPoints(report.userId, 5);
+    }
+
+    res.json(updatedReport);
   } catch (error) {
     console.error("Error updating report:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
-// Delete a report (admin only)
+// Delete a report
 router.delete("/:id", async (req, res) => {
   try {
     const report = await Report.findById(req.params.id);
-    
     if (!report) {
       return res.status(404).json({ message: "Report not found" });
     }
-    
-    await Report.findByIdAndDelete(req.params.id);
-    
+
+    await Report.deleteById(req.params.id);
     res.json({ message: "Report deleted successfully" });
   } catch (error) {
     console.error("Error deleting report:", error);

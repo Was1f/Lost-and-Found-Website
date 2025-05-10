@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import BaseModel from './base.model.js';
 
 const commentSchema = new mongoose.Schema({
   postId: {
@@ -39,6 +40,52 @@ const commentSchema = new mongoose.Schema({
   },
 });
 
-const Comment = mongoose.model('Comment', commentSchema);
+const CommentModel = mongoose.model('Comment', commentSchema);
 
-export default Comment;
+// Create Comment class that extends BaseModel
+class Comment extends BaseModel {
+  constructor() {
+    super(CommentModel);
+  }
+
+  // Add comment-specific methods
+  async findByPost(postId) {
+    return await this.find({ postId, isRemoved: false });
+  }
+
+  async findByUser(userId) {
+    return await this.find({ userId, isRemoved: false });
+  }
+
+  async findTopLevelComments(postId) {
+    return await this.find({ 
+      postId, 
+      parentCommentId: null,
+      isRemoved: false 
+    });
+  }
+
+  async findReplies(commentId) {
+    return await this.find({ 
+      parentCommentId: commentId,
+      isRemoved: false 
+    });
+  }
+
+  async removeComment(commentId) {
+    return await this.updateById(commentId, { 
+      isRemoved: true,
+      text: '[Removed]',
+      updatedAt: new Date()
+    });
+  }
+
+  async updateComment(commentId, text) {
+    return await this.updateById(commentId, { 
+      text,
+      updatedAt: new Date()
+    });
+  }
+}
+
+export default new Comment();

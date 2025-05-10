@@ -203,9 +203,14 @@ function AdminReportPage() {
     try {
       setSubmitting(true);
       
-      // Delete the post
+      // Delete the post with admin token
       await axios.delete(
-        `http://localhost:5000/api/admin/posts/${selectedReport.postId._id}`
+        `http://localhost:5000/api/admin/posts/${selectedReport.postId._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+          }
+        }
       );
 
       // Also update the report to resolved
@@ -214,6 +219,11 @@ function AdminReportPage() {
         { 
           status: "Resolved", 
           adminResponse: adminResponse || "Post has been deleted due to policy violation."
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+          }
         }
       );
 
