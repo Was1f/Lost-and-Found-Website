@@ -1,0 +1,179 @@
+/* comments.css - Fixed container sizes with original buttons */
+.comments-section {
+  margin-top: 2rem;
+  width: 100%; /* Match post container width */
+}
+
+.comments-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.comment-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.comment-form input {
+  flex: 1;
+  padding: 0.5rem; /* Reduced padding */
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.comment-form input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.comment-card {
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 0.75rem; /* Reduced vertical padding */
+  margin-bottom: 0.75rem; /* Reduced vertical margin */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%; /* Match post container width */
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.375rem; /* Reduced margin */
+}
+
+.comment-user {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.comment-date {
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.comment-text {
+  margin-bottom: 0.5rem; /* Reduced margin */
+  line-height: 1.4; /* Slightly reduced line height */
+}
+
+.comment-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.comment-actions button {
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.reply-btn {
+  color: #4a5568;
+}
+
+.reply-btn:hover {
+  background-color: #edf2f7;
+}
+
+.delete-btn {
+  color: #e53e3e;
+}
+
+.delete-btn:hover {
+  background-color: #fed7d7;
+}
+
+.replies-container {
+  margin-left: 1.25rem; /* Slightly reduced margin */
+  padding-left: 0.75rem; /* Reduced padding */
+  border-left: 2px solid #e2e8f0;
+  margin-top: 0.5rem; /* Reduced margin */
+}
+
+.reply-card {
+  background-color: #fff;
+  border-radius: 0.375rem;
+  padding: 0.625rem; /* Reduced padding */
+  margin-bottom: 0.5rem; /* Reduced margin */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  width: calc(100% - 0.75rem); /* Account for indentation */
+}
+
+.reply-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem; /* Reduced margin */
+}
+
+.reply-form input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.reply-form button {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+/* Original button styles */
+.submit-btn {
+  background-color: #3182ce; /* Blue background */
+  color: white;
+  font-size: 0.875rem; /* Slightly smaller font size */
+  padding: 8px 16px; /* Smaller padding */
+  border-radius: 30px; /* Rounded corners */
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease; /* Smooth hover effect */
+  text-transform: uppercase; /* Uppercase text for impact */
+}
+
+.submit-btn:hover {
+  background-color: #2b6cb0; /* Darker blue on hover */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow on hover */
+}
+
+.submit-btn:active {
+  background-color: #2b528c; /* Slightly darker on click */
+  transform: translateY(2px); /* Pressed effect */
+}
+
+.cancel-btn {
+  background-color: #e2e8f0;
+  color: #4a5568;
+  border: none;
+}
+
+.cancel-btn:hover {
+  background-color: #cbd5e0;
+}
+
+.no-comments {
+  text-align: center;
+  padding: 1.5rem; /* Reduced padding */
+  color: #718096;
+  font-style: italic;
+}
+
+/* Button for the main comment form */
+.comment-form .submit-btn {
+  background-color: #3182ce;
+  color: white;
+}

@@ -3,7 +3,7 @@ import { Box, Flex,IconButton, Heading, Radio, RadioGroup, FormControl, FormLabe
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { FaBookmark, FaRegBookmark } from 'react-icons/fa'; 
-
+import './CommentSection.css';
 const PostDetailsPage = () => {
   const { id } = useParams(); // Get the post ID from URL
   const [post, setPost] = useState(null);
@@ -155,6 +155,62 @@ const toggleBookmark = async () => {
       console.error("Error posting comment", error);
     }
   };
+ 
+// Add this state at the top with other state variables
+const [currentUserId, setCurrentUserId] = useState(null);
+
+// Add this effect to decode the token and get the current user ID
+useEffect(() => {
+  if (token) {
+    try {
+      // Simple JWT decode to get the payload
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      const payload = JSON.parse(jsonPayload);
+      setCurrentUserId(payload.id);
+    } catch (error) {
+      console.error("Error decoding token:", error);
+    }
+  }
+}, [token]);
+  // Add this function for handling comment/reply deletion
+const handleDeleteComment = async (commentId, isReply = false) => {
+  if (!window.confirm("Are you sure you want to delete this comment?")) {
+    return;
+  }
+
+  try {
+    await axios.delete(`http://localhost:5000/api/comments/${commentId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    toast({
+      title: `${isReply ? "Reply" : "Comment"} deleted`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+
+    // Refresh comments after deletion
+    const updatedComments = await axios.get(`http://localhost:5000/api/comments/${id}`);
+    setComments(updatedComments.data);
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    toast({
+      title: "Error",
+      description: `Failed to delete ${isReply ? "reply" : "comment"}`,
+      status: "error",
+      duration: 5000,
+      isClosable: true,
+    });
+  }
+};
 
   // Handle posting a reply
   const handleReplySubmit = async () => {
@@ -334,107 +390,130 @@ const toggleBookmark = async () => {
       )}
 
 
-      {/* Comments Section */}
-      <Box mt={10}>
-        <Heading as="h3" size="lg" mb={4}>
-          Comments
-        </Heading>
+   {/* Comments Section - REPLACE your existing comments section with this */}
+<div className="comments-section">
+  <h3 className="comments-title">Comments</h3>
 
-        {/* Comment Input */}
-        <Box display="flex" mb={4}>
-          <Input
-            placeholder="Write a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            mr={2}
-          />
-          <Button colorScheme="blue" onClick={handleCommentSubmit}>
-            Comment
-          </Button>
-        </Box>
+  {/* Comment Input */}
+  <div className="comment-form">
+    <input
+      placeholder="Write a comment..."
+      value={newComment}
+      onChange={(e) => setNewComment(e.target.value)}
+    />
+    <button className="submit-btn" onClick={handleCommentSubmit}>
+      Comment
+    </button>
+  </div>
 
-        {/* List of Comments */}
-        <VStack align="start" spacing={3}>
-          {comments.length > 0 ? (
-            comments.map((comment) => (
-              <Box
-                key={comment._id}
-                bg="gray.100"
-                p={3}
-                rounded="md"
-                w="100%"
-              >
-                <Text fontWeight="bold" fontSize="sm" mb={1}>
-                  {comment.userId?.email || "Anonymous"} {/* populated user email */}
-                </Text>
-                <Text fontSize="sm">{comment.text}</Text>
-                <Text fontSize="xs" color="gray.500" mt={1}>
-                  {new Date(comment.createdAt).toLocaleString()}
-                </Text>
-
-                {/* Reply Button */}
-                <Button
-                  colorScheme="blue"
-                  size="sm"
-                  mt={2}
-                  onClick={() => setSelectedCommentId(comment._id)} // Set comment ID to reply to
-                >
-                  Reply
-                </Button>
-
-                {/* Replies Section */}
-                {comment._doc?.replies && comment._doc.replies.length > 0 ? (
-                  <Box mt={3} ml={6}>
-                    {comment._doc.replies.map((reply) => (
-                      <Box key={reply._id} bg="gray.200" p={3} rounded="md" mb={2}>
-                        <Text fontWeight="bold" fontSize="sm" mb={1}>
-                          {reply.userId?.email || "Anonymous"}
-                        </Text>
-                        <Text fontSize="sm">{reply.text}</Text>
-                        <Text fontSize="xs" color="gray.500" mt={1}>
-                          {new Date(reply.createdAt).toLocaleString()}
-                        </Text>
-                      </Box>
-                    ))}
-                  </Box>
-                ) : comment.replies && comment.replies.length > 0 ? (
-                  <Box mt={3} ml={6}>
-                    {comment.replies.map((reply) => (
-                      <Box key={reply._id} bg="gray.200" p={3} rounded="md" mb={2}>
-                        <Text fontWeight="bold" fontSize="sm" mb={1}>
-                          {reply.userId?.email || "Admin"}
-                        </Text>
-                        <Text fontSize="sm">{reply.text}</Text>
-                        <Text fontSize="xs" color="gray.500" mt={1}>
-                          {new Date(reply.createdAt).toLocaleString()}
-                        </Text>
-                      </Box>
-                    ))}
-                  </Box>
-                ) : null}
-
-                {/* Reply Input */}
-                {selectedCommentId === comment._id && (
-                  <Box display="flex" mt={3}>
-                    <Input
-                      placeholder="Write a reply..."
-                      value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      mr={2}
-                    />
-                    <Button colorScheme="blue" onClick={handleReplySubmit}>
-                      Reply
-                    </Button>
-                  </Box>
-                )}
-
-              </Box>
-            ))
-          ) : (
-            <Text>No comments yet. Be the first!</Text>
+  {/* List of Comments */}
+  {comments.length > 0 ? (
+    comments.map((comment) => (
+      <div key={comment._id} className="comment-card">
+        <div className="comment-header">
+          <span className="comment-user">{comment.userId?.email || "Anonymous"}</span>
+          <span className="comment-date">
+            {new Date(comment.createdAt).toLocaleString()}
+          </span>
+        </div>
+        
+        <p className="comment-text">{comment.text}</p>
+        
+        <div className="comment-actions">
+          <button 
+            className="reply-btn"
+            onClick={() => setSelectedCommentId(comment._id)}
+          >
+            Reply
+          </button>
+          
+          {currentUserId && comment.userId?._id === currentUserId && (
+            <button 
+              className="delete-btn"
+              onClick={() => handleDeleteComment(comment._id)}
+            >
+              Delete
+            </button>
           )}
-        </VStack>
-      </Box>
+        </div>
+
+        {/* Replies */}
+        {((comment._doc?.replies && comment._doc.replies.length > 0) || 
+          (comment.replies && comment.replies.length > 0)) && (
+          <div className="replies-container">
+            {/* Handle both reply data structures */}
+            {comment._doc?.replies && comment._doc.replies.map((reply) => (
+              <div key={reply._id} className="reply-card">
+                <div className="comment-header">
+                  <span className="comment-user">{reply.userId?.email || "Anonymous"}</span>
+                  <span className="comment-date">
+                    {new Date(reply.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                
+                <p className="comment-text">{reply.text}</p>
+                
+                {currentUserId && reply.userId?._id === currentUserId && (
+                  <div className="comment-actions">
+                    <button 
+                      className="delete-btn"
+                      onClick={() => handleDeleteComment(reply._id, true)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {comment.replies && comment.replies.map((reply) => (
+              <div key={reply._id} className="reply-card">
+                <div className="comment-header">
+                  <span className="comment-user">{reply.userId?.email || "Admin"}</span>
+                  <span className="comment-date">
+                    {new Date(reply.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                
+                <p className="comment-text">{reply.text}</p>
+                
+                {currentUserId && reply.userId?._id === currentUserId && (
+                  <div className="comment-actions">
+                    <button 
+                      className="delete-btn"
+                      onClick={() => handleDeleteComment(reply._id, true)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Reply Input */}
+        {selectedCommentId === comment._id && (
+          <div className="reply-form">
+            <input
+              placeholder="Write a reply..."
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+            />
+            <button className="submit-btn" onClick={handleReplySubmit}>
+              Reply
+            </button>
+            <button className="cancel-btn" onClick={() => setSelectedCommentId(null)}>
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+    ))
+  ) : (
+    <div className="no-comments">No comments yet. Be the first!</div>
+  )}
+</div>
     </Box>
   );
 };

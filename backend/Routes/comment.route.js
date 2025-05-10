@@ -83,6 +83,44 @@ router.post('/comments/reply', protect, async (req, res) => {
   }
 });
 
+// DELETE a comment and all its replies
+router.delete('/:commentId', protect, async (req, res) => {
+  try {
+    const commentId = req.params.commentId;
+    
+    // Validate commentId as a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(commentId)) {
+      return res.status(400).json({ message: 'Invalid commentId format' });
+    }
+    
+    // Find the comment
+    const comment = await Comment.findById(commentId);
+    
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+    
+    // Check if the user is authorized to delete this comment
+    if (comment.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this comment' });
+    }
+    
+    // If it's a parent comment, delete all replies first
+    if (!comment.parentCommentId) {
+      await Comment.deleteMany({ parentCommentId: commentId });
+      console.log(`Deleted all replies to comment: ${commentId}`);
+    }
+    
+    // Delete the comment itself
+    await Comment.findByIdAndDelete(commentId);
+    
+    res.status(200).json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    res.status(500).json({ message: 'Server error deleting comment', error: error.message });
+  }
+});
+
 // GET all comments for a post with their replies
 router.get('/:postId', async (req, res) => {
   try {
