@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Box, Heading, Radio, RadioGroup, FormControl, FormLabel, Textarea, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Text, Image, VStack, Input, Button, Badge } from "@chakra-ui/react";
+import { Box, Flex,IconButton, Heading, Radio, RadioGroup, FormControl, FormLabel, Textarea, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Text, Image, VStack, Input, Button, Badge,HStack,Tooltip,useToast } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { FaBookmark, FaRegBookmark } from 'react-icons/fa'; 
 
 const PostDetailsPage = () => {
   const { id } = useParams(); // Get the post ID from URL
@@ -13,6 +14,8 @@ const PostDetailsPage = () => {
   const [isReportModalOpen, setReportModalOpen] = useState(false);
   const [reportType, setReportType] = useState('');
   const [description, setDescription] = useState('');
+  const [isBookmarked, setIsBookmarked] = useState(false);  
+  const toast = useToast(); 
   const token = localStorage.getItem("authToken");
 
   // Fetch post details and comments
@@ -35,6 +38,98 @@ const PostDetailsPage = () => {
 
     fetchPostAndComments();
   }, [id, token]);
+
+
+  // Fetch post details and bookmark status
+  useEffect(() => {
+    const fetchPostAndBookmarkStatus = async () => {
+      try {
+        // Fetch post details
+        const postRes = await axios.get(`http://localhost:5000/api/posts/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPost(postRes.data);
+
+        // Check if the post is bookmarked by the user
+        checkBookmarkStatus(); // Call the checkBookmarkStatus function here to update the bookmark status
+      } catch (error) {
+        console.error("Error fetching post:", error);
+      }
+    };
+
+    fetchPostAndBookmarkStatus();
+  }, [id, token]);
+
+  
+// In your PostDetailsPage.jsx file - Update checkBookmarkStatus function
+const checkBookmarkStatus = async () => {
+  try {
+    if (!token) return;
+    
+    // Updated URL to use the new route
+    const response = await axios.get(`http://localhost:5000/api/bookmarks/status/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    setIsBookmarked(response.data.isBookmarked);
+  } catch (error) {
+    console.error('Error checking bookmark status:', error);
+  }
+};
+
+// Update toggleBookmark function
+const toggleBookmark = async () => {
+  try {
+    if (!token) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please log in to bookmark posts',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (isBookmarked) {
+      // Remove bookmark
+      await axios.delete(`http://localhost:5000/api/bookmarks/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setIsBookmarked(false);
+      toast({
+        title: 'Bookmark removed',
+        status: 'success',
+        duration: 3000,
+        isClosable: true
+      });
+    } else {
+      // Add bookmark
+      await axios.post(`http://localhost:5000/api/bookmarks/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setIsBookmarked(true);
+      toast({
+        title: 'Post bookmarked',
+        status: 'success',
+        duration: 3000,
+        isClosable: true
+      });
+    }
+  } catch (error) {
+    console.error('Error toggling bookmark:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to update bookmark',
+      status: 'error',
+      duration: 5000,
+      isClosable: true
+    });
+  }
+};
 
   // Handle posting a new comment
   const handleCommentSubmit = async () => {
@@ -143,9 +238,23 @@ const PostDetailsPage = () => {
       />
 
       {/* Post Info */}
-      <Heading as="h2" size="xl" mb={4}>
-        {post.title}
-      </Heading>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+  <Heading as="h2" size="xl">
+    {post.title}
+  </Heading>
+        
+        {/* ADD THIS BOOKMARK BUTTON */}
+        <Tooltip label={isBookmarked ? "Remove bookmark" : "Add to bookmarks"}>
+          <IconButton
+            aria-label={isBookmarked ? "Remove bookmark" : "Add to bookmarks"}
+            icon={isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
+            onClick={toggleBookmark}
+            colorScheme={isBookmarked ? "blue" : "gray"}
+            variant="ghost"
+            size="lg"
+          />
+        </Tooltip>
+      </Box>
 
       <Badge colorScheme={post.status === "lost" ? "red" : "green"} fontSize="md" mb={4}>
         {post.status.toUpperCase()}
@@ -168,9 +277,23 @@ const PostDetailsPage = () => {
       </Text>
 
        {/* Report Post Button */}
-       <Button onClick={() => setReportModalOpen(true)} colorScheme="blue" mb={4}>
-        Report
-      </Button>
+       <HStack spacing={4} mb={6}>
+        <Button 
+          onClick={() => setReportModalOpen(true)} 
+          colorScheme="blue" 
+          variant="outline"
+        >
+          Report
+        </Button>
+        
+        <Button
+          onClick={toggleBookmark}
+          colorScheme={isBookmarked ? "blue" : "gray"}
+          leftIcon={isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
+        >
+          {isBookmarked ? "Bookmarked" : "Bookmark"}
+        </Button>
+      </HStack>
 
       {/*  Report Modal */}
       {isReportModalOpen && (

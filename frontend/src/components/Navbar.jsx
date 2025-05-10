@@ -26,7 +26,7 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { PlusSquareIcon, HamburgerIcon } from "@chakra-ui/icons";
-import { FaHome, FaHistory, FaUser } from "react-icons/fa";
+import { FaHome, FaHistory, FaUser, FaBookmark } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -110,6 +110,10 @@ const Navbar = () => {
 						{!isAdmin && (
 							<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
 						)}
+						 {!isAdmin && (
+		
+							<NavButton to="/bookmarks" icon={<FaBookmark />}>Bookmarks</NavButton>
+						)}
 						{!isAdmin && (
 							<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
 						)}
@@ -179,6 +183,10 @@ const Navbar = () => {
 									{!isAdmin && (
 										<NavButton to="/my-posts" icon={<FaUser />}>My Posts</NavButton>
 									)}
+									 {!isAdmin && (
+								
+											<NavButton to="/bookmarks" icon={<FaBookmark />}>Bookmarks</NavButton>
+										)}
 									{!isAdmin && (
 										<NavButton to="/create" icon={<PlusSquareIcon />} isHighlighted>Create Post</NavButton>
 									)}

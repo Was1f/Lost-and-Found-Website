@@ -47,7 +47,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'banned'],
     default: 'active'  // Default to active when user signs up
-  }
+  },
+   // Added bookmarks field to store post IDs
+  bookmarks: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post',
+    default: []
+  }]
+  
 });
 
 // Hash the password before saving to DB

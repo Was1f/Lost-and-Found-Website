@@ -25,7 +25,7 @@ import AdminReportPage from "./pages/AdminReportPage";
 import AutoMatchingResult from "./pages/AutoMatchingResult";
 import ViewMyReportsPage from './pages/ViewMyReportsPage';
 
-
+import BookmarksPage from './pages/BookmarksPage';
 import PostHistoryPage from "./pages/PostHistoryPage";
 import Leaderboard from "./pages/leaderboard";
 import VisitUserProfile from "./pages/VisitUserProfile"
@@ -49,7 +49,7 @@ function App() {
       <Routes>
         {/* User Routes */}
         {/* Admin Routes */}
-        
+        <Route path="/bookmarks" element={<BookmarksPage />} />
         <Route path='/admin/reports' element={<AdminReportPage />} />
         <Route path='/' element={<LandingPage />} />
         <Route path='/post/:id' element={<PostDetailsPage />} />
