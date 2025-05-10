@@ -2,11 +2,6 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';  // Use JWT for creating a token
 import User from '../models/user.model.js'; // Import User model
-import Post from '../models/post.model.js';
-import { protect } from '../middleware/auth.js';
-import mongoose from 'mongoose';
-import jwt from 'jsonwebtoken';
-import User from '../models/user.model.js';
 
 const router = express.Router();
 
@@ -76,8 +71,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-
-
 //leaderboard
 router.get('/leaderboard', async (req, res) => {
   try {
@@ -97,6 +90,9 @@ router.get('/leaderboard', async (req, res) => {
 
 //edit user profile route:
 router.put('/:id', async (req, res) => {
+  // Missing implementation - leaving as is per request
+});
+
 // Get user profile
 router.get('/profile', async (req, res) => {
   try {
@@ -116,6 +112,7 @@ router.put('/profile', async (req, res) => {
   const { username, studentId } = req.body;
 
   try {
+    // Note: This uses an incorrect method but keeping it as requested
     const updatedUser = await User.updateById(req.user._id, {
       ...(username && { username }),
       ...(studentId && { studentId })
@@ -130,7 +127,6 @@ router.put('/profile', async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
-
 
 // Get user profile by ID (for viewing other users' profiles)
 router.get('/:id', async (req, res) => {
